@@ -17,15 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-body { width:100%; height:100%; margin:0px;	-webkit-user-select:none; -webkit-touch-callout:none; -moz-user-select:none; }
+body { width:100%; height:100%; margin:0px; }
 
-.tdhop { width:100%; height:100%; -webkit-user-select:none; -webkit-touch-callout:none; -moz-user-select:none;}
+.tdhop { width:100%; height:100%; position:relative; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; }
 
-#draw-canvas { background-repeat:no-repeat;  background-position:center top; -webkit-background-size:cover; -moz-background-size:cover; -o-background-size:cover; background-size:cover; outline:none; -webkit-user-select:none; -webkit-touch-callout:none; -moz-user-select:none; }
+#draw-canvas { background-repeat:no-repeat; background-position:center top; -webkit-background-size:cover; -moz-background-size:cover; -o-background-size:cover; background-size:cover; outline:none; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; }
 
-#toolbar { position:absolute; margin-left:20px;	margin-top:20px; -webkit-user-select:none; -webkit-touch-callout:none; -moz-user-select:none; }
+#toolbar { position:absolute; margin-left:10px; margin-top:10px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; }
 
-#toolbar img { margin-bottom:8px; opacity:0.5; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -moz-user-select:none;  }
+#toolbar img { margin-bottom:8px; width:60px; height:60px; opacity:0.5; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; }
 
-#tdhlg { width:115px; height:15px; cursor:pointer; color:#A0A0A0; text-decoration:none; font-family:verdana; font-style:italic; font-size:10px; position:absolute; -webkit-user-select:none; -webkit-touch-callout:none; -moz-user-select:none; }
-
+#tdhlg { overflow:hidden; right:2; bottom:2; width:105px; height:15px; cursor:pointer; color:#909090; text-decoration:none; font-family:verdana; font-style:italic; font-size:10px; line-height:13px; position:absolute; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; }

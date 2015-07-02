@@ -44,19 +44,16 @@ function setup3dhop() {
 
 	presenter.setScene({
 		meshes: {
-			"Axis" : { url: "models/singleres/axis.ply" }
+			"Gargoyle" : { url: "models/multires/gargo.nxs" },
+			"Cage" : { url: "models/singleres/cage.ply" }
 		},
 		modelInstances : {
-			"Model1" : { mesh : "Axis" }
-		},
-		trackball: { 
-			type : TurnTableTrackball 
-		},
-		space: {
-			centerMode: "explicit",
-			radiusMode: "explicit",
-			explicitCenter: [0.0, 0.0, 0.0],
-			explicitRadius: 100.0
+			"Model1" : {
+				mesh : "Cage"
+			},
+			"Model2" : {
+				mesh : "Gargoyle"
+			}
 		}
 	});
 }
@@ -75,4 +72,5 @@ $(document).ready(function(){
 	setup3dhop();
 });
 </script>
+
 </html>

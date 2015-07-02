@@ -1,0 +1,30 @@
+3D Heritage Online Presenter [http://www.3dhop.net] - CHANGELOG FILE
+
+3DHOP by Visual Computing Laboratory - ISTI - CNR [http://vcg.isti.cnr.it]
+
+Contact Us           [info@3dhop.net]
+
+Marco Callieri       [marco.callieri@isti.cnr.it]
+Massimiliano Corsini [massimiliano.corsini@isti.cnr.it]
+Marco Potenziani     [marco.potenziani@isti.cnr.it]
+
+24 September 2014
+
+ * --------- Main Changes -----------
+ * + Added INSTANCES and HOTSPOTS VISIBILITY features;
+ * + Added geometries PICKING and ONHOVER EVENT HANDLERS;
+ * + Added FULL SCREEN feature;
+ * = Updated UI event listener for touch screen compatibility;
+ * = Updated TOOLBAR features for faster loading and touch events support;
+ * + Added basic DOCUMENTATION;
+ * + Added HOW-TO example for VISIBILITY and HOTSPOTS-EVENTS new advanced features explanation (only in the "3DHOP Full Version" package);
+
+ * --------- Files Added/Modified -----------
+ * = Updated "spidergl.js" file;
+ * = Updated "init.js" file;
+ * = Updated "presenter.js" file;
+ * = Updated "css" file;
+ * = Updated all ".html" files;
+ * = Updated "skins" directory;
+ * + Added "docs" directory with 3DHOP documentation files;
+ * + Added how-to ".html" files for visibility and hotspots-events new advanced features explanation (only in "3DHOP Full Version" package);

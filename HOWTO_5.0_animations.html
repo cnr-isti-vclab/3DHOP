@@ -3,6 +3,7 @@
 <head>
 <meta content="charset=UTF-8"/>
 <title>3DHOP - 3D Heritage Online Presenter</title>
+<style type="text/css">a:hover {color:gray; cursor:pointer;}</style>
 <!--STYLESHEET-->
 <link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>  
 <!--SPIDERGL-->
@@ -34,6 +35,23 @@
  </div>
  <canvas id="draw-canvas" style="background-image: url(skins/backgrounds/light.jpg)"/>
 </div>
+<div style="width:400px; float:left;">
+ <h4 style="text-align:center;">Animate To Trackball Position</h4>
+ <ul type="circle">
+  <li><a onclick="presenter.animateToTrackballPosition([180.0, 40.0, 3.0]);">Back</a></li>
+  <li><a onclick="presenter.animateToTrackballPosition([225.0, 40.0, 3.0]);">Back-Right</a></li>
+  <li><a onclick="presenter.animateToTrackballPosition([135.0, 40.0, 3.0]);">Back-Left</a></li>
+  <li><a onclick="presenter.animateToTrackballPosition([270.0, 40.0, 3.0]);">Right</a></li>
+  <li><a onclick="presenter.animateToTrackballPosition([ 90.0, 40.0, 3.0]);">Left</a></li>
+  <li><a onclick="presenter.animateToTrackballPosition([315.0, 40.0, 3.0]);">Front-Right</a></li>
+  <li><a onclick="presenter.animateToTrackballPosition([ 45.0, 40.0, 3.0]);">Front-Left</a></li>
+  <li><a onclick="presenter.animateToTrackballPosition([  0.0, 40.0, 3.0]);">Front</a></li>
+ </ul> 
+</div>
+<div style="width:400px; float:left;">
+ <h4 style="text-align:center;"><a onclick="log(presenter.getTrackballPosition());">Get Trackball Position</a></h4>
+ <textarea id="log-text" style="width:400px; height:160px; resize: none" readonly></textarea>
+</div> 
 </body>
 
 <script type="text/javascript">
@@ -44,35 +62,52 @@ function setup3dhop() {
 
 	presenter.setScene({
 		meshes: {
-			"Axis" : { url: "models/singleres/axis.ply" }
+			"Gargoyle" : { url: "models/multires/gargo.nxs" },
+			"Box" : { 
+				url: "models/singleres/cube.ply",
+				transform : { matrix: SglMat4.scaling([ 3.0, 0.2, 3.0]) }
+			}
 		},
 		modelInstances : {
-			"Model1" : { mesh : "Axis" }
+			"Gargo" : {
+				mesh : "Gargoyle"
+			},
+			"Base" : {
+				mesh : "Box",
+				transform : { matrix: SglMat4.translation([0.0, -5.0, 0.0]) }
+			}
 		},
-		trackball: { 
-			type : TurnTableTrackball 
-		},
-		space: {
-			centerMode: "explicit",
-			radiusMode: "explicit",
-			explicitCenter: [0.0, 0.0, 0.0],
-			explicitRadius: 100.0
+		trackball: {
+			type : TurnTableTrackball,
+			trackOptions : {
+				startDistance : 3.0,
+				minMaxDist    : [1.5, 3.0],
+				minMaxTheta   : [-10.0, 70.0]
+			}
 		}
 	});
 }
 
 function actionsToolbar(action) {
-	if(action=='home') presenter.resetTrackball(); 
+	if(action=='home') presenter.setTrackballPosition([ 0.0, 0.0, 3.0]);
 	else if(action=='zoomin') presenter.zoomIn();
 	else if(action=='zoomout') presenter.zoomOut(); 
 	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
 	else if(action=='full'  || action=='full_on') fullscreenSwitch(); 
 }
 
+function log(msg) {
+	document.getElementById("log-text").innerHTML += msg + "\n";
+	document.getElementById("log-text").scrollTop = document.getElementById("log-text").scrollHeight;
+}
+
 $(document).ready(function(){
 	init3dhop();
 
 	setup3dhop();
+
+	resizeCanvas(800,600);
 });
 </script>
+
 </html>

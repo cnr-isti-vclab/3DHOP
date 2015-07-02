@@ -13,7 +13,7 @@
    height="1052.3622047"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.3.1 r9886"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="skin.svg">
   <defs
      id="defs4" />
@@ -24,20 +24,22 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.70710678"
-     inkscape:cx="577.62459"
-     inkscape:cy="519.13653"
+     inkscape:zoom="2.8040541"
+     inkscape:cx="262.71985"
+     inkscape:cy="823.97618"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1366"
-     inkscape:window-height="744"
-     inkscape:window-x="0"
-     inkscape:window-y="24"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:snap-global="true"
      inkscape:snap-grids="true"
-     inkscape:object-paths="true">
+     inkscape:object-paths="true"
+     inkscape:snap-page="false"
+     inkscape:snap-bbox="true">
     <inkscape:grid
        type="xygrid"
        id="grid3024"
@@ -603,5 +605,170 @@
        inkscape:export-filename="/home/ponchio/sandbox/presenter/skins/dark/double.png"
        inkscape:export-xdpi="90"
        inkscape:export-ydpi="90" />
+    <g
+       transform="translate(-84.369262,0.05682221)"
+       id="help-1"
+       inkscape:label="#g3025"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"
+       inkscape:export-filename="C:\Users\VCLAB\Documents\Web Server\projects\3DHop\3dhop_1.1_capsella_wc\skins\dark\help-2.png">
+      <rect
+         style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#666666;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         id="rect3011-7"
+         width="71"
+         height="71"
+         x="180.92857"
+         y="433.29074"
+         rx="12"
+         ry="12"
+         inkscape:export-xdpi="90"
+         inkscape:export-ydpi="90"
+         inkscape:export-filename="C:\Users\VCLAB\Documents\Web Server\projects\3DHop\3dhop_1.1_capsella_wc\skins\dark\help_on1.png" />
+      <text
+         xml:space="preserve"
+         style="font-size:64.73033904999999800px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;text-anchor:start;fill:#ff006e;fill-opacity:1;stroke:#666666;stroke-width:0.92471915000000005;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;font-family:Arial;-inkscape-font-specification:Arial Bold"
+         x="196.09198"
+         y="495.71957"
+         id="text3021-4"><tspan
+           sodipodi:role="line"
+           id="tspan3023-0"
+           x="196.09198"
+           y="495.71957"
+           style="font-size:73.97753142999999900px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ff006e;stroke-width:0.92471915000000005;font-family:Arial;-inkscape-font-specification:Arial;fill-opacity:1">?</tspan></text>
+    </g>
+    <rect
+       ry="12"
+       rx="12"
+       y="194.86218"
+       x="150.5"
+       height="71"
+       width="71"
+       id="rect3066-1"
+       style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#666666;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <rect
+       ry="12"
+       rx="12"
+       y="194.86218"
+       x="258.5"
+       height="71"
+       width="71"
+       id="rect3066-7"
+       style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#666666;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <g
+       id="g3901">
+      <g
+         id="g3904">
+        <path
+           style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           d="M 162 206.375 L 162 224.375 L 168 224.375 L 168 206.375 L 162 206.375 z "
+           id="rect3117" />
+      </g>
+    </g>
+    <path
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-opacity:1;marker-mid:none"
+       d="M 162 206.375 L 162 212.375 L 180 212.375 L 180 206.375 L 162 206.375 z "
+       id="rect3887" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3889"
+       width="18"
+       height="6"
+       x="192"
+       y="206.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3891"
+       width="6"
+       height="18"
+       x="204"
+       y="206.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3893"
+       width="6"
+       height="18"
+       x="162"
+       y="236.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3895"
+       width="18"
+       height="6"
+       x="162"
+       y="248.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3897"
+       width="6"
+       height="18"
+       x="204"
+       y="236.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3899"
+       width="18"
+       height="6"
+       x="192"
+       y="248.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3960"
+       width="6"
+       height="18"
+       x="282"
+       y="236.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3962"
+       width="18"
+       height="6"
+       x="270"
+       y="236.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3964"
+       width="6"
+       height="18"
+       x="282"
+       y="206.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3966"
+       width="18"
+       height="6"
+       x="270"
+       y="218.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3968"
+       width="6"
+       height="18"
+       x="300"
+       y="206.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3970"
+       width="18"
+       height="6"
+       x="300"
+       y="218.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3972"
+       width="18"
+       height="6"
+       x="300"
+       y="236.36218" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect3974"
+       width="6"
+       height="18"
+       x="300"
+       y="236.36218" />
   </g>
 </svg>

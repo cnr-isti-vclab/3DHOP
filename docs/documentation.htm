@@ -1,0 +1,153 @@
+<!DOCTYPE><html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+ <head>
+  <meta content="charset=UTF-8"/>
+  <title>3DHOP - Docs</title>
+ </head>
+ <body>
+  <div class="container">
+   <div id="page" class="prepend-1 span-20 last">
+   <div id="header" class="span-20 last">
+    <div id="title" class="span-6">
+     <h1><a href="http://vcg.isti.cnr.it/3dhop/index.php" style="color:#555">3DHOP</a></h1>
+     <span class="subtitle">3D Heritage Online Presenter</span>
+    </div>
+   </div> <!-- header -->
+   <div class="span-20 last">
+    <div class="span-20">
+		<h2>Docs</h2>
+
+		<h3>Basic documentation</h3>
+
+		<h4>Exposed functions</h4>
+		<p align="justify">
+		<em>3DHOP</em> object related native functions:
+		</p>
+		<table class="docs"><tbody>
+		<tr class="c_row"><td width="15px"><li></li></td><td width="265px"><b>animateToTrackballPosition(position)</b></td><td width="55px" style="text-align:center">-</td><td width="385px">set a new position for the used trackball and animate the camera from the current point of view to the new setted;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">position</td><td>[array] : the spatial coordinates of the trackball (the number of values may varying depending on the used trackball);</td></tr>
+
+		<tr class="c_row"><td><li></li></td><td><b>enableLightTrackball(on)</b></td><td style="text-align:center">-</td><td>enable or disable the 3D scene trackball interactive lighting control;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">on</td><td>[boolean] : true to enable, false to disable (light trackball is disabled by default);</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>enableOnHover(on)</b></td><td style="text-align:center">-</td><td>enable or disable the visual effects (spots transparency and mouse cursor changes) related to the movement of the mouse pointer onto a mesh in the 3D scene.</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">on</td><td>[boolean] : true to enable, false to disable (on hover effects are disabled by default). <span style="color:#e00">Visual effects activation could decreases performance on slower systems;</span></td></tr>
+
+		<tr class="c_row" style="text-align:center; vertical-align:middle;"><td><li></li></td><td><b>getTrackballPosition()</b></td><td style="text-align:center"><img title="Return a value" src="./img/return.png" style="width:16px; height:16px;"></img></td><td>return the actual position of the used trackball;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Returns</i></td><td style="text-align:center">-</td><td>[array] : the spatial coordinates of the trackball (the number of values may varying depending on the used trackball);</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>isInstanceVisibilityEnabled(tag)</b></td><td style="text-align:center"><img title="Return a value" src="./img/return.png" style="width:16px; height:16px;"></img></td><td>return the visibility status in the 3D scene of the specified model instance;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">tag</td><td>[string] : the tag name specified in the "tags" field of "modelInstance" (in "setScene") that refers the instance of the model on which the visibility command acts. Accepts the constant value "HOP_ALL" too (without quotes) that refers all the models instances ("HOP_ALL is the default tag value");</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Returns</i></td><td style="text-align:center">-</td><td>[boolean] : true if visible, false if not visible. <span style="color:#e00">If tag is "HOP_ALL" the function returns true if at least one of all the instances is visible;</span></td></tr>
+
+		<tr class="c_row"><td><li></li></td><td><b>isLightTrackballEnabled()</b></td><td style="text-align:center"><img title="Return a value" src="./img/return.png" style="width:16px; height:16px;"></img></td><td>return the activation status of the 3D scene trackball interactive lighting control;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Returns</i></td><td style="text-align:center">-</td><td>[boolean] : true if enabled, false if disabled;</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>isSpotVisibilityEnabled(tag)</b></td><td style="text-align:center"><img title="Return a value" src="./img/return.png" style="width:16px; height:16px;"></img></td><td>return the visibility status in the 3D scene of the specified hot spot instance;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">tag</td><td>[string] : the tag name specified in the "tags" field of "spots" (in "setScene") that refers the instance of the hot spot on which the visibility command acts. Accepts the constant value "HOP_ALL" too (without quotes) that refers all the hot spots instances ("HOP_ALL is the default tag value");</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Returns</i></td><td style="text-align:center">-</td><td>[boolean] : true if visible, false if not visible. <span style="color:#e00">If tag is "HOP_ALL" the function returns true if at least one of all the instances is visible;</span></td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>isOnHoverEnabled()</b></td><td style="text-align:center"><img title="Return a value" src="./img/return.png" style="width:16px; height:16px;"></img></td><td>return the activation status of the visual effects (spots transparency and mouse cursor changes) related to the movement of the mouse pointer onto a mesh in the 3D scene;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Returns</i></td><td style="text-align:center">-</td><td>[boolean] : true if enabled, false if disabled;</td></tr>
+
+		<tr><td><li></li></td><td><b>resetTrackball()</b></td><td style="text-align:center">-</td><td>reset both the position and light control trackballs to the initial setting;</td></tr>
+
+		<tr class="c_row"><td><li></li></td><td><b>rotateLight(x, y)</b></td><td style="text-align:center">-</td><td>rotate the 3D scene light trackball;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">x</td><td>[number] : the amount of displacement along the x-axis (accepts values from -0.5 to 0.5);</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i></i></td><td style="text-align:center">y</td><td>[number] : the amount of displacement along the y-axis (accepts values from -0.5 to 0.5);</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>setInstanceVisibility(tag, state, redraw)</b></td><td style="text-align:center">-</td><td>set the visibility in the 3D scene of the specified model instance;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">tag</td><td>[string] : the tag name specified in the "tags" field of "modelInstance" (in "setScene") that refers the instance of the model on which the visibility command acts. Accepts the constant value "HOP_ALL" too (without quotes) that refers all the models instances;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i></i></td><td style="text-align:center">state</td><td>[boolean] : true to make the instance visible, false to not make;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i></i></td><td style="text-align:center">redraw</td><td>[boolean] : true to redraw the 3D scene, false to not redraw;</td></tr>
+
+		<tr class="c_row"><td><li></li></td><td><b>setScene(options)</b></td><td style="text-align:center">-</td><td><em>3DHOP</em> main method, set the 3D scene;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">options</td><td>[multiple values] : all the text fields that define the virtual scene (meshes, modelInstances, spots, trackball, space). Check the <a href="http://vcg.isti.cnr.it/3dhop/howto.php">how to</a> section for more details;</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>setSpotVisibility(tag, state, redraw)</b></td><td style="text-align:center">-</td><td>set the visibility in the 3D scene of the specified hot spot instance;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">tag</td><td>[string] : the tag name specified in the "tags" field of "spots" (in "setScene") that refers the instance of the hot spot on which the visibility command acts. Accepts the constant value "HOP_ALL" too (without quotes) that refers all the hot spots instances;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i></i></td><td style="text-align:center">state</td><td>[boolean] : true to make the instance visible, false to not make;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i></i></td><td style="text-align:center">redraw</td><td>[boolean] : true to redraw the 3D scene, false to not redraw;</td></tr>
+
+		<tr class="c_row"><td><li></li></td><td><b>setTrackballPosition(position)</b></td><td style="text-align:center">-</td><td>set a new position for the used trackball and redraw the 3D scene with the camera in the new setted point;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">position</td><td>[array] : the spatial coordinates of the trackball (the number of values may varying depending on the used trackball);</td></tr>
+
+		<tr class="c_row"><td><li></li></td><td><b>supportsWebGL()</b></td><td style="text-align:center"><img title="Return a value" src="./img/return.png" style="width:16px; height:16px;"></img></td><td>check if the system supports the WebGL API;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Returns</i></td><td style="text-align:center">-</td><td>[boolean] : true if supported, false if not supported;</td></tr>
+
+		<tr><td><li></li></td><td><b>toggleDebugMode()</b></td><td style="text-align:center">-</td><td>toggle <em>3DHOP</em> between normal mode and debug mode;</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>toggleInstanceVisibility(tag, redraw)</b></td><td style="text-align:center">-</td><td>toggle the visibility in the 3D scene of the specified model instance;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">tag</td><td>[string] : the tag name specified in the "tags" field of "modelInstance" (in "setScene") that refers the instance of the model on which the visibility command acts. Accepts the constant value "HOP_ALL" too (without quotes) that refers all the models instances;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i></i></td><td style="text-align:center">redraw</td><td>[boolean] : true to redraw the 3D scene, false to not redraw;</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>toggleSpotVisibility(tag, redraw)</b></td><td style="text-align:center">-</td><td>toggle the visibility in the 3D scene of the specified hot spot instance;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">tag</td><td>[string] : the tag name specified in the "tags" field of "spots" (in "setScene") that refers the instance of the hot spot on which the visibility command acts. Accepts the constant value "HOP_ALL" too (without quotes) that refers all the hot spots instances;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i></i></td><td style="text-align:center">redraw</td><td>[boolean] : true to redraw the 3D scene, false to not redraw;</td></tr>
+
+		<tr><td><li></li></td><td><b>zoomIn()</b></td><td style="text-align:center">-</td><td>zoom the camera one step into the 3D scene;</td></tr>
+
+		<tr><td><li></li></td><td><b>zoomOut()</b></td><td style="text-align:center">-</td><td>zoom the camera one step out of the 3D scene;</td></tr>
+
+		</tbody></table>
+		<br/>
+
+		<h4>Hooked functions</h4>
+		<p align="justify">
+		<em>3DHOP</em> object related callback functions (activated by specific events):
+		</p>
+		<table class="docs"><tbody>
+		<tr class="c_row"><td width="15px"><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td width="185px"><b>_onEnterInstance(id)</b></td><td width="55px" style="text-align:center">-</td><td width="465px">bind an event handler to be fired when the mouse enters an instance;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">id</td><td>[string] : the instance name specified in the "<i>modelInstance</i>" field of "<i>setScene</i>";</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>_onEnterSpot(id)</b></td><td style="text-align:center">-</td><td>bind an event handler to be fired when the mouse enters a spot;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">id</td><td>[string] : the spot name specified in the "<i>spots</i>" field of "<i>setScene</i>";</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>_onLeaveInstance(id)</b></td><td style="text-align:center">-</td><td>bind an event handler to be fired when the mouse leaves an instance;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">id</td><td>[string] : the instance name specified in the "<i>modelInstance</i>" field of "<i>setScene</i>";</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>_onLeaveSpot(id)</b></td><td style="text-align:center">-</td><td>bind an event handler to be fired when the mouse leaves a spot;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">id</td><td>[string] : the spot name specified in the "<i>spots</i>" field of "<i>setScene</i>";</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>_onPickedInstance(id)</b></td><td style="text-align:center">-</td><td>bind an event handler to be fired when the mouse clicks an instance;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">id</td><td>[string] : the instance name specified in the "<i>modelInstance</i>" field of "<i>setScene</i>";</td></tr>
+
+		<tr class="c_row"><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>_onPickedSpot(id)</b></td><td style="text-align:center">-</td><td>bind an event handler to be fired when the mouse clicks a spot;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">id</td><td>[string] : the spot name specified in the "<i>spots</i>" field of "<i>setScene</i>";</td></tr>
+		</tbody></table>
+		<br/>
+
+		<h4>Utility functions</h4>
+		<p align="justify">
+		<em>3DHOP</em> object independent utility functions:
+		</p>
+		<table class="docs"><tbody>
+		<tr><td width="15px"><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td width="185px"><b>fullscreenSwitch()</b></td><td  width="55px" style="text-align:center">-</td><td width="465px">switch between <em>3DHOP</em> element fullscreen and normal mode, simultaneously updating the toolbar related button icon;</td></tr>
+
+		<tr><td><li title="Feature added with the latest release" style="list-style-image:url('img/new.png'); margin:-3px 0px 0px -10px; width:20px; height:20px;"></li></td><td><b>hotspotSwitch()</b></td><td style="text-align:center">-</td><td>switch between on/off toolbar related hotspot button icon;</td></tr>
+
+		<tr><td><li></li></td><td><b>lightSwitch()</b></td><td style="text-align:center">-</td><td>switch between on/off toolbar related light control button icon;</td></tr>
+
+		<tr class="c_row"><td><li></li></td><td><b>moveToolbar(left, top)</b></td><td style="text-align:center">-</td><td>move the <em>3DHOP</em> toolbar around the screen;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">left</td><td>[number] : toolbar margin-left space in px (relative to <em>3DHOP</em> container, default value is 10). Accepts the CSS margin syntax too (enclosed in quotes);</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i></i></td><td style="text-align:center">top</td><td>[number] : toolbar margin-top space in px (relative to <em>3DHOP</em> container, default value is 10). Accepts the CSS margin syntax too (enclosed in quotes);</td></tr>
+
+		<tr class="c_row"><td><li></li></td><td><b>resizeCanvas(width, height)</b></td><td style="text-align:center">-</td><td>change the <em>3DHOP</em> sizes;</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i>Parameters</i></td><td style="text-align:center">width</td><td>[number] : <em>3DHOP</em> width value in px (default is full browser). Accepts the CSS width syntax too (enclosed in quotes);</td></tr>
+			<tr class="h_row" style="background-color:white"><td></td><td style="text-align:right"><i></i></td><td style="text-align:center">height</td><td>[number] : <em>3DHOP</em> height value in px (default is full browser). Accepts the CSS height syntax too (enclosed in quotes);</td></tr>
+		</tbody></table>
+		<br>
+    </div>
+   </div> <!-- content -->
+   <div id="footer" class="span-20 last">
+     <p style="text-align:center; vertical-align:middle; margin-top:4px;">A <a href="http://vcg.isti.cnr.it">Visual Computing Laboratory</a> - <a href="http://www.isti.cnr.it">ISTI</a> - <a href="http://www.cnr.it">CNR</a> initiative</p>
+     <p class="cv-social-media" style="text-align:center; margin:-15 0 15 0;">
+		<a href="https://www.facebook.com/3DHOP"><span id="facebook" class="icon-facebook facebook" style="background-color:white"></span></a>
+		<a href="https://plus.google.com/102702616087918300683"><span id="gplus" class="icon-gplus gplus" style="background-color:white"></span></a>
+		<a href="https://twitter.com/3DHOP"><span id="twitter" class="icon-twitter" style="background-color:white"></span></a>
+     </p>
+   </div> <!-- footer -->
+   </div> <!-- page -->
+  </div> <!-- container -->
+ </body>
+</html>  
+  

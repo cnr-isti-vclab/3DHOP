@@ -1,12 +1,14 @@
-3D Heritage Online Presenter - README FILE
+3D Heritage Online Presenter [http://www.3dhop.net] - README FILE
 
-3DHOP by Visual Computing Laboratory - ISTI - CNR [http://vcg.isti.cnr.it/]
+3DHOP by Visual Computing Laboratory - ISTI - CNR [http://vcg.isti.cnr.it]
 
-Marco Callieri       [marco[DOT]callieri[AT]isti[DOT]cnr[DOT]it]
-Massimiliano Corsini [massimiliano[DOT]corsini[AT]isti[DOT]cnr[DOT]it]
-Marco Potenziani     [marco[DOT]potenziani[AT]isti[DOT]cnr[DOT]it]
+Contact Us           [info@3dhop.net]
 
-27 January 2014
+Marco Callieri       [marco.callieri@isti.cnr.it]
+Massimiliano Corsini [massimiliano.corsini@isti.cnr.it]
+Marco Potenziani     [marco.potenziani@isti.cnr.it]
+
+24 September 2014
 
 CONTENTS
 I.   CONTENTS LIST
@@ -17,22 +19,28 @@ I. CONTENTS LIST
 
 Essential Version
 ------------
-js          folder with the 3DHOP necessary JavaScript files
-models      folder with the 3DHOP single and multi resolution models
-skins       folder with the 3DHOP toolbar and background graphic elements files
-stylesheet  folder with the 3DHOP CSS file
-3dhop.html  3DHOP basic HTML file  
-README.txt  This file
+docs           folder with the 3DHOP basic documentation
+js             folder with the 3DHOP necessary JavaScript files
+models         folder with the 3DHOP single and multi resolution models
+skins          folder with the 3DHOP toolbar and background graphic elements files
+stylesheet     folder with the 3DHOP CSS file
+3dhop.html     3DHOP basic HTML file  
+CHANGELOG.txt  the log file with all the news of this 3DHOP release
+LICENSE.txt    the GPL license file
+README.txt     this file
 
 Full Version
-------------
-howto       folder with the 3DHOP HTML HOW TO files list 
-js          folder with the 3DHOP necessary JavaScript files
-models      folder with the 3DHOP single and multi resolution models
-skins       folder with the 3DHOP toolbar and background graphic elements files
-stylesheet  folder with the 3DHOP CSS file
-3dhop.html  3DHOP basic HTML file  
-README.txt  This file
+------------ 
+docs           folder with the 3DHOP basic documentation
+js             folder with the 3DHOP necessary JavaScript files
+models         folder with the 3DHOP single and multi resolution models
+skins          folder with the 3DHOP toolbar and background graphic elements files
+stylesheet     folder with the 3DHOP CSS file
+3dhop.html     3DHOP basic HTML file 
+HOWTO_*.html   3DHOP basic HTML HOW TO files
+CHANGELOG.txt  the log file with all the news of this 3DHOP release
+LICENSE.txt    the GPL license file
+README.txt     this file
 
 
 II. HOW TO INSTALL
@@ -75,7 +83,7 @@ to open local files);
 ¥ download and unpack 3DHOP on your PC;
 ¥ browse the 3DHOP folder and simply drag and drop the desired HTML files inside the opened browser and you are done!
 
-[Tip: on the FIREFOX browser no simple way to enable the local files loading are provided
+[Tip: on FIREFOX and INTERNET EXPLORER browsers no simple way to enable the local files loading are provided
 (so is recommended to install a Web browser if you can use only this browser). 
 However, by default it supports the use of 3D models in Ply format, so you can use 3DHOP in a limited mode, 
 restricted to single resolution models, but without to perform any procedure or to install nothing.]
@@ -84,10 +92,12 @@ restricted to single resolution models, but without to perform any procedure or 
 III. TECHNICAL INFO
 
 A WebGL-enabled browser is needed to run 3DHOP. Please refer to this page for a quick HOWTO:
-http://www.khronos.org/webgl/wiki/Getting_a_WebGL_Implementation 
+http://www.khronos.org/webgl/wiki/Getting_a_WebGL_Implementation
+
+3DHOP is supported by all the most widely used browsers and has been successfully tested on the latest versions of Google CHROME, Mozilla FIREFOX, Microsoft INTERNET EXPLORER and OPERA.  
 
 If you need technical assistance about 3DHOP, visit the project website at 
-http://vcg.isti.cnr.it/3dhop/
+http://www.3dhop.net
 
 3DHOP software is released under the GPL license.
 

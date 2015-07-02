@@ -16060,7 +16060,6 @@ SpiderGL.UserInterface.CanvasHandler.DEFAULT_PROPERTY_NAME = "ui";
 
 SpiderGL.UserInterface.CanvasHandler._touchHandler = function (event) {
 	var touches = event.changedTouches,
-
 	first = touches[0],
 	type = "";
 
@@ -16273,16 +16272,16 @@ SpiderGL.UserInterface.CanvasHandler.prototype = {
 	},
 
 	_onMouseMove : function (e) {
+//NEW CODE START (mpot 13/06/14)
 		this._cursorPrevPos = this._cursorPos;
 
 		var xy = this._getMouseClientPos(e);
 		this._cursorPos = xy;
 
 		this._cursorDeltaPos = [this._cursorPos[0] - this._cursorPrevPos[0], this._cursorPos[1] - this._cursorPrevPos[1]];
-		this._dispatch("onMouseMove", xy[0], xy[1], e);
 
 		for (var i=0; i<3; ++i) {
-			if (!this._mouseButtonsDown[i]) continue;
+			if (!this._mouseButtonsDown[i]||(this._cursorDeltaPos[0]==0&&this._cursorDeltaPos[1]==0)) continue;
 			var sPos = this._dragStartPos[i];
 			var ePos = [xy[0], xy[1]];
 			this._dragEndPos[i] = ePos;
@@ -16291,44 +16290,24 @@ SpiderGL.UserInterface.CanvasHandler.prototype = {
 				this._dragging[i] = true;
 				this._dispatch("onDragStart", i, sPos[0], sPos[1]);
 			}
-			this._dispatch("onDrag", i, ePos[0], ePos[1]);
+			else this._dispatch("onDrag", i, ePos[0], ePos[1]);
 		}
 
+		this._dispatch("onMouseMove", xy[0], xy[1], e);
+
 		e.stopPropagation();
+//NEW CODE END (mpot 13/06/14)
 	},
 
 	_onWindowMouseMove : function (e) {
-//ORIGINAL CODE START (mpot 15/01/14)
-/*	
-		var gl = this._gl;
-		var xy = this._getMouseClientPos(e);
-
-		if (!xy[2]) return;
-
-		for (var i=0; i<3; ++i) {
-			if (!this._dragging[i]) continue;
-			var sPos = this._dragStartPos[i];
-			var ePos = [xy[0], xy[1]];
-			this._dragEndPos[i] = ePos;
-			this._dragDeltaPos[i] = [ePos[0] - sPos[0], ePos[1] - sPos[1]];
-			this._dispatch("onDrag", i, ePos[0], ePos[1]);
-		}
-
-		e.stopPropagation();
-*/		
-//ORIGINAL CODE END (mpot 15/01/14)	
-
-//NEW CODE START (mpot 15/01/14)
+//NEW CODE START (mpot 13/06/14)
 		this._cursorPrevPos = this._cursorPos;
 
 		var xy = this._getMouseClientPos(e);
 
-//		if (xy[2]) return;	//uncomment this if you want mouse movement valids only on the canvas
-		
 		this._cursorPos = xy;
 
 		this._cursorDeltaPos = [this._cursorPos[0] - this._cursorPrevPos[0], this._cursorPos[1] - this._cursorPrevPos[1]];
-		this._dispatch("onMouseMove", xy[0], xy[1], e);		
 
 		for (var i=0; i<3; ++i) {
 			if (!this._dragging[i]) continue;
@@ -16339,8 +16318,11 @@ SpiderGL.UserInterface.CanvasHandler.prototype = {
 			this._dispatch("onDrag", i, ePos[0], ePos[1]);
 		}
 
+		if (xy[2]) return;
+		this._dispatch("onMouseMove", xy[0], xy[1], e);
+
 		e.stopPropagation();
-//NEW CODE END (mpot 15/01/14)		
+//NEW CODE END (mpot 13/06/14)
 	},
 
 	_onMouseWheel : function (e) {
@@ -16370,6 +16352,10 @@ SpiderGL.UserInterface.CanvasHandler.prototype = {
 	},
 
 	_onMouseOut: function(e) {
+//NEW CODE START (mpot 13/06/14)
+		var xy = this._getMouseClientPos(e);
+		this._dispatch("onMouseOut", xy[0], xy[1], e);
+//NEW CODE END (mpot 13/06/14)
 	},
 
 	_onClick : function (e) {

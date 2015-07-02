@@ -44,19 +44,21 @@ function setup3dhop() {
 
 	presenter.setScene({
 		meshes: {
-			"Axis" : { url: "models/singleres/axis.ply" }
+			"Laurana" : { url: "models/singleres/laurana.ply" }
 		},
 		modelInstances : {
-			"Model1" : { mesh : "Axis" }
+			"Model1" : { mesh : "Laurana" } 
 		},
-		trackball: { 
-			type : TurnTableTrackball 
-		},
-		space: {
-			centerMode: "explicit",
-			radiusMode: "explicit",
-			explicitCenter: [0.0, 0.0, 0.0],
-			explicitRadius: 100.0
+		trackball: {
+			type : TurnTableTrackball,
+			trackOptions : {
+				startPhi: 0.0,
+				startTheta: 0.0,
+				startDistance: 2.5,
+				minMaxPhi: [-170, 170],
+				minMaxTheta: [-10.0, 50.0],
+				minMaxDist: [0.5, 3.0]
+			}
 		}
 	});
 }

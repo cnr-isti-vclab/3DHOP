@@ -31,26 +31,27 @@ SphereTrackball.prototype = {
 		var opt = sglGetDefaultObject({
 			startCenter   : [ 0.0, 0.0, 0.0 ],
 			startDistance : 2.0,
-			minMaxDist    : [0.2, 4.0],			
+			minMaxDist    : [0.2, 4.0],
 		}, options);
-		
+
 		this._action = SGL_TRACKBALL_NO_ACTION;
 		this._new_action = true;
 
 		// starting/default parameters
-		this._startDistance = opt.startDistance;   			//distance
+		this._startDistance = opt.startDistance; //distance
 
 		// current parameters
-		this._distance = this._startDistance;		
-		
+		this._distance = this._startDistance;
+
 		//limits
-		this._minMaxDist  = opt.minMaxDist;		
+		this._minMaxDist  = opt.minMaxDist;
 		
 		this._matrix = SglMat4.identity();
-		this._sphereMatrix = SglMat4.identity();		
-		
+		this._sphereMatrix = SglMat4.identity();
+
 		this._pts    = [ [0.0, 0.0], [0.0, 0.0] ];
-	
+		this._start = [0.0, 0.0];
+
 		this.reset();
 	},
 
@@ -61,11 +62,11 @@ SphereTrackball.prototype = {
 	  m = SglMat4.mul(m, SglMat4.translation([0.0, 0.0, -this._distance]));
 	  
 	  // spheretrack
-      m = SglMat4.mul(m, this._sphereMatrix);	  
+      m = SglMat4.mul(m, this._sphereMatrix); 
 
-      this._matrix = m;		
-    },	
-	
+      this._matrix = m;
+    },
+
 	_projectOnSphere : function(x, y) {
 		var r = 1.0;
 
@@ -114,18 +115,18 @@ SphereTrackball.prototype = {
 		this._sphereMatrix = newstate;
 		this._computeMatrix();
 	},
-	
+
 	get action()  { return this._action; },
-	
-	set action(a) { this._action = a },
+
+	set action(a) { if(this._action != a) this._new_action = true; this._action = a; },
 
 	get matrix() { return this._matrix; },
 
 	reset : function () {
 		this._matrix = SglMat4.identity();
-		this._sphereMatrix = SglMat4.identity();		
+		this._sphereMatrix = SglMat4.identity();
 		
-		this._distance = this._startDistance;		
+		this._distance = this._startDistance;
 		
 		this._pts    = [ [0.0, 0.0], [0.0, 0.0] ];
 		this._action = SGL_TRACKBALL_NO_ACTION;
@@ -135,10 +136,22 @@ SphereTrackball.prototype = {
 	},
 
 	track : function(m, x, y, z) {
-		this._pts[0][0] = this._pts[1][0];
-		this._pts[0][1] = this._pts[1][1];
-		this._pts[1][0] = x;
-		this._pts[1][1] = y;
+
+        if(this._new_action) {
+            this._start[0] = x;
+            this._start[1] = y;
+            this._new_action = false;
+        }
+
+        var dx = this._start[0] - x; 
+        var dy = this._start[1] - y;
+        this._start[0] = x;
+        this._start[1] = y;
+
+		this._pts[0][0] = this._pts[1][0] + dx;
+		this._pts[0][1] = this._pts[1][1] + dy;
+		this._pts[1][0] = dx;
+		this._pts[1][1] = dy;
 
 		switch (this._action) {
 			case SGL_TRACKBALL_ROTATE:

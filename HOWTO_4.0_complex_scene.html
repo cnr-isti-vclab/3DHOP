@@ -44,19 +44,36 @@ function setup3dhop() {
 
 	presenter.setScene({
 		meshes: {
-			"Axis" : { url: "models/singleres/axis.ply" }
+			"Laurana" : { url: "models/singleres/laurana.ply" },
+			"Gargoyle" : { url: "models/multires/gargo.nxs" },
+			"Box" : { 
+				url: "models/singleres/cube.ply",
+				transform : { matrix: SglMat4.scaling([ 13.0, 0.5, 10.0]) },
+			}
 		},
 		modelInstances : {
-			"Model1" : { mesh : "Axis" }
+			"Center" : {
+				mesh : "Laurana",
+				transform : { matrix: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 235.0, -50.0, 1.0] },
+			},
+			"Right" : {
+				mesh : "Gargoyle",
+				transform : { matrix: SglMat4.mul(SglMat4.translation([120.0, 0.0, 150.0]), SglMat4.rotationAngleAxis(sglDegToRad(-90.0), [0.0, 1.0, 0.0])) }
+			},
+			"Left" : {
+				mesh : "Gargoyle",
+				transform : { matrix: SglMat4.translation([-120.0, 0.0, 120.0]) }
+			},
+			"Base" : {
+				mesh : "Box",
+				transform : { matrix: SglMat4.translation([0.0, -12.5, 0.0]) }
+			},
 		},
-		trackball: { 
-			type : TurnTableTrackball 
-		},
-		space: {
-			centerMode: "explicit",
-			radiusMode: "explicit",
-			explicitCenter: [0.0, 0.0, 0.0],
-			explicitRadius: 100.0
+		space : {
+			centerMode : "explicit",
+			radiusMode : "specific",
+			whichInstanceRadius  : "Base",
+			explicitCenter   : [0.0, 100.0, 0.0]
 		}
 	});
 }
@@ -75,4 +92,5 @@ $(document).ready(function(){
 	setup3dhop();
 });
 </script>
+
 </html>
