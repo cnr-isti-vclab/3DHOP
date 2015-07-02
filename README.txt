@@ -6,9 +6,10 @@ Contact Us           [info@3dhop.net]
 
 Marco Callieri       [marco.callieri@isti.cnr.it]
 Massimiliano Corsini [massimiliano.corsini@isti.cnr.it]
+Matteo Dellepiane    [matteo.dellepiane@isti.cnr.it]
 Marco Potenziani     [marco.potenziani@isti.cnr.it]
 
-24 September 2014
+06 Jul 2015
 
 CONTENTS
 I.   CONTENTS LIST
@@ -17,39 +18,44 @@ III. TECHNICAL INFO
 
 I. CONTENTS LIST
 
-Essential Version
+"documentation" Folder -> the 3DHOP basic documentation
 ------------
-docs           folder with the 3DHOP basic documentation
-js             folder with the 3DHOP necessary JavaScript files
-models         folder with the 3DHOP single and multi resolution models
-skins          folder with the 3DHOP toolbar and background graphic elements files
-stylesheet     folder with the 3DHOP CSS file
-3dhop.html     3DHOP basic HTML file  
-CHANGELOG.txt  the log file with all the news of this 3DHOP release
-LICENSE.txt    the GPL license file
-README.txt     this file
+img            folder with the 3DHOP basic documentation graphic elements files
+docs.html      3DHOP basic documentation HTML file 
 
-Full Version
------------- 
-docs           folder with the 3DHOP basic documentation
-js             folder with the 3DHOP necessary JavaScript files
-models         folder with the 3DHOP single and multi resolution models
-skins          folder with the 3DHOP toolbar and background graphic elements files
+"minimal" Folder     -> the 3DHOP minimal version, a ready-to-use viewer in a self-contained folder
+------------
+js             folder with the 3DHOP source JavaScript files
+models         folder with the 3D model
+skins          folder with the toolbar and background graphic elements files
 stylesheet     folder with the 3DHOP CSS file
-3dhop.html     3DHOP basic HTML file 
-HOWTO_*.html   3DHOP basic HTML HOW TO files
-CHANGELOG.txt  the log file with all the news of this 3DHOP release
+index.html     3DHOP viewer HTML file  
+
+"examples" Folder    -> all the 3DHOP examples/howto shown in the 3DHOP website
+------------ 
+js             folder with the 3DHOP source JavaScript files
+models         folder with the single- and multi-resolution 3D models
+skins          folder with the toolbar and background graphic elements files
+stylesheet     folder with the 3DHOP CSS file
+HOWTO_*.html   3DHOP HOW-TOs HTML files
+
+Text Files           -> basic info texts
+------------
+CHANGELOG.txt  the list of the changes in this 3DHOP release
 LICENSE.txt    the GPL license file
 README.txt     this file
 
 
 II. HOW TO INSTALL
 
-There is no installation: just copy the 3DHOP folder into your server project path
+More detailed info on the deployment of 3DHOP can be found in this pdf:  http://3dhop.net/download/3DHOPsite_deployment.pdf
+
+There is no installation: just copy the 3DHOP "essential" or "examples" folder into your server project path
 and link or embed the viewer in yours project pages.
 
 3DHOP is a tool designed for the Web, so it requires to be embedded in an HTML environment to work.
 However if you want to run 3DHop in local on your PC you can choose between two ways:
+
 
 1. Web server
 ------------
@@ -65,6 +71,7 @@ Once installed the Web server there are just a few step to run 3DHOP:
 
 [Tip: to install a Web server in a more simple way exist several applications, like XAMPP (http://www.apachefriends.org/index.html)
 or BITNAMI WAMP Stack (http://bitnami.com/stack/wamp) , that can do this for you...] 
+
 
 2. Direct link
 ------------
@@ -83,7 +90,7 @@ to open local files);
 ¥ download and unpack 3DHOP on your PC;
 ¥ browse the 3DHOP folder and simply drag and drop the desired HTML files inside the opened browser and you are done!
 
-[Tip: on FIREFOX and INTERNET EXPLORER browsers no simple way to enable the local files loading are provided
+[Tip: on FIREFOX, INTERNET EXPLORER and SAFARI browsers no simple way to enable the local files loading are provided
 (so is recommended to install a Web browser if you can use only this browser). 
 However, by default it supports the use of 3D models in Ply format, so you can use 3DHOP in a limited mode, 
 restricted to single resolution models, but without to perform any procedure or to install nothing.]
@@ -94,7 +101,7 @@ III. TECHNICAL INFO
 A WebGL-enabled browser is needed to run 3DHOP. Please refer to this page for a quick HOWTO:
 http://www.khronos.org/webgl/wiki/Getting_a_WebGL_Implementation
 
-3DHOP is supported by all the most widely used browsers and has been successfully tested on the latest versions of Google CHROME, Mozilla FIREFOX, Microsoft INTERNET EXPLORER and OPERA.  
+3DHOP is supported by all the most widely used browsers and has been successfully tested on the latest versions of Google CHROME, Mozilla FIREFOX, Microsoft INTERNET EXPLORER, Apple SAFARI and OPERA.  
 
 If you need technical assistance about 3DHOP, visit the project website at 
 http://www.3dhop.net
