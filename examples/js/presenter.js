@@ -115,7 +115,8 @@ Presenter.prototype = {
 			ID              : 0,
             transform       : null,
 			visible         : true,
-			tags            : [ ]
+			tags            : [ ],
+			clippable       : true,
 		}, options);
 		r.transform = this._parseTransform(r.transform);
 		r.ID = this._instancesProgressiveID;
@@ -197,6 +198,7 @@ Presenter.prototype = {
                                                                                   \n\
             uniform   mat4 uWorldViewProjectionMatrix;                            \n\
             uniform   mat3 uViewSpaceNormalMatrix;                                \n\
+            uniform   mat4 uModelMatrix;                                          \n\
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
@@ -205,11 +207,13 @@ Presenter.prototype = {
                                                                                   \n\
             varying   vec3 vNormal;                                               \n\
             varying   vec3 vColor;                                                \n\
+            varying   vec4 vModelPos;                                             \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
                 vNormal     = uViewSpaceNormalMatrix * aNormal;                   \n\
                 vColor      = aColor;                                             \n\
+                vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
                                                                                   \n\
                 gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
 				gl_PointSize = 1.5 * aPointSize;								  \n\
@@ -225,13 +229,23 @@ Presenter.prototype = {
             uniform   float uAlpha;                                               \n\
             uniform   bool uUseSolidColor;                                        \n\
             uniform   vec3 uSolidColor;                                           \n\
+            uniform   vec3 uClipPoint;                                            \n\
+            uniform   vec3 uClipAxis;                                             \n\
                                                                                   \n\
             varying   vec3 vNormal;                                               \n\
             varying   vec3 vColor;                                                \n\
+            varying   vec4 vModelPos;                                             \n\
 			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
+			    if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;  \n\
+			    else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
+			    if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;  \n\
+			    else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
+			    if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;  \n\
+			    else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
+				                                                                  \n\
         		float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);				  \n\
 		        float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);				  \n\
         		float c = 1.0 - (a + b);										  \n\
@@ -269,10 +283,13 @@ Presenter.prototype = {
             uniforms   : {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
                 "uViewSpaceNormalMatrix"     : SglMat3.identity(),
+				"uModelMatrix" 				 : SglMat4.identity(),
                 "uViewSpaceLightDirection"   : this._lightDirection,
 				"uAlpha"                     : 1.0,
 				"uUseSolidColor"             : false,
 				"uSolidColor"                : [1.0, 1.0, 1.0],
+				"uClipPoint"                 : [0.0, 0.0, 0.0],
+				"uClipAxis"                  : [0.0, 0.0, 0.0],
             }
         });
 		if(this._isDebugging)
@@ -288,6 +305,7 @@ Presenter.prototype = {
                                                                                   \n\
             uniform   mat4 uWorldViewProjectionMatrix;                            \n\
             uniform   mat3 uViewSpaceNormalMatrix;                                \n\
+            uniform   mat4 uModelMatrix;                                          \n\
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
@@ -295,11 +313,13 @@ Presenter.prototype = {
                                                                                   \n\
             varying   vec3 vNormal;                                               \n\
             varying   vec3 vColor;                                                \n\
+            varying   vec4 vModelPos;                                             \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
                 vNormal     = uViewSpaceNormalMatrix * aNormal;                   \n\
                 vColor      = aColor;                                             \n\
+                vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
                                                                                   \n\
                 gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
             }                                                                     \n\
@@ -314,13 +334,23 @@ Presenter.prototype = {
             uniform   float uAlpha;                                               \n\
             uniform   bool uUseSolidColor;                                        \n\
             uniform   vec3 uSolidColor;                                           \n\
+            uniform   vec3 uClipPoint;                                            \n\
+            uniform   vec3 uClipAxis;                                             \n\
                                                                         		  \n\
             varying   vec3 vNormal;                                               \n\
             varying   vec3 vColor;                                                \n\
+            varying   vec4 vModelPos;                                             \n\
 			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
+			    if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;  \n\
+			    else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
+			    if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;  \n\
+			    else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
+			    if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;  \n\
+			    else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
+				                                                                  \n\
                 vec3  normal  = normalize(vNormal);                               \n\
                 float nDotL   = dot(normal, -uViewSpaceLightDirection);           \n\
 				                                                                  \n\
@@ -353,10 +383,13 @@ Presenter.prototype = {
             uniforms   : {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
                 "uViewSpaceNormalMatrix"     : SglMat3.identity(),
+				"uModelMatrix" 				 : SglMat4.identity(),
                 "uViewSpaceLightDirection"   : this._lightDirection,
 				"uAlpha"                     : 1.0,
 				"uUseSolidColor"             : false,
 				"uSolidColor"                : [1.0, 1.0, 1.0],
+				"uClipPoint"                 : [0.0, 0.0, 0.0],
+				"uClipAxis"                  : [0.0, 0.0, 0.0],				
             }
         });
 		if(this._isDebugging)
@@ -372,16 +405,19 @@ Presenter.prototype = {
             precision highp float;                                                \n\
                                                                                   \n\
             uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+            uniform   mat4 uModelMatrix;                                          \n\
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
             attribute vec3 aColor;                                                \n\
             attribute float aPointSize;                                           \n\
                                                                                   \n\
+            varying   vec4 vModelPos;                                             \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
-                gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
+                vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
+				gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
 				gl_PointSize = 1.5 * aPointSize;								  \n\
             }                                                                     \n\
         ");
@@ -391,7 +427,11 @@ Presenter.prototype = {
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
                                                                                   \n\
-            uniform   vec4 uColorID;                                              \n\
+            uniform   vec3 uClipPoint;                                            \n\
+            uniform   vec3 uClipAxis;                                             \n\
+                                                                                  \n\
+            varying   vec4 vModelPos;                                             \n\
+			                                                                      \n\
 			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
 			vec4 pack_depth(const in float depth)                                         \n\
@@ -405,6 +445,13 @@ Presenter.prototype = {
 																				  \n\
             void main(void)                                                       \n\
             {                                                                     \n\
+			    if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;  \n\
+			    else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
+			    if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;  \n\
+			    else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
+			    if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;  \n\
+			    else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
+				                                                                  \n\
         		float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);				  \n\
 		        float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);				  \n\
         		float c = 1.0 - (a + b);										  \n\
@@ -431,6 +478,9 @@ Presenter.prototype = {
             },
             uniforms   : {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
+				"uModelMatrix" 				 : SglMat4.identity(),
+				"uClipPoint"                 : [0.0, 0.0, 0.0],
+				"uClipAxis"                  : [0.0, 0.0, 0.0],	
             }
         });
 		if(this._isDebugging)
@@ -445,14 +495,18 @@ Presenter.prototype = {
             precision highp float;                                                \n\
                                                                                   \n\
             uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+            uniform   mat4 uModelMatrix;                                          \n\
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
             attribute vec3 aColor;                                                \n\
+			                                                                      \n\
+            varying   vec4 vModelPos;                                             \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
-                gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
+                vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
+				gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
             }                                                                     \n\
         ");
 		if(this._isDebugging)
@@ -461,6 +515,11 @@ Presenter.prototype = {
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
                                                                                   \n\
+            uniform   vec3 uClipPoint;                                            \n\
+            uniform   vec3 uClipAxis;                                             \n\
+                                                                                  \n\
+            varying   vec4 vModelPos;                                             \n\
+			                                                                      \n\
 			vec4 pack_depth(const in float depth)                                         \n\
 			{                                                                             \n\
 				const vec4 bit_shift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);  \n\
@@ -472,6 +531,13 @@ Presenter.prototype = {
 																				  \n\
             void main(void)                                                       \n\
             {                                                                     \n\
+			    if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;  \n\
+			    else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
+			    if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;  \n\
+			    else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
+			    if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;  \n\
+			    else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
+				                                                                  \n\
                 vec4 myColor;                                                     \n\
 				myColor = pack_depth(gl_FragCoord.z);                             \n\
 				gl_FragColor  = myColor;                                          \n\
@@ -492,6 +558,9 @@ Presenter.prototype = {
             },
             uniforms   : {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
+				"uModelMatrix" 				 : SglMat4.identity(),
+				"uClipPoint"                 : [0.0, 0.0, 0.0],
+				"uClipAxis"                  : [0.0, 0.0, 0.0],				
             }
         });
 		if(this._isDebugging)
@@ -782,6 +851,7 @@ Presenter.prototype = {
 																					  \n\
 				uniform   mat4 uWorldViewProjectionMatrix;                            \n\
 				uniform   mat3 uViewSpaceNormalMatrix;                                \n\
+				uniform   mat4 uModelMatrix;                                          \n\
 																					  \n\
 				attribute vec3 aPosition;                                             \n\
 				attribute vec3 aNormal;                                               \n\
@@ -789,12 +859,14 @@ Presenter.prototype = {
 																					  \n\
 				varying   vec3 vNormal;                                               \n\
 				varying   vec3 vColor;                                                \n\
+				varying   vec4 vModelPos;                                             \n\
 																					  \n\
 				void main(void)                                                       \n\
 				{                                                                     \n\
 					vNormal     = uViewSpaceNormalMatrix * aNormal;                   \n\
 					vColor      = aColor;                                             \n\
-																					  \n\
+					vModelPos   = uModelMatrix * vec4(aPosition, 1.0);                \n\
+                                                                                      \n\
 					gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
 				}                                                                     \n\
 			",
@@ -805,12 +877,22 @@ Presenter.prototype = {
 				uniform   float     uAlpha;                                           \n\
                 uniform   bool uUseSolidColor;                                        \n\
                 uniform   vec3 uSolidColor;                                           \n\
+				uniform   vec3 uClipAxis;                                             \n\
+				uniform   vec3 uClipPoint;                                             \n\
 																					  \n\
 				varying   vec3 vNormal;                                               \n\
 				varying   vec3 vColor;                                                \n\
-																					  \n\
+				varying   vec4 vModelPos;                                             \n\
+			                                                                          \n\
 				void main(void)                                                       \n\
 				{                                                                     \n\
+					if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;  \n\
+					else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
+					if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;  \n\
+					else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
+					if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;  \n\
+					else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
+				                                                                      \n\
 					vec3  normal    = normalize(vNormal);                             \n\
 					float nDotL     = dot(normal, -uViewSpaceLightDirection);         \n\
 																					  \n\
@@ -834,10 +916,13 @@ Presenter.prototype = {
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 				"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
+				"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },	
 				"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 				"uAlpha"                     : { semantic : "uAlpha",                     value : 1.0 },
 				"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : true },
 				"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
+				"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
+				"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },				
 			}
 		});
 		
@@ -852,18 +937,27 @@ Presenter.prototype = {
 				precision highp float;                                                \n\
 																					  \n\
 				uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+				uniform   mat4 uModelMatrix;                                          \n\
 																					  \n\
 				attribute vec3 aPosition;                                             \n\
 				attribute vec3 aNormal;                                               \n\
 				attribute vec3 aColor;                                                \n\
 																					  \n\
+				varying   vec4 vModelPos;                                             \n\
+																					  \n\
 				void main(void)                                                       \n\
 				{                                                                     \n\
+					vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
 					gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
 				}                                                                     \n\
 			",
 			fragmentShader : "\
 				precision highp float;                                                \n\
+																					  \n\
+				uniform   vec3 uClipPoint;                                            \n\
+				uniform   vec3 uClipAxis;                                             \n\
+																					  \n\
+				varying   vec4 vModelPos;                                             \n\
 																					  \n\
 				vec4 pack_depth(const in float depth)                                         \n\
 				{                                                                             \n\
@@ -876,6 +970,13 @@ Presenter.prototype = {
 																					  \n\
 				void main(void)                                                       \n\
 				{                                                                     \n\
+					if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;  \n\
+					else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
+					if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;  \n\
+					else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
+					if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;  \n\
+					else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
+																					  \n\
 					vec4 myColor;                                                     \n\
 					myColor = pack_depth(gl_FragCoord.z);                             \n\
 					gl_FragColor  = myColor;                                          \n\
@@ -887,6 +988,9 @@ Presenter.prototype = {
 			},
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
+				"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },	
+				"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
+				"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },				
 			}
 		});
 		
@@ -1527,19 +1631,27 @@ Presenter.prototype = {
 
 			xform.model.push();
 			xform.model.multiply(space.transform.matrix);
-			// transform using mesh & instance matrices
 			xform.model.multiply(instance.transform.matrix);
 			xform.model.multiply(mesh.transform.matrix);
-
+			
+			var modelMatrix = SglMat4.identity();
+			modelMatrix = SglMat4.mul(modelMatrix, space.transform.matrix);
+			modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
+			modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);	
+			var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+			
 			var uniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
+				"uModelMatrix"               : modelMatrix,
 				"uViewSpaceLightDirection"   : this._lightDirection,
 				"uAlpha"                     : 1.0,
 				"uUseSolidColor"             : instance.useSolidColor,
-				"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]]
-			};
-
+				"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
+				"uClipPoint"                 : this._clipPoint,
+				"uClipAxis"                  : thisClipAxis,				
+			};		
+			
 			if(mesh.isNexus) {
 				if (!renderable.isReady) continue;
 
@@ -1606,13 +1718,23 @@ Presenter.prototype = {
 			xform.model.multiply(instance.transform.matrix);
 			xform.model.multiply(mesh.transform.matrix);
 
+			var modelMatrix = SglMat4.identity();
+			modelMatrix = SglMat4.mul(modelMatrix, space.transform.matrix);
+			modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
+			modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
+			var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+			
 			var uniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
+				"uModelMatrix"               : modelMatrix,
 				"uViewSpaceLightDirection"   : this._lightDirection,
 				"uAlpha"                     : instance.alpha,
 				"uUseSolidColor"             : instance.useSolidColor,
-				"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]]
+				"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
+				"uClipPoint"                 : [0.0, 0.0, 0.0],
+				"uClipPoint"                 : this._clipPoint,
+				"uClipAxis"                  : thisClipAxis,				
 			};
 
 			if(mesh.isNexus) {
@@ -1833,8 +1955,17 @@ Presenter.prototype = {
 			xform.model.multiply(instance.transform.matrix);
 			xform.model.multiply(mesh.transform.matrix);
 
+			var modelMatrix = SglMat4.identity();
+			modelMatrix = SglMat4.mul(modelMatrix, space.transform.matrix);
+			modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
+			modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);			
+			var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+			
 			var uniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+				"uModelMatrix"               : modelMatrix,
+				"uClipPoint"                 : this._clipPoint,
+				"uClipAxis"                  : thisClipAxis,
 			};
 
 			if(mesh.isNexus) {
@@ -2281,6 +2412,10 @@ Presenter.prototype = {
 		this._pointB = [0.0, 0.0, 0.0];
 		this.measurement = 0;
 
+		// plane section
+		this._clipPoint = [0.0, 0.0, 0.0];
+		this._clipAxis  = [0.0, 0.0, 0.0];
+		
 		// handlers
 		this._onPickedInstance = 0;
 		this._onPickedSpot     = 0;
@@ -2843,8 +2978,10 @@ Presenter.prototype = {
 		}
 		return visibility;
 	},
-
+	
+//-----------------------------------------------------------------------------
 // spot visibility
+
 	setSpotVisibilityByName : function (name, newState, redraw) {
 		var ui = this.ui;
 
@@ -2973,6 +3110,43 @@ Presenter.prototype = {
 		return visibility;
 	},
 
+//-----------------------------------------------------------------------------	
+// sections	
+	
+    setClippingXYZ: function( cx, cy, cz) {
+		this._clipAxis = [cx,cy,cz];
+		this.ui.postDrawEvent();
+    },	
+
+    resetClippingXYZ: function() {
+		this._clipAxis = [0.0, 0.0, 0.0];
+		this.ui.postDrawEvent();
+    },
+	
+	setClippingPointXabs: function( lcx ) {
+		this._clipPoint[0] = lcx;
+		this.ui.postDrawEvent();
+    },
+	
+	setClippingPointYabs: function( lcy ) {
+		this._clipPoint[1] = lcy;
+		this.ui.postDrawEvent();
+    },
+
+	setClippingPointZabs: function( lcz ) {
+		this._clipPoint[2] = lcz;
+		this.ui.postDrawEvent();
+    },	
+	
+	setClippingPointXYZabs: function( newpoint ) {
+		this._clipPoint = newpoint;
+		this.ui.postDrawEvent();
+    },		
+	
+	
+	
+//-----------------------------------------------------------------------------	
+	
     zoomIn: function() {
        this.onMouseWheel(-1);
     },
@@ -2981,6 +3155,8 @@ Presenter.prototype = {
        this.onMouseWheel(1);
     },
 
+//-----------------------------------------------------------------------------	
+	
     rotateLight: function(x, y) {       
       x *= 2;
       y *= 2;
@@ -3003,6 +3179,8 @@ Presenter.prototype = {
 		return this._movingLight;
 	},
 
+//-----------------------------------------------------------------------------	
+	
 	enableOnHover: function(on) {
 		this._onHover = on;
 	},
@@ -3011,6 +3189,8 @@ Presenter.prototype = {
 		return this._onHover;
 	},
 
+//-----------------------------------------------------------------------------
+	
 	enableMeasurementTool: function(on) {
 		this._isMeasuring = on;
 
@@ -3021,4 +3201,6 @@ Presenter.prototype = {
 	isMeasurementToolEnabled: function() {
 		return this._isMeasuring;
 	}
+	
+//-----------------------------------------------------------------------------	
 };
