@@ -212,11 +212,11 @@ Presenter.prototype = {
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
-            attribute vec3 aColor;                                                \n\
+            attribute vec4 aColor;                                                \n\
             attribute float aPointSize;                                           \n\
                                                                                   \n\
             varying   vec3 vNormal;                                               \n\
-            varying   vec3 vColor;                                                \n\
+            varying   vec4 vColor;                                                \n\
             varying   vec4 vModelPos;                                             \n\
                                                                                   \n\
             void main(void)                                                       \n\
@@ -245,7 +245,7 @@ Presenter.prototype = {
             uniform   float uClipColorSize;                                       \n\
                                                                         		  \n\
             varying   vec3 vNormal;                                               \n\
-            varying   vec3 vColor;                                                \n\
+            varying   vec4 vColor;                                                \n\
             varying   vec4 vModelPos;                                             \n\
 			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
@@ -265,9 +265,12 @@ Presenter.prototype = {
 						                                                          \n\
 				vec3 diffuse;                                                     \n\
 				if(uUseSolidColor)                                                \n\
-                  diffuse = uSolidColor;                                          \n\
+                  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
+                    diffuse = vColor.aaa;                                         \n\
+                  else                                                            \n\
+                    diffuse = uSolidColor;                                        \n\
 				else                                                              \n\
-                  diffuse = vColor;                                               \n\
+                  diffuse = vColor.rgb;                                               \n\
 				if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
   				  vec3  normal  = normalize(vNormal);                             \n\
                   float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
@@ -330,10 +333,10 @@ Presenter.prototype = {
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
-            attribute vec3 aColor;                                                \n\
+            attribute vec4 aColor;                                                \n\
                                                                                   \n\
             varying   vec3 vNormal;                                               \n\
-            varying   vec3 vColor;                                                \n\
+            varying   vec4 vColor;                                                \n\
             varying   vec4 vModelPos;                                             \n\
                                                                                   \n\
             void main(void)                                                       \n\
@@ -361,7 +364,7 @@ Presenter.prototype = {
             uniform   float uClipColorSize;                                       \n\
                                                                         		  \n\
             varying   vec3 vNormal;                                               \n\
-            varying   vec3 vColor;                                                \n\
+            varying   vec4 vColor;                                                \n\
             varying   vec4 vModelPos;                                             \n\
 			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
@@ -379,9 +382,12 @@ Presenter.prototype = {
 				                                                                  \n\
 				vec3  diffuse;                                                    \n\
 				if(uUseSolidColor)                                                \n\
-                  diffuse = uSolidColor;                                          \n\
+                  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
+                    diffuse = vColor.aaa;                                         \n\
+                  else                                                            \n\
+                    diffuse = uSolidColor;                                        \n\
 				else                                                              \n\
-                  diffuse = vColor;                                               \n\
+                  diffuse = vColor.rgb;                                           \n\
                 if(gl_FrontFacing)                                                \n\
                   diffuse = diffuse * max(0.0, nDotL);                            \n\
 				else                                                              \n\
@@ -887,10 +893,10 @@ Presenter.prototype = {
 																					  \n\
 				attribute vec3 aPosition;                                             \n\
 				attribute vec3 aNormal;                                               \n\
-				attribute vec3 aColor;                                                \n\
+				attribute vec4 aColor;                                                \n\
 																					  \n\
 				varying   vec3 vNormal;                                               \n\
-				varying   vec3 vColor;                                                \n\
+				varying   vec4 vColor;                                                \n\
 				varying   vec4 vModelPos;                                             \n\
 																					  \n\
 				void main(void)                                                       \n\
@@ -915,7 +921,7 @@ Presenter.prototype = {
             	uniform   float uClipColorSize;                                       \n\
                                                                         			  \n\
 				varying   vec3 vNormal;                                               \n\
-				varying   vec3 vColor;                                                \n\
+				varying   vec4 vColor;                                                \n\
 				varying   vec4 vModelPos;                                             \n\
 			                                                                          \n\
 				void main(void)                                                       \n\
@@ -931,10 +937,13 @@ Presenter.prototype = {
 					float nDotL     = dot(normal, -uViewSpaceLightDirection);         \n\
 																					  \n\
 					vec3 diffuse;                                                     \n\
-				    if(uUseSolidColor)                                                \n\
-                      diffuse = uSolidColor;                                          \n\
+					if(uUseSolidColor)                                                \n\
+					  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
+						diffuse = vColor.aaa;                                         \n\
+					  else                                                            \n\
+						diffuse = uSolidColor;                                        \n\
 				    else                                                              \n\
-                      diffuse = vColor;                                               \n\
+                      diffuse = vColor.rgb;                                           \n\
                     if(gl_FrontFacing)                                                \n\
                       diffuse = diffuse * max(0.0, nDotL);                            \n\
 				    else                                                              \n\
