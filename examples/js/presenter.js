@@ -388,10 +388,14 @@ Presenter.prototype = {
                     diffuse = uSolidColor;                                        \n\
 				else                                                              \n\
                   diffuse = vColor.rgb;                                           \n\
-                if(gl_FrontFacing)                                                \n\
-                  diffuse = diffuse * max(0.0, nDotL);                            \n\
-				else                                                              \n\
-                  diffuse = diffuse * vec3(0.4, 0.3, 0.3) * abs(nDotL);           \n\
+				if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
+					if(gl_FrontFacing)                                            \n\
+						diffuse = diffuse * max(0.0, nDotL);                      \n\
+					else                                                          \n\
+						diffuse = diffuse * vec3(0.4, 0.3, 0.3) * abs(nDotL);     \n\
+                }                                                                 \n\
+				else if(!gl_FrontFacing)                                          \n\
+					diffuse = diffuse * vec3(0.4, 0.3, 0.3);                      \n\
 				                                                                  \n\
 			    if((uClipAxis[0] == 1.0)&&((uClipPoint[0]-vModelPos[0])<uClipColorSize)) diffuse = uClipColor;  \n\
 			    else if((uClipAxis[0] == -1.0)&&((vModelPos[0]-uClipPoint[0])<uClipColorSize)) diffuse = uClipColor; \n\
@@ -460,7 +464,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Vertex Shader Log:\n" + nxsVertexShader.log);
+			console.log("NXS XYZPOINT Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
@@ -501,7 +505,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("NXS Fragment Shader Log:\n" + nxsFragmentShader.log);
+			console.log("NXS XYZPOINT Fragment Shader Log:\n" + nxsFragmentShader.log);
 
         var program = new SglProgram(gl, {
             shaders    : [
@@ -522,7 +526,7 @@ Presenter.prototype = {
             }
         });
 		if(this._isDebugging)
-			console.log("NXS Program Log:\n" + program.log);
+			console.log("NXS XYZPOINT Program Log:\n" + program.log);
 	
 		return program;
 	},		
@@ -548,7 +552,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Vertex Shader Log:\n" + nxsVertexShader.log);
+			console.log("NXS XYZ Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
@@ -582,7 +586,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("NXS Fragment Shader Log:\n" + nxsFragmentShader.log);
+			console.log("NXS XYZ Fragment Shader Log:\n" + nxsFragmentShader.log);
 
         var program = new SglProgram(gl, {
             shaders    : [
@@ -602,7 +606,7 @@ Presenter.prototype = {
             }
         });
 		if(this._isDebugging)
-			console.log("NXS Program Log:\n" + program.log);
+			console.log("NXS XYZ Program Log:\n" + program.log);
 	
 		return program;
 	},		
@@ -628,7 +632,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Vertex Shader Log:\n" + nxsVertexShader.log);
+			console.log("NXS COLORCODEDIDPOINT Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
@@ -650,7 +654,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Fragment Shader Log:\n" + nxsFragmentShader.log);
+			console.log("NXS COLORCODEDIDPOINT Fragment Shader Log:\n" + nxsFragmentShader.log);
 
         var program = new SglProgram(gl, {
             shaders    : [
@@ -669,7 +673,7 @@ Presenter.prototype = {
             }
         });
 		if(this._isDebugging)
-			console.log("Program Log:\n" + program.log);
+			console.log("NXS COLORCODEDIDPOINT Program Log:\n" + program.log);
 
 		return program;
 	},
@@ -691,7 +695,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Vertex Shader Log:\n" + nxsVertexShader.log);
+			console.log("NXS COLORCODEDID Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
@@ -704,7 +708,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Fragment Shader Log:\n" + nxsFragmentShader.log);
+			console.log("NXS COLORCODEDID Fragment Shader Log:\n" + nxsFragmentShader.log);
 
         var program = new SglProgram(gl, {
             shaders    : [
@@ -722,7 +726,7 @@ Presenter.prototype = {
             }
         });
 		if(this._isDebugging)
-			console.log("Program Log:\n" + program.log);
+			console.log("NXS COLORCODEDID Program Log:\n" + program.log);
 	
 		return program;
 	},
@@ -754,7 +758,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Vertex Shader Log:\n" + nxsVertexShader.log);
+			console.log("NXS COLORSHADEDPOINT Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
@@ -785,7 +789,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Fragment Shader Log:\n" + nxsFragmentShader.log);
+			console.log("NXS COLORSHADEDPOINT Fragment Shader Log:\n" + nxsFragmentShader.log);
 
         var program = new SglProgram(gl, {
             shaders    : [
@@ -806,7 +810,7 @@ Presenter.prototype = {
             }
         });
 		if(this._isDebugging)
-			console.log("Program Log:\n" + program.log);
+			console.log("NXS COLORSHADEDPOINT Program Log:\n" + program.log);
 
 		return program;
 	},
@@ -832,7 +836,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Vertex Shader Log:\n" + nxsVertexShader.log);
+			console.log("NXS COLORSHADED Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
@@ -855,7 +859,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("Fragment Shader Log:\n" + nxsFragmentShader.log);
+			console.log("NXS COLORSHADED Fragment Shader Log:\n" + nxsFragmentShader.log);
 
         var program = new SglProgram(gl, {
             shaders    : [
@@ -875,7 +879,7 @@ Presenter.prototype = {
             }
         });
 		if(this._isDebugging)
-			console.log("Program Log:\n" + program.log);
+			console.log("NXS COLORSHADED Program Log:\n" + program.log);
 
 		return program;
 	},
@@ -944,10 +948,14 @@ Presenter.prototype = {
 						diffuse = uSolidColor;                                        \n\
 				    else                                                              \n\
                       diffuse = vColor.rgb;                                           \n\
-                    if(gl_FrontFacing)                                                \n\
-                      diffuse = diffuse * max(0.0, nDotL);                            \n\
-				    else                                                              \n\
-                      diffuse = diffuse * vec3(0.4, 0.3, 0.3) * abs(nDotL);           \n\
+					if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
+						if(gl_FrontFacing)                                            \n\
+							diffuse = diffuse * max(0.0, nDotL);                      \n\
+						else                                                          \n\
+							diffuse = diffuse * vec3(0.4, 0.3, 0.3) * abs(nDotL);     \n\
+					}                                                                 \n\
+					else if(!gl_FrontFacing)                                          \n\
+						diffuse = diffuse * vec3(0.4, 0.3, 0.3);                      \n\
 				  	                                                                  \n\
 			    	if((uClipAxis[0] == 1.0)&&((uClipPoint[0]-vModelPos[0])<uClipColorSize)) diffuse = uClipColor;  \n\
 			 	    else if((uClipAxis[0] == -1.0)&&((vModelPos[0]-uClipPoint[0])<uClipColorSize)) diffuse = uClipColor; \n\
@@ -960,8 +968,8 @@ Presenter.prototype = {
 				}                                                                     \n\
 			",
 			vertexStreams : {
-				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-				"aColor"  : [ 0.4, 0.4, 0.8, 1.0 ]
+				"aNormal" : [ 0.0, 0.0, 0.0, 0.0 ],
+				"aColor"  : [ 0.8, 0.8, 0.8, 1.0 ]
 			},
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -1035,8 +1043,8 @@ Presenter.prototype = {
 				}                                                                     \n\
 			",
 			vertexStreams : {
-				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-				"aColor"  : [ 0.4, 0.4, 0.8, 1.0 ]
+				"aNormal" : [ 0.0, 0.0, 0.0, 0.0 ],
+				"aColor"  : [ 0.8, 0.8, 0.8, 1.0 ]
 			},
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -1078,8 +1086,8 @@ Presenter.prototype = {
 				}                                                                     \n\
 			",
 			vertexStreams : {
-				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-				"aColor"  : [ 0.4, 0.4, 0.8, 1.0 ]
+				"aNormal" : [ 0.0, 0.0, 0.0, 0.0 ],
+				"aColor"  : [ 0.8, 0.8, 0.8, 1.0 ]
 			},
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -1134,8 +1142,8 @@ Presenter.prototype = {
 				}                                                                     \n\
 			",
 			vertexStreams : {
-				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-				"aColor"  : [ 0.4, 0.4, 0.8, 1.0 ]
+				"aNormal" : [ 0.0, 0.0, 0.0, 0.0 ],
+				"aColor"  : [ 0.8, 0.8, 0.8, 1.0 ]
 			},
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -1712,7 +1720,7 @@ Presenter.prototype = {
 				"uClipAxis"                  : thisClipAxis,
 				"uClipColor"				 : config.clippingBorderColor,
 				"uClipColorSize"			 : thisClipBordersize
-			};					
+			};				
 			
 			if(mesh.isNexus) {
 				if (!renderable.isReady) continue;
@@ -2866,7 +2874,7 @@ Presenter.prototype = {
 		}
 
 		// create point-to-point line model
-		this._createLineModel();
+		this._createLineModel()
 		// create quad models		
 		this._createQuadModels();
 
