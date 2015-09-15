@@ -233,6 +233,7 @@ Presenter.prototype = {
 			console.log("NXS POINT Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
+			#extension GL_EXT_frag_depth : enable								  \n\
             precision highp float;                                                \n\
                                                                                   \n\
             uniform   vec3 uViewSpaceLightDirection;                              \n\
@@ -247,7 +248,6 @@ Presenter.prototype = {
             varying   vec3 vNormal;                                               \n\
             varying   vec4 vColor;                                                \n\
             varying   vec4 vModelPos;                                             \n\
-			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
@@ -263,14 +263,13 @@ Presenter.prototype = {
         		float c = 1.0 - (a + b);										  \n\
         		if(c < 0.0) { discard; }										  \n\
 						                                                          \n\
-				vec3 diffuse;                                                     \n\
+				vec3 diffuse = vColor.rgb;                                        \n\
 				if(uUseSolidColor)                                                \n\
                   if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
                     diffuse = vColor.aaa;                                         \n\
                   else                                                            \n\
                     diffuse = uSolidColor;                                        \n\
-				else                                                              \n\
-                  diffuse = vColor.rgb;                                               \n\
+																				  \n\
 				if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
   				  vec3  normal  = normalize(vNormal);                             \n\
                   float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
@@ -322,7 +321,7 @@ Presenter.prototype = {
 		return program;
 	},
 
-	_createStandardNXSProgram : function () {
+	_createStandardFaceNXSProgram : function () {
 		var gl = this.ui.gl;
         var nxsVertexShader = new SglVertexShader(gl, "\
             precision highp float;                                                \n\
@@ -349,9 +348,10 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("NXS Vertex Shader Log:\n" + nxsVertexShader.log);
+			console.log("NXS FACE Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
+			#extension GL_EXT_frag_depth : enable								  \n\
             precision highp float;                                                \n\
                                                                                   \n\
             uniform   vec3 uViewSpaceLightDirection;                              \n\
@@ -366,7 +366,6 @@ Presenter.prototype = {
             varying   vec3 vNormal;                                               \n\
             varying   vec4 vColor;                                                \n\
             varying   vec4 vModelPos;                                             \n\
-			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
@@ -380,14 +379,14 @@ Presenter.prototype = {
                 vec3  normal  = normalize(vNormal);                               \n\
                 float nDotL   = dot(normal, -uViewSpaceLightDirection);           \n\
 				                                                                  \n\
-				vec3  diffuse;                                                    \n\
+				                                                                  \n\
+				vec3  diffuse= vColor.rgb;                                        \n\
 				if(uUseSolidColor)                                                \n\
                   if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
                     diffuse = vColor.aaa;                                         \n\
                   else                                                            \n\
                     diffuse = uSolidColor;                                        \n\
-				else                                                              \n\
-                  diffuse = vColor.rgb;                                           \n\
+																				  \n\
 				if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
 					if(gl_FrontFacing)                                            \n\
 						diffuse = diffuse * max(0.0, nDotL);                      \n\
@@ -407,8 +406,8 @@ Presenter.prototype = {
                 gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
             }                                                                     \n\
         ");
-		if(this._isDebugging)
-			console.log("NXS Fragment Shader Log:\n" + nxsFragmentShader.log);
+		//if(this._isDebugging)
+			console.log("NXS FACE Fragment Shader Log:\n" + nxsFragmentShader.log);
 
         var program = new SglProgram(gl, {
             shaders    : [
@@ -418,7 +417,8 @@ Presenter.prototype = {
             attributes : {
                 "aPosition" : 0,
                 "aNormal"   : 1,
-                "aColor"    : 2
+                "aColor"    : 2,
+				"aPointSize": 4				
             },
             uniforms   : {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
@@ -435,13 +435,13 @@ Presenter.prototype = {
             }
         });
 		if(this._isDebugging)
-			console.log("NXS Program Log:\n" + program.log);
+			console.log("NXS FACE Program Log:\n" + program.log);
 	
 		return program;
 	},
 
 	// Depth to color nexus rendering, point and faces
-	_createXYZPointNXSProgram : function () {
+	_createXYZNXSProgram : function () {
 		var gl = this.ui.gl;
         var nxsVertexShader = new SglVertexShader(gl, "\
             precision highp float;                                                \n\
@@ -464,7 +464,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("NXS XYZPOINT Vertex Shader Log:\n" + nxsVertexShader.log);
+			console.log("NXS XYZ Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
@@ -476,92 +476,6 @@ Presenter.prototype = {
 			                                                                      \n\
 			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
-			vec4 pack_depth(const in float depth)                                         \n\
-			{                                                                             \n\
-				const vec4 bit_shift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);  \n\
-				const vec4 bit_mask  = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);        \n\
-				vec4 res = fract(depth * bit_shift);                                      \n\
-				res -= res.xxyz * bit_mask;                                               \n\
-				return res;                                                               \n\
-			}                                                                             \n\
-																				  \n\
-            void main(void)                                                       \n\
-            {                                                                     \n\
-			    if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;  \n\
-			    else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
-			    if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;  \n\
-			    else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
-			    if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;  \n\
-			    else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
-				                                                                  \n\
-        		float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);				  \n\
-		        float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);				  \n\
-        		float c = 1.0 - (a + b);										  \n\
-        		if(c < 0.0) { discard; }										  \n\
-                vec4 myColor;                                                     \n\
-				myColor = pack_depth(gl_FragCoord.z);                             \n\
-				gl_FragColor  = myColor;                                          \n\
-	       		gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));	  \n\
-            }                                                                     \n\
-        ");
-		if(this._isDebugging)
-			console.log("NXS XYZPOINT Fragment Shader Log:\n" + nxsFragmentShader.log);
-
-        var program = new SglProgram(gl, {
-            shaders    : [
-                nxsVertexShader,
-                nxsFragmentShader
-            ],
-            attributes : {
-                "aPosition" : 0,
-                "aNormal"   : 1,
-                "aColor"    : 2,
-				"aPointSize": 4
-            },
-            uniforms   : {
-                "uWorldViewProjectionMatrix" : SglMat4.identity(),
-				"uModelMatrix" 				 : SglMat4.identity(),
-				"uClipPoint"                 : [0.0, 0.0, 0.0],
-				"uClipAxis"                  : [0.0, 0.0, 0.0],	
-            }
-        });
-		if(this._isDebugging)
-			console.log("NXS XYZPOINT Program Log:\n" + program.log);
-	
-		return program;
-	},		
-	
-	_createXYZNXSProgram : function () {
-		var gl = this.ui.gl;
-        var nxsVertexShader = new SglVertexShader(gl, "\
-            precision highp float;                                                \n\
-                                                                                  \n\
-            uniform   mat4 uWorldViewProjectionMatrix;                            \n\
-            uniform   mat4 uModelMatrix;                                          \n\
-                                                                                  \n\
-            attribute vec3 aPosition;                                             \n\
-            attribute vec3 aNormal;                                               \n\
-            attribute vec3 aColor;                                                \n\
-			                                                                      \n\
-            varying   vec4 vModelPos;                                             \n\
-                                                                                  \n\
-            void main(void)                                                       \n\
-            {                                                                     \n\
-                vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
-				gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-            }                                                                     \n\
-        ");
-		if(this._isDebugging)
-			console.log("NXS XYZ Vertex Shader Log:\n" + nxsVertexShader.log);
-
-        var nxsFragmentShader = new SglFragmentShader(gl, "\
-            precision highp float;                                                \n\
-                                                                                  \n\
-            uniform   vec3 uClipPoint;                                            \n\
-            uniform   vec3 uClipAxis;                                             \n\
-                                                                                  \n\
-            varying   vec4 vModelPos;                                             \n\
-			                                                                      \n\
 			vec4 pack_depth(const in float depth)                                         \n\
 			{                                                                             \n\
 				const vec4 bit_shift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);  \n\
@@ -596,23 +510,24 @@ Presenter.prototype = {
             attributes : {
                 "aPosition" : 0,
                 "aNormal"   : 1,
-                "aColor"    : 2
+                "aColor"    : 2,
+				"aPointSize": 4
             },
             uniforms   : {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
 				"uModelMatrix" 				 : SglMat4.identity(),
 				"uClipPoint"                 : [0.0, 0.0, 0.0],
-				"uClipAxis"                  : [0.0, 0.0, 0.0],				
+				"uClipAxis"                  : [0.0, 0.0, 0.0],	
             }
         });
 		if(this._isDebugging)
-			console.log("NXS XYZ Program Log:\n" + program.log);
+			console.log("NXS XYZPOINT Program Log:\n" + program.log);
 	
 		return program;
 	},		
-	
+		
 	// color coded ID program for NXS rendering, points and faces
-	_createColorCodedIDPointNXSProgram : function () {
+	_createColorCodedIDNXSProgram : function () {
 		var gl = this.ui.gl;
         var nxsVertexShader = new SglVertexShader(gl, "\
             precision highp float;                                                \n\
@@ -623,7 +538,6 @@ Presenter.prototype = {
             attribute vec3 aNormal;                                               \n\
             attribute vec3 aColor;                                                \n\
             attribute float aPointSize;                                           \n\
-                                                                                  \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
@@ -637,24 +551,15 @@ Presenter.prototype = {
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
                                                                                   \n\
-            uniform   vec3 uViewSpaceLightDirection;                              \n\
-                                                                                  \n\
             uniform   vec4 uColorID;                                              \n\
-			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
-        		float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);				  \n\
-		        float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);				  \n\
-        		float c = 1.0 - (a + b);										  \n\
-        		if(c < 0.0) { discard; }										  \n\
-																				  \n\
                 gl_FragColor  = uColorID;                                         \n\
-	       		gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));	  \n\
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("NXS COLORCODEDIDPOINT Fragment Shader Log:\n" + nxsFragmentShader.log);
+			console.log("NXS COLORCODED ID Fragment Shader Log:\n" + nxsFragmentShader.log);
 
         var program = new SglProgram(gl, {
             shaders    : [
@@ -673,66 +578,13 @@ Presenter.prototype = {
             }
         });
 		if(this._isDebugging)
-			console.log("NXS COLORCODEDIDPOINT Program Log:\n" + program.log);
+			console.log("NXS COLORCODED ID Program Log:\n" + program.log);
 
-		return program;
-	},
-
-	_createColorCodedIDNXSProgram : function () {
-		var gl = this.ui.gl;
-        var nxsVertexShader = new SglVertexShader(gl, "\
-            precision highp float;                                                \n\
-                                                                                  \n\
-            uniform   mat4 uWorldViewProjectionMatrix;                            \n\
-                                                                                  \n\
-            attribute vec3 aPosition;                                             \n\
-            attribute vec3 aNormal;                                               \n\
-            attribute vec3 aColor;                                                \n\
-                                                                                  \n\
-            void main(void)                                                       \n\
-            {                                                                     \n\
-                gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-            }                                                                     \n\
-        ");
-		if(this._isDebugging)
-			console.log("NXS COLORCODEDID Vertex Shader Log:\n" + nxsVertexShader.log);
-
-        var nxsFragmentShader = new SglFragmentShader(gl, "\
-            precision highp float;                                                \n\
-                                                                                  \n\
-            uniform   vec4 uColorID;                                              \n\
-                                                                                  \n\
-            void main(void)                                                       \n\
-            {                                                                     \n\
-                gl_FragColor  = uColorID;                                         \n\
-            }                                                                     \n\
-        ");
-		if(this._isDebugging)
-			console.log("NXS COLORCODEDID Fragment Shader Log:\n" + nxsFragmentShader.log);
-
-        var program = new SglProgram(gl, {
-            shaders    : [
-                nxsVertexShader,
-                nxsFragmentShader
-            ],
-            attributes : {
-                "aPosition" : 0,
-                "aNormal"   : 1,
-                "aColor"    : 2
-            },
-            uniforms   : {
-                "uWorldViewProjectionMatrix" : SglMat4.identity(),
-				"uColorID"                   : [1.0, 0.5, 0.0, 1.0]
-            }
-        });
-		if(this._isDebugging)
-			console.log("NXS COLORCODEDID Program Log:\n" + program.log);
-	
 		return program;
 	},
 
 	// single-color barely-shaded program for NXS rendering, points and faces
-	_createColorShadedPointNXSProgram : function () {
+	_createColorShadedNXSProgram : function () {
 		var gl = this.ui.gl;
         var nxsVertexShader = new SglVertexShader(gl, "\
             precision highp float;                                                \n\
@@ -758,7 +610,7 @@ Presenter.prototype = {
             }                                                                     \n\
         ");
 		if(this._isDebugging)
-			console.log("NXS COLORSHADEDPOINT Vertex Shader Log:\n" + nxsVertexShader.log);
+			console.log("NXS COLOR SHADED Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
             precision highp float;                                                \n\
@@ -768,15 +620,9 @@ Presenter.prototype = {
                                                                                   \n\
             varying   vec3 vNormal;                                               \n\
             varying   vec3 vColor;                                                \n\
-			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
-        		float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);				  \n\
-		        float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);				  \n\
-        		float c = 1.0 - (a + b);										  \n\
-        		if(c < 0.0) { discard; }										  \n\
-						                                                          \n\
 				vec3 diffuse = vec3(uColorID[0], uColorID[1], uColorID[2]);       \n\
 				if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
   				  vec3  normal  = normalize(vNormal);                             \n\
@@ -785,7 +631,6 @@ Presenter.prototype = {
                   diffuse = (diffuse*0.5) + (diffuse * lambert * 0.5);            \n\
                 }                                                                 \n\
                 gl_FragColor  = vec4(diffuse, uColorID[3]);                       \n\
-	       		gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));	  \n\
             }                                                                     \n\
         ");
 		if(this._isDebugging)
@@ -810,76 +655,7 @@ Presenter.prototype = {
             }
         });
 		if(this._isDebugging)
-			console.log("NXS COLORSHADEDPOINT Program Log:\n" + program.log);
-
-		return program;
-	},
-
-	_createColorShadedNXSProgram : function () {
-		var gl = this.ui.gl;
-        var nxsVertexShader = new SglVertexShader(gl, "\
-            precision highp float;                                                \n\
-                                                                                  \n\
-            uniform   mat4 uWorldViewProjectionMatrix;                            \n\
-            uniform   mat3 uViewSpaceNormalMatrix;                                \n\
-                                                                                  \n\
-            attribute vec3 aPosition;                                             \n\
-            attribute vec3 aNormal;                                               \n\
-            attribute vec3 aColor;                                                \n\
-                                                                                  \n\
-            varying   vec3 vNormal;                                               \n\
-                                                                                  \n\
-            void main(void)                                                       \n\
-            {                                                                     \n\
-                vNormal     = uViewSpaceNormalMatrix * aNormal;                   \n\
-                gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-            }                                                                     \n\
-        ");
-		if(this._isDebugging)
-			console.log("NXS COLORSHADED Vertex Shader Log:\n" + nxsVertexShader.log);
-
-        var nxsFragmentShader = new SglFragmentShader(gl, "\
-            precision highp float;                                                \n\
-                                                                                  \n\
-            uniform   vec3 uViewSpaceLightDirection;                              \n\
-            uniform   vec4 uColorID;                                              \n\
-                                                                                  \n\
-            varying   vec3 vNormal;                                               \n\
-                                                                                  \n\
-            void main(void)                                                       \n\
-            {                                                                     \n\
-                vec3  normal  = normalize(vNormal);                               \n\
-                float nDotL   = dot(normal, -uViewSpaceLightDirection);           \n\
-				float lambert   = max(-nDotL, nDotL);                             \n\
-																				  \n\
-				vec3  baseColor = vec3(uColorID[0], uColorID[1], uColorID[2]);    \n\
-				vec3  diffuse   = (baseColor*0.5) + (baseColor * lambert * 0.5);  \n\
-                                                                                  \n\
-                gl_FragColor  = vec4(diffuse, uColorID[3]);                       \n\
-            }                                                                     \n\
-        ");
-		if(this._isDebugging)
-			console.log("NXS COLORSHADED Fragment Shader Log:\n" + nxsFragmentShader.log);
-
-        var program = new SglProgram(gl, {
-            shaders    : [
-                nxsVertexShader,
-                nxsFragmentShader
-            ],
-            attributes : {
-                "aPosition" : 0,
-                "aNormal"   : 1,
-                "aColor"    : 2
-            },
-            uniforms   : {
-                "uWorldViewProjectionMatrix" : SglMat4.identity(),
-                "uViewSpaceNormalMatrix"     : SglMat3.identity(),
-                "uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
-				"uColorID"                   : [1.0, 0.5, 0.0, 1.0]
-            }
-        });
-		if(this._isDebugging)
-			console.log("NXS COLORSHADED Program Log:\n" + program.log);
+			console.log("NXS COLOR SHADED Program Log:\n" + program.log);
 
 		return program;
 	},
@@ -940,14 +716,13 @@ Presenter.prototype = {
 					vec3  normal    = normalize(vNormal);                             \n\
 					float nDotL     = dot(normal, -uViewSpaceLightDirection);         \n\
 																					  \n\
-					vec3 diffuse;                                                     \n\
+					vec3 diffuse = vColor.rgb;                                        \n\
 					if(uUseSolidColor)                                                \n\
 					  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
 						diffuse = vColor.aaa;                                         \n\
 					  else                                                            \n\
 						diffuse = uSolidColor;                                        \n\
-				    else                                                              \n\
-                      diffuse = vColor.rgb;                                           \n\
+																					  \n\
 					if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
 						if(gl_FrontFacing)                                            \n\
 							diffuse = diffuse * max(0.0, nDotL);                      \n\
@@ -1662,11 +1437,10 @@ Presenter.prototype = {
 		var height   = this.ui.height;
 		var xform    = this.xform;
 		var renderer = this.renderer;
-		var CurrProgram   = this.basicNXSProgram; 
-		var CurrPointProgram = this.pointNXSProgram;
+		var CurrFaceProgram = this.faceNXSProgram; 
+		var CurrPointProgram = this.pointNXSProgram; 		
 		var CurrTechnique = this.basicPLYTechnique;
 		var CCProgram   = this.colorShadedNXSProgram;
-		var CCPointProgram = this.colorShadedPointNXSProgram;
 		var CCTechnique = this.colorShadedPLYtechnique;
 		var lineTechnique = this.simpleLinetechnique;
 		var meshes    = this._scene.meshes;
@@ -1739,7 +1513,7 @@ Presenter.prototype = {
 				
 				var program;
 				if(nexus._header.signature.face.hasIndex) 
-					program = CurrProgram;
+					program = CurrFaceProgram;
 				else
 					program = CurrPointProgram;
 				program.bind();
@@ -1826,7 +1600,7 @@ Presenter.prototype = {
 				
 				var program;
 				if(nexus._header.signature.face.hasIndex) 
-					program = CurrProgram;
+					program = CurrFaceProgram;
 				else
 					program = CurrPointProgram;
 				program.bind();
@@ -1952,11 +1726,7 @@ Presenter.prototype = {
 				nexus.projectionMatrix = xform.projectionMatrix;
 				nexus.viewport         = [0, 0, width, height];
 
-				var program;
-				if(nexus._header.signature.face.hasIndex) 
-					program = CCProgram;
-				else
-					program = CCPointProgram;
+				var program = CCProgram;
 				program.bind();
 				program.setUniforms(uniforms);
 					nexus.begin();
@@ -2090,7 +1860,6 @@ Presenter.prototype = {
 		var xform    = this.xform;
 		var renderer = this.renderer;
 		var CurrProgram   = this.colorCodedXYZNXSProgram;
-		var CurrPointProgram = this.colorCodedXYZPointNXSProgram;
 		var CurrTechnique = this.colorCodedXYZPLYtechnique;
 		var meshes    = this._scene.meshes;
 		var instances = this._scene.modelInstances;
@@ -2148,11 +1917,7 @@ Presenter.prototype = {
 
 				this.pickFramebuffer.bind();
 
-				var program;
-				if(nexus._header.signature.face.hasIndex) 
-					program = CurrProgram;
-				else
-					program = CurrPointProgram;
+				var program = CurrProgram;
 				program.bind();
 				program.setUniforms(uniforms);
 					nexus.begin();
@@ -2212,7 +1977,6 @@ Presenter.prototype = {
 		var xform    = this.xform;
 		var renderer = this.renderer;
 		var CurrProgram   = this.colorCodedIDNXSProgram;
-		var CurrPointProgram = this.colorCodedIDPointNXSProgram;
 		var CurrTechnique = this.colorCodedIDPLYtechnique;
 		var meshes    = this._scene.meshes;
 		var instances = this._scene.modelInstances;
@@ -2263,11 +2027,7 @@ Presenter.prototype = {
 
 				this.pickFramebuffer.bind();
 
-				var program;
-				if(nexus._header.signature.face.hasIndex) 
-					program = CurrProgram;
-				else
-					program = CurrPointProgram;
+				var program = CurrProgram;
 				program.bind();
 				program.setUniforms(uniforms);
 					nexus.begin();
@@ -2314,7 +2074,6 @@ Presenter.prototype = {
 		var xform    = this.xform;
 		var renderer = this.renderer;
 		var CurrProgram   = this.colorCodedIDNXSProgram;
-		var CurrPointProgram = this.colorCodedIDPointNXSProgram;
 		var CurrTechnique = this.colorCodedIDPLYtechnique;
 		var meshes    = this._scene.meshes;
 		var spots = this._scene.spots;
@@ -2366,11 +2125,7 @@ Presenter.prototype = {
 
 				this.pickFramebuffer.bind();
 
-				var program;
-				if(nexus._header.signature.face.hasIndex) 
-					program = CurrProgram;
-				else
-					program = CurrPointProgram;
+				var program = CurrProgram;
 				program.bind();
 				program.setUniforms(uniforms);
 					nexus.begin();
@@ -2431,11 +2186,7 @@ Presenter.prototype = {
 
 				this.pickFramebuffer.bind();
 
-				var program;
-				if(nexus._header.signature.face.hasIndex) 
-					program = CurrProgram;
-				else
-					program = CurrPointProgram;
+				var program = CurrProgram;
 				program.bind();
 				program.setUniforms(uniforms);
 					nexus.begin();
@@ -2569,20 +2320,16 @@ Presenter.prototype = {
 		var viewMatrix = SglMat4.identity();
 
 		// shaders
-		this.basicNXSProgram = this._createStandardNXSProgram();
+		this.faceNXSProgram = this._createStandardFaceNXSProgram();
 		this.pointNXSProgram = this._createStandardPointNXSProgram();
+		this.colorShadedNXSProgram = this._createColorShadedNXSProgram();
 		this.colorCodedIDNXSProgram = this._createColorCodedIDNXSProgram();
-		this.colorCodedIDPointNXSProgram = this._createColorCodedIDPointNXSProgram();
 		this.colorCodedXYZNXSProgram = this._createXYZNXSProgram();
-		this.colorCodedXYZPointNXSProgram = this._createXYZPointNXSProgram();		
 
 		this.basicPLYTechnique  = this._createStandardPLYtechnique();
+		this.colorShadedPLYtechnique = this._createColorShadedPLYtechnique();
 		this.colorCodedIDPLYtechnique  = this._createColorCodedIDPLYtechnique();
 		this.colorCodedXYZPLYtechnique  = this._createXYZPLYtechnique();
-
-		this.colorShadedNXSProgram = this._createColorShadedNXSProgram();
-		this.colorShadedPointNXSProgram = this._createColorShadedPointNXSProgram();
-		this.colorShadedPLYtechnique = this._createColorShadedPLYtechnique();
 
 		this.simpleLinetechnique = this._createSimpleLinetechnique();
 
