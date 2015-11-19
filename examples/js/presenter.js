@@ -183,7 +183,7 @@ Presenter.prototype = {
 		var r = sglGetDefaultObject({
 			measurementColor    : [0.5, 1.0, 0.5],
 			showClippingPlanes  : true,
-			showClippingBorder  : true,
+			showClippingBorder  : false,
 			clippingBorderSize  : 0.5,
 			clippingBorderColor : [0.0, 1.0, 1.0]
 		}, options);
@@ -3099,44 +3099,59 @@ Presenter.prototype = {
 //-----------------------------------------------------------------------------	
 // sections	
 	
-    setClippingXYZ: function( cx, cy, cz) {
+    resetClippingXYZ: function() {
+        this._calculateBounding();
+   		this._clipAxis = [0.0, 0.0, 0.0];
+		this._clipPoint = [0.0, 0.0, 0.0];		
+		this.ui.postDrawEvent();
+    },	
+	
+    setClippingXYZ: function(cx, cy, cz) {
         this._calculateBounding();
    		this._clipAxis = [cx,cy,cz];
 		this.ui.postDrawEvent();
     },	
-
-    resetClippingXYZ: function() {
+	
+    setClippingX: function(cx) {
         this._calculateBounding();
-   		this._clipAxis = [0.0, 0.0, 0.0];		
+   		this._clipAxis[0] = cx;
+		this.ui.postDrawEvent();
+    },	
+    setClippingY: function(cy) {
+        this._calculateBounding();
+   		this._clipAxis[1] = cy;
+		this.ui.postDrawEvent();
+    },	
+    setClippingXYZ: function(cz) {
+        this._calculateBounding();
+   		this._clipAxis[2] = cz;
+		this.ui.postDrawEvent();
+    },	
+
+	setClippingPointXYZabs: function(clx, cly, clz) {
+        this._calculateBounding();
+		this._clipPoint = [clx, cly, clz];
 		this.ui.postDrawEvent();
     },
 	
-	setClippingPointXabs: function( clx ) {
+	setClippingPointXabs: function(clx) {
         this._calculateBounding();
    		this._clipPoint[0] = clx;
 		this.ui.postDrawEvent();
     },
-	
-	setClippingPointYabs: function( cly ) {
+	setClippingPointYabs: function(cly) {
         this._calculateBounding();
    		this._clipPoint[1] = cly;
 		this.ui.postDrawEvent();
     },
-
-	setClippingPointZabs: function( clz ) {
+	setClippingPointZabs: function(clz) {
         this._calculateBounding();
 		this._clipPoint[2] = clz;
 		this.ui.postDrawEvent();
     },
 
-	setClippingPointXYZabs: function( clx, cly, clz ) {
-        this._calculateBounding();
-		this._clipPoint = [clx, cly, clz];
-		this.ui.postDrawEvent();
-    },
-
-    setClippingPointXYZ: function( clx, cly, clz ) {
-        nClipPoint = [0.0, 0.0, 0.0];
+    setClippingPointXYZ: function(clx, cly, clz) {
+        var nClipPoint = [0.0, 0.0, 0.0];
 
         this._calculateBounding();        
         
@@ -3152,6 +3167,31 @@ Presenter.prototype = {
 		this.ui.postDrawEvent();
     },
 
+    setClippingPointX: function(clx) {
+        var nClipPoint = 0.0;
+        this._calculateBounding();        
+        if(clx<0.0) clx=0.0; else if(clx>1.0) clx=1.0;
+        nClipPoint = this._sceneBboxMin[0] + clx * (this._sceneBboxMax[0] - this._sceneBboxMin[0]);
+		this._clipPoint[0] = nClipPoint;        
+		this.ui.postDrawEvent();
+    },	
+    setClippingPointY: function(cly) {
+        var nClipPoint = 0.0;
+        this._calculateBounding();        
+        if(cly<0.0) cly=0.0; else if(cly>1.0) cly=1.0;
+        nClipPoint = this._sceneBboxMin[1] + cly * (this._sceneBboxMax[1] - this._sceneBboxMin[1]);
+		this._clipPoint[1] = nClipPoint;        
+		this.ui.postDrawEvent();
+    },	
+    setClippingPointZ: function(clz) {
+        var nClipPoint = 0.0;
+        this._calculateBounding();        
+        if(clz<0.0) clz=0.0; else if(clz>1.0) clz=1.0;
+        nClipPoint = this._sceneBboxMin[2] + clz * (this._sceneBboxMax[2] - this._sceneBboxMin[2]);
+		this._clipPoint[2] = nClipPoint;
+		this.ui.postDrawEvent();
+    },		
+	
 	_calculateBounding: function() {		var meshes    = this._scene.meshes;
 		var instances = this._scene.modelInstances;
 		this._sceneBboxMin = SglVec3.maxNumber();
@@ -3197,6 +3237,17 @@ Presenter.prototype = {
 		this._sceneBboxCenter[1] = (this._sceneBboxMin[1] + this._sceneBboxMax[1]) / 2.0;
 		this._sceneBboxCenter[2] = (this._sceneBboxMin[2] + this._sceneBboxMax[2]) / 2.0;
     },
+	
+    setClippingRendermode: function(showPlanes, showBorder, borderSize, borderColor) {
+        this._calculateBounding();	
+		this._scene.config.showClippingPlanes = showPlanes;	
+		this._scene.config.showClippingBorder = showBorder;
+		if(borderSize)
+			this._scene.config.clippingBorderSize = borderSize;
+		if(borderColor)
+			this._scene.config.clippingBorderColor = borderColor;		
+		this.ui.postDrawEvent();			
+    },	
 	
 //-----------------------------------------------------------------------------	
 	
