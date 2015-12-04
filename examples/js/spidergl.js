@@ -623,14 +623,14 @@ SpiderGL.Type.typeSize = (function(){
  */
 SpiderGL.Type.typeToGL = (function(){
 	var typeMap = { };
-	typeMap[SpiderGL.Type.NO_TYPE] = WebGLRenderingContext.NONE;
-	typeMap[SpiderGL.Type.INT8   ] = WebGLRenderingContext.BYTE;
-	typeMap[SpiderGL.Type.UINT8  ] = WebGLRenderingContext.UNSIGNED_BYTE;
-	typeMap[SpiderGL.Type.INT16  ] = WebGLRenderingContext.SHORT;
-	typeMap[SpiderGL.Type.UINT16 ] = WebGLRenderingContext.UNSIGNED_SHORT;
-	typeMap[SpiderGL.Type.INT32  ] = WebGLRenderingContext.INT;
-	typeMap[SpiderGL.Type.UINT32 ] = WebGLRenderingContext.UNSIGNED_INT;
-	typeMap[SpiderGL.Type.FLOAT32] = WebGLRenderingContext.FLOAT;
+	typeMap[SpiderGL.Type.NO_TYPE] = WebGLRenderingContext.prototype.NONE;
+	typeMap[SpiderGL.Type.INT8   ] = WebGLRenderingContext.prototype.BYTE;
+	typeMap[SpiderGL.Type.UINT8  ] = WebGLRenderingContext.prototype.UNSIGNED_BYTE;
+	typeMap[SpiderGL.Type.INT16  ] = WebGLRenderingContext.prototype.SHORT;
+	typeMap[SpiderGL.Type.UINT16 ] = WebGLRenderingContext.prototype.UNSIGNED_SHORT;
+	typeMap[SpiderGL.Type.INT32  ] = WebGLRenderingContext.prototype.INT;
+	typeMap[SpiderGL.Type.UINT32 ] = WebGLRenderingContext.prototype.UNSIGNED_INT;
+	typeMap[SpiderGL.Type.FLOAT32] = WebGLRenderingContext.prototype.FLOAT;
 	return function (sglType) {
 		return typeMap[sglType];
 	};
@@ -645,14 +645,14 @@ SpiderGL.Type.typeToGL = (function(){
  */
 SpiderGL.Type.typeFromGL = (function(){
 	var typeMap = { };
-	typeMap[WebGLRenderingContext.NONE          ] = SpiderGL.Type.NO_TYPE;
-	typeMap[WebGLRenderingContext.BYTE          ] = SpiderGL.Type.INT8;
-	typeMap[WebGLRenderingContext.UNSIGNED_BYTE ] = SpiderGL.Type.UINT8;
-	typeMap[WebGLRenderingContext.SHORT         ] = SpiderGL.Type.INT16;
-	typeMap[WebGLRenderingContext.UNSIGNED_SHORT] = SpiderGL.Type.UINT16;
-	typeMap[WebGLRenderingContext.INT           ] = SpiderGL.Type.INT32;
-	typeMap[WebGLRenderingContext.UNSIGNED_INT  ] = SpiderGL.Type.UINT32;
-	typeMap[WebGLRenderingContext.FLOAT         ] = SpiderGL.Type.FLOAT32;
+	typeMap[WebGLRenderingContext.prototype.NONE          ] = SpiderGL.Type.NO_TYPE;
+	typeMap[WebGLRenderingContext.prototype.BYTE          ] = SpiderGL.Type.INT8;
+	typeMap[WebGLRenderingContext.prototype.UNSIGNED_BYTE ] = SpiderGL.Type.UINT8;
+	typeMap[WebGLRenderingContext.prototype.SHORT         ] = SpiderGL.Type.INT16;
+	typeMap[WebGLRenderingContext.prototype.UNSIGNED_SHORT] = SpiderGL.Type.UINT16;
+	typeMap[WebGLRenderingContext.prototype.INT           ] = SpiderGL.Type.INT32;
+	typeMap[WebGLRenderingContext.prototype.UNSIGNED_INT  ] = SpiderGL.Type.UINT32;
+	typeMap[WebGLRenderingContext.prototype.FLOAT         ] = SpiderGL.Type.FLOAT32;
 	return function (glType) {
 		return typeMap[glType];
 	};
@@ -701,13 +701,13 @@ SpiderGL.Type.TRIANGLE_STRIP = 6;
 
 SpiderGL.Type.primitiveToGL = (function(){
 	var enumMap = { };
-	enumMap[SpiderGL.Type.POINTS        ] = WebGLRenderingContext.POINTS;
-	enumMap[SpiderGL.Type.LINES         ] = WebGLRenderingContext.LINES;
-	enumMap[SpiderGL.Type.LINE_LOOP     ] = WebGLRenderingContext.LINE_LOOP;
-	enumMap[SpiderGL.Type.LINE_STRIP    ] = WebGLRenderingContext.LINE_STRIP;
-	enumMap[SpiderGL.Type.TRIANGLES     ] = WebGLRenderingContext.TRIANGLES;
-	enumMap[SpiderGL.Type.TRIANGLE_FAN  ] = WebGLRenderingContext.TRIANGLE_FAN;
-	enumMap[SpiderGL.Type.TRIANGLE_STRIP] = WebGLRenderingContext.TRIANGLE_STRIP;
+	enumMap[SpiderGL.Type.POINTS        ] = WebGLRenderingContext.prototype.POINTS;
+	enumMap[SpiderGL.Type.LINES         ] = WebGLRenderingContext.prototype.LINES;
+	enumMap[SpiderGL.Type.LINE_LOOP     ] = WebGLRenderingContext.prototype.LINE_LOOP;
+	enumMap[SpiderGL.Type.LINE_STRIP    ] = WebGLRenderingContext.prototype.LINE_STRIP;
+	enumMap[SpiderGL.Type.TRIANGLES     ] = WebGLRenderingContext.prototype.TRIANGLES;
+	enumMap[SpiderGL.Type.TRIANGLE_FAN  ] = WebGLRenderingContext.prototype.TRIANGLE_FAN;
+	enumMap[SpiderGL.Type.TRIANGLE_STRIP] = WebGLRenderingContext.prototype.TRIANGLE_STRIP;
 	return function (sglEnum) {
 		return enumMap[sglEnum];
 	};
@@ -8472,7 +8472,7 @@ SpiderGL.WebGL.Context.DEFAULT_UNPACK_PREMULTIPLY_ALPHA = false;
  * @see SpiderGL.WebGL.Context.DEFAULT_UNPACK_PREMULTIPLY_ALPHA
  * @see SpiderGL.WebGL.Context.setStandardGLUnpack
  */
-SpiderGL.WebGL.Context.DEFAULT_UNPACK_COLORSPACE_CONVERSION = WebGLRenderingContext.NONE;
+SpiderGL.WebGL.Context.DEFAULT_UNPACK_COLORSPACE_CONVERSION = WebGLRenderingContext.prototype.NONE;
 
 /**
  * Retrieves the WebGLRenderingContext from a canvas.
@@ -10079,7 +10079,7 @@ SpiderGL.WebGL.Context.getHijacked = function (canvas, args) {
 SpiderGL.WebGL.Context.setStandardGLUnpack = function (gl) {
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,                true);
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,     false);
-	gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, WebGLRenderingContext.NONE);
+	gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, WebGLRenderingContext.prototype.NONE);
 }
 
 /**
@@ -10142,7 +10142,7 @@ SpiderGL.WebGL.ObjectGL = function (gl, target, options) {
  *
  * @default WebGLRenderingContext.NONE
  */
-SpiderGL.WebGL.ObjectGL.TARGET = WebGLRenderingContext.NONE;
+SpiderGL.WebGL.ObjectGL.TARGET = WebGLRenderingContext.prototype.NONE;
 
 /**
  * Generic null WebObjectGL binding.
@@ -10353,7 +10353,7 @@ SpiderGL.WebGL.Buffer = function (gl, target, options) {
  *
  * @default WebGLRenderingContext.NONE
  */
-SpiderGL.WebGL.Buffer.TARGET = WebGLRenderingContext.NONE;
+SpiderGL.WebGL.Buffer.TARGET = WebGLRenderingContext.prototype.NONE;
 
 /**
  * Default usage hint when specifying buffer size or data.
@@ -10362,7 +10362,7 @@ SpiderGL.WebGL.Buffer.TARGET = WebGLRenderingContext.NONE;
  *
  * @default WebGLRenderingContext.STATIC_DRAW
  */
-SpiderGL.WebGL.Buffer.DEFAULT_USAGE = WebGLRenderingContext.STATIC_DRAW;
+SpiderGL.WebGL.Buffer.DEFAULT_USAGE = WebGLRenderingContext.prototype.STATIC_DRAW;
 
 /**
  * Default buffer offset when specifying buffer subdata.
@@ -10564,7 +10564,7 @@ SpiderGL.WebGL.VertexBuffer = function (gl, options) {
  *
  * @default WebGLRenderingContext.ARRAY_BUFFER
  */
-SpiderGL.WebGL.VertexBuffer.TARGET = WebGLRenderingContext.ARRAY_BUFFER;
+SpiderGL.WebGL.VertexBuffer.TARGET = WebGLRenderingContext.prototype.ARRAY_BUFFER;
 
 /**
  * Default vertex attribute index when using SpiderGL.WebGL.VertexBuffer#vertexAttribPointer.
@@ -10591,7 +10591,7 @@ SpiderGL.WebGL.VertexBuffer.DEFAULT_ATTRIBUTE_SIZE = 3;
  *
  * @default WebGLRenderingContext.FLOAT
  */
-SpiderGL.WebGL.VertexBuffer.DEFAULT_ATTRIBUTE_TYPE = WebGLRenderingContext.FLOAT;
+SpiderGL.WebGL.VertexBuffer.DEFAULT_ATTRIBUTE_TYPE = WebGLRenderingContext.prototype.FLOAT;
 
 /**
  * Default vertex attribute normalized flag when using SpiderGL.WebGL.VertexBuffer#vertexAttribPointer.
@@ -10719,7 +10719,7 @@ SpiderGL.WebGL.IndexBuffer = function (gl, options) {
  *
  * @default WebGLRenderingContext.ELEMENT_ARRAY_BUFFER
  */
-SpiderGL.WebGL.IndexBuffer.TARGET = WebGLRenderingContext.ELEMENT_ARRAY_BUFFER;
+SpiderGL.WebGL.IndexBuffer.TARGET = WebGLRenderingContext.prototype.ELEMENT_ARRAY_BUFFER;
 
 /**
  * Default elements draw mode when using SpiderGL.WebGL.IndexBuffer#drawElements.
@@ -10728,7 +10728,7 @@ SpiderGL.WebGL.IndexBuffer.TARGET = WebGLRenderingContext.ELEMENT_ARRAY_BUFFER;
  *
  * @default WebGLRenderingContext.TRIANGLES
  */
-SpiderGL.WebGL.IndexBuffer.DEFAULT_DRAW_ELEMENTS_MODE  = WebGLRenderingContext.TRIANGLES;
+SpiderGL.WebGL.IndexBuffer.DEFAULT_DRAW_ELEMENTS_MODE  = WebGLRenderingContext.prototype.TRIANGLES;
 
 /**
  * Default elements count when using SpiderGL.WebGL.IndexBuffer#drawElements.
@@ -10747,7 +10747,7 @@ SpiderGL.WebGL.IndexBuffer.DEFAULT_DRAW_ELEMENTS_COUNT  = -1;
  *
  * @default WebGLRenderingContext.UNSIGNED_SHORT
  */
-SpiderGL.WebGL.IndexBuffer.DEFAULT_DRAW_ELEMENTS_TYPE = WebGLRenderingContext.UNSIGNED_SHORT;
+SpiderGL.WebGL.IndexBuffer.DEFAULT_DRAW_ELEMENTS_TYPE = WebGLRenderingContext.prototype.UNSIGNED_SHORT;
 
 /**
  * Default index buffer offset when using SpiderGL.WebGL.IndexBuffer#drawElements.
@@ -10912,7 +10912,7 @@ SpiderGL.WebGL.Framebuffer = function (gl, options) {
  *
  * @default WebGLRenderingContext.FRAMEBUFFER
  */
-SpiderGL.WebGL.Framebuffer.TARGET = WebGLRenderingContext.FRAMEBUFFER;
+SpiderGL.WebGL.Framebuffer.TARGET = WebGLRenderingContext.prototype.FRAMEBUFFER;
 
 /**
  * Default value for SpiderGL.WebGL.Framebuffer#autoViewport.
@@ -10939,7 +10939,7 @@ SpiderGL.WebGL.Framebuffer.DEFAULT_ATTACHMENT_TEXTURE_LEVEL = 0;
  *
  * @default WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X
  */
-SpiderGL.WebGL.Framebuffer.DEFAULT_ATTACHMENT_CUBE_MAP_FACE = WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X;
+SpiderGL.WebGL.Framebuffer.DEFAULT_ATTACHMENT_CUBE_MAP_FACE = WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_POSITIVE_X;
 
 /**
  * Default read rectangle left coordinate (in pixels).
@@ -10996,7 +10996,7 @@ SpiderGL.WebGL.Framebuffer.DEFAULT_READ_PIXELS_HEIGHT = -1;
  *
  * @see SpiderGL.WebGL.Framebuffer#readPixels
  */
-SpiderGL.WebGL.Framebuffer.DEFAULT_READ_PIXELS_FORMAT = WebGLRenderingContext.RGBA;
+SpiderGL.WebGL.Framebuffer.DEFAULT_READ_PIXELS_FORMAT = WebGLRenderingContext.prototype.RGBA;
 
 /**
  * The WebGL birfield mask used for clearing the framebuffer.
@@ -11007,7 +11007,7 @@ SpiderGL.WebGL.Framebuffer.DEFAULT_READ_PIXELS_FORMAT = WebGLRenderingContext.RG
  *
  * @see SpiderGL.WebGL.Framebuffer#clear
  */
-SpiderGL.WebGL.Framebuffer.DEFAULT_CLEAR_MASK = (WebGLRenderingContext.COLOR_BUFFER_BIT | WebGLRenderingContext.DEPTH_BUFFER_BIT | WebGLRenderingContext.STENCIL_BUFFER_BIT);
+SpiderGL.WebGL.Framebuffer.DEFAULT_CLEAR_MASK = (WebGLRenderingContext.prototype.COLOR_BUFFER_BIT | WebGLRenderingContext.prototype.DEPTH_BUFFER_BIT | WebGLRenderingContext.prototype.STENCIL_BUFFER_BIT);
 
 /**
  * The WebGL pixel type for reading framebuffer pixels.
@@ -11030,10 +11030,10 @@ SpiderGL.WebGL.Framebuffer.DEFAULT_READ_PIXELS_TYPE = WebGLRenderingContext.UNSI
 SpiderGL.WebGL.Framebuffer.unbind = function (gl) { gl.bindFramebuffer(SpiderGL.WebGL.Framebuffer.TARGET, null); };
 
 SpiderGL.WebGL.Framebuffer._attachmentName = { };
-SpiderGL.WebGL.Framebuffer._attachmentName[WebGLRenderingContext.COLOR_ATTACHMENT0]        = "color";
-SpiderGL.WebGL.Framebuffer._attachmentName[WebGLRenderingContext.DEPTH_ATTACHMENT]         = "depth";
-SpiderGL.WebGL.Framebuffer._attachmentName[WebGLRenderingContext.STENCIL_ATTACHMENT]       = "stencil";
-SpiderGL.WebGL.Framebuffer._attachmentName[WebGLRenderingContext.DEPTH_STENCIL_ATTACHMENT] = "depthStencil";
+SpiderGL.WebGL.Framebuffer._attachmentName[WebGLRenderingContext.prototype.COLOR_ATTACHMENT0]        = "color";
+SpiderGL.WebGL.Framebuffer._attachmentName[WebGLRenderingContext.prototype.DEPTH_ATTACHMENT]         = "depth";
+SpiderGL.WebGL.Framebuffer._attachmentName[WebGLRenderingContext.prototype.STENCIL_ATTACHMENT]       = "stencil";
+SpiderGL.WebGL.Framebuffer._attachmentName[WebGLRenderingContext.prototype.DEPTH_STENCIL_ATTACHMENT] = "depthStencil";
 
 SpiderGL.WebGL.Framebuffer.prototype = {
 	_gl_deleteFramebuffer : function (framebuffer) {
@@ -11717,7 +11717,7 @@ SpiderGL.WebGL.Program = function (gl, options) {
  *
  * @default WebGLRenderingContext.NONE
  */
-SpiderGL.WebGL.Program.TARGET = WebGLRenderingContext.NONE;
+SpiderGL.WebGL.Program.TARGET = WebGLRenderingContext.prototype.NONE;
 
 /**
  * Default value for SpiderGL.WebGL.Program#autoLink.
@@ -11738,23 +11738,23 @@ SpiderGL.WebGL.Program.DEFAULT_AUTO_LINK = true;
 SpiderGL.WebGL.Program.unbind = function (gl) { gl.useProgram(null); };
 
 SpiderGL.WebGL.Program._uniformSetFunctions = { };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.BOOL        ] = function (dsa, h, v) { dsa.uniform1i        (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.BOOL_VEC2   ] = function (dsa, h, v) { dsa.uniform2iv       (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.BOOL_VEC3   ] = function (dsa, h, v) { dsa.uniform3iv       (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.BOOL_VEC4   ] = function (dsa, h, v) { dsa.uniform4iv       (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.INT         ] = function (dsa, h, v) { dsa.uniform1i        (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.INT_VEC2    ] = function (dsa, h, v) { dsa.uniform2iv       (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.INT_VEC3    ] = function (dsa, h, v) { dsa.uniform3iv       (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.INT_VEC4    ] = function (dsa, h, v) { dsa.uniform4iv       (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.FLOAT       ] = function (dsa, h, v) { dsa.uniform1f        (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.FLOAT_VEC2  ] = function (dsa, h, v) { dsa.uniform2fv       (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.FLOAT_VEC3  ] = function (dsa, h, v) { dsa.uniform3fv       (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.FLOAT_VEC4  ] = function (dsa, h, v) { dsa.uniform4fv       (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.FLOAT_MAT2  ] = function (dsa, h, v) { dsa.uniformMatrix2fv (h, this.location, false, v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.FLOAT_MAT3  ] = function (dsa, h, v) { dsa.uniformMatrix3fv (h, this.location, false, v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.FLOAT_MAT4  ] = function (dsa, h, v) { dsa.uniformMatrix4fv (h, this.location, false, v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.SAMPLER_2D  ] = function (dsa, h, v) { dsa.uniform1i        (h, this.location,        v); };
-SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.SAMPLER_CUBE] = function (dsa, h, v) { dsa.uniform1i        (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.BOOL        ] = function (dsa, h, v) { dsa.uniform1i        (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.BOOL_VEC2   ] = function (dsa, h, v) { dsa.uniform2iv       (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.BOOL_VEC3   ] = function (dsa, h, v) { dsa.uniform3iv       (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.BOOL_VEC4   ] = function (dsa, h, v) { dsa.uniform4iv       (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.INT         ] = function (dsa, h, v) { dsa.uniform1i        (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.INT_VEC2    ] = function (dsa, h, v) { dsa.uniform2iv       (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.INT_VEC3    ] = function (dsa, h, v) { dsa.uniform3iv       (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.INT_VEC4    ] = function (dsa, h, v) { dsa.uniform4iv       (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.FLOAT       ] = function (dsa, h, v) { dsa.uniform1f        (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.FLOAT_VEC2  ] = function (dsa, h, v) { dsa.uniform2fv       (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.FLOAT_VEC3  ] = function (dsa, h, v) { dsa.uniform3fv       (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.FLOAT_VEC4  ] = function (dsa, h, v) { dsa.uniform4fv       (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.FLOAT_MAT2  ] = function (dsa, h, v) { dsa.uniformMatrix2fv (h, this.location, false, v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.FLOAT_MAT3  ] = function (dsa, h, v) { dsa.uniformMatrix3fv (h, this.location, false, v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.FLOAT_MAT4  ] = function (dsa, h, v) { dsa.uniformMatrix4fv (h, this.location, false, v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.SAMPLER_2D  ] = function (dsa, h, v) { dsa.uniform1i        (h, this.location,        v); };
+SpiderGL.WebGL.Program._uniformSetFunctions[WebGLRenderingContext.prototype.SAMPLER_CUBE] = function (dsa, h, v) { dsa.uniform1i        (h, this.location,        v); };
 
 SpiderGL.WebGL.Program.prototype = {
 	_gl_deleteProgram : function (program) {
@@ -12505,7 +12505,7 @@ SpiderGL.WebGL.Renderbuffer = function (gl, options) {
  *
  * @default WebGLRenderingContext.RENDERBUFFER
  */
-SpiderGL.WebGL.Renderbuffer.TARGET = WebGLRenderingContext.RENDERBUFFER;
+SpiderGL.WebGL.Renderbuffer.TARGET = WebGLRenderingContext.prototype.RENDERBUFFER;
 
 /**
  * WebGLRenderbuffer unbinding.
@@ -12713,7 +12713,7 @@ SpiderGL.WebGL.Shader = function (gl, target, type, options) {
  *
  * @default WebGLRenderingContext.NONE
  */
-SpiderGL.WebGL.Shader.TARGET = WebGLRenderingContext.NONE;
+SpiderGL.WebGL.Shader.TARGET = WebGLRenderingContext.prototype.NONE;
 
 /**
  * Default value for SpiderGL.WebGL.Shader#autoCompile.
@@ -12943,7 +12943,7 @@ SpiderGL.WebGL.VertexShader = function (gl, options) {
  *
  * @default WebGLRenderingContext.NONE
  */
-SpiderGL.WebGL.VertexShader.TARGET = WebGLRenderingContext.NONE;
+SpiderGL.WebGL.VertexShader.TARGET = WebGLRenderingContext.prototype.NONE;
 
 /**
  * Dummy vertex shader unbinding.
@@ -12990,7 +12990,7 @@ SpiderGL.WebGL.FragmentShader = function (gl, options) {
  *
  * @default WebGLRenderingContext.NONE
  */
-SpiderGL.WebGL.FragmentShader.TARGET = WebGLRenderingContext.NONE;
+SpiderGL.WebGL.FragmentShader.TARGET = WebGLRenderingContext.prototype.NONE;
 
 /**
  * Dummy fragment shader unbinding.
@@ -13150,7 +13150,7 @@ SpiderGL.WebGL.Texture = function (gl, target, options) {
 	this.setSampler(options);
 }
 
-SpiderGL.WebGL.Texture.TARGET = WebGLRenderingContext.NONE;
+SpiderGL.WebGL.Texture.TARGET = WebGLRenderingContext.prototype.NONE;
 
 /**
  * Default texture border when calling setImage
@@ -13168,7 +13168,7 @@ SpiderGL.WebGL.Texture.DEFAULT_BORDER = 0;
  *
  * @default WebGLRenderingContext.RGBA
  */
-SpiderGL.WebGL.Texture.DEFAULT_FORMAT = WebGLRenderingContext.RGBA;
+SpiderGL.WebGL.Texture.DEFAULT_FORMAT = WebGLRenderingContext.prototype.RGBA;
 
 /**
  * Default value for SpiderGL.WebGL.Texture#autoMipmap
@@ -13186,7 +13186,7 @@ SpiderGL.WebGL.Texture.DEFAULT_AUTO_GENERATE_MIPMAP = false;
  *
  * @default WebGLRenderingContext.RGBA
  */
-SpiderGL.WebGL.Texture.DEFAULT_INTERNAL_FORMAT = WebGLRenderingContext.RGBA;
+SpiderGL.WebGL.Texture.DEFAULT_INTERNAL_FORMAT = WebGLRenderingContext.prototype.RGBA;
 
 /**
  * Default texture level when calling setImage.
@@ -13204,7 +13204,7 @@ SpiderGL.WebGL.Texture.DEFAULT_LEVEL = 0;
  *
  * @default WebGLRenderingContext.LINEAR
  */
-SpiderGL.WebGL.Texture.DEFAULT_MAG_FILTER = WebGLRenderingContext.LINEAR;
+SpiderGL.WebGL.Texture.DEFAULT_MAG_FILTER = WebGLRenderingContext.prototype.LINEAR;
 
 /**
  * Default texture minification filter.
@@ -13213,7 +13213,7 @@ SpiderGL.WebGL.Texture.DEFAULT_MAG_FILTER = WebGLRenderingContext.LINEAR;
  *
  * @default WebGLRenderingContext.LINEAR
  */
-SpiderGL.WebGL.Texture.DEFAULT_MIN_FILTER = WebGLRenderingContext.LINEAR;
+SpiderGL.WebGL.Texture.DEFAULT_MIN_FILTER = WebGLRenderingContext.prototype.LINEAR;
 
 /**
  * Default texture input data type when calling setImage or setSubImage.
@@ -13222,7 +13222,7 @@ SpiderGL.WebGL.Texture.DEFAULT_MIN_FILTER = WebGLRenderingContext.LINEAR;
  *
  * @default WebGLRenderingContext.UNSIGNED_BYTE
  */
-SpiderGL.WebGL.Texture.DEFAULT_TYPE = WebGLRenderingContext.UNSIGNED_BYTE;
+SpiderGL.WebGL.Texture.DEFAULT_TYPE = WebGLRenderingContext.prototype.UNSIGNED_BYTE;
 
 /**
  * Default texture wrap mode in horizontal direction.
@@ -13231,7 +13231,7 @@ SpiderGL.WebGL.Texture.DEFAULT_TYPE = WebGLRenderingContext.UNSIGNED_BYTE;
  *
  * @default WebGLRenderingContext.REPEAT
  */
-SpiderGL.WebGL.Texture.DEFAULT_WRAP_S = WebGLRenderingContext.REPEAT;
+SpiderGL.WebGL.Texture.DEFAULT_WRAP_S = WebGLRenderingContext.prototype.REPEAT;
 
 /**
  * Default texture wrap mode in vertical direction.
@@ -13240,7 +13240,7 @@ SpiderGL.WebGL.Texture.DEFAULT_WRAP_S = WebGLRenderingContext.REPEAT;
  *
  * @default WebGLRenderingContext.REPEAT
  */
-SpiderGL.WebGL.Texture.DEFAULT_WRAP_T = WebGLRenderingContext.REPEAT;
+SpiderGL.WebGL.Texture.DEFAULT_WRAP_T = WebGLRenderingContext.prototype.REPEAT;
 
 /**
  * Default texture sub-image x offset when calling setSubImage.
@@ -13288,7 +13288,7 @@ SpiderGL.WebGL.Texture.DEFAULT_UNPACK_PREMULTIPLY_ALPHA = false;
  * @see SpiderGL.WebGL.Texture.DEFAULT_UNPACK_FLIP_Y
  * @see SpiderGL.WebGL.Texture.DEFAULT_UNPACK_PREMULTIPLY_ALPHA
  */
-SpiderGL.WebGL.Texture.DEFAULT_UNPACK_COLORSPACE_CONVERSION = WebGLRenderingContext.NONE;
+SpiderGL.WebGL.Texture.DEFAULT_UNPACK_COLORSPACE_CONVERSION = WebGLRenderingContext.prototype.NONE;
 
 SpiderGL.WebGL.Texture.unbind = function (gl) { };
 
@@ -13301,14 +13301,14 @@ SpiderGL.WebGL.Texture._FACE_NEGATIVE_Z_BIT = (1 << 5);
 SpiderGL.WebGL.Texture._FACE_ALL_BITS       = (SpiderGL.WebGL.Texture._FACE_POSITIVE_X_BIT | SpiderGL.WebGL.Texture._FACE_NEGATIVE_X_BIT | SpiderGL.WebGL.Texture._FACE_POSITIVE_Y_BIT | SpiderGL.WebGL.Texture._FACE_NEGATIVE_Y_BIT | SpiderGL.WebGL.Texture._FACE_POSITIVE_Z_BIT | SpiderGL.WebGL.Texture._FACE_NEGATIVE_Z_BIT);
 
 SpiderGL.WebGL.Texture._faceBits = { };
-SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.TEXTURE_2D                 ] = SpiderGL.WebGL.Texture._FACE_ALL_BITS;
-SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.TEXTURE_CUBE_MAP           ] = SpiderGL.WebGL.Texture._FACE_ALL_BITS;
-SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X] = SpiderGL.WebGL.Texture._FACE_POSITIVE_X_BIT;
-SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.TEXTURE_CUBE_MAP_NEGATIVE_X] = SpiderGL.WebGL.Texture._FACE_NEGATIVE_X_BIT;
-SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_Y] = SpiderGL.WebGL.Texture._FACE_POSITIVE_Y_BIT;
-SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.TEXTURE_CUBE_MAP_NEGATIVE_Y] = SpiderGL.WebGL.Texture._FACE_NEGATIVE_Y_BIT;
-SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_Z] = SpiderGL.WebGL.Texture._FACE_POSITIVE_Z_BIT;
-SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.TEXTURE_CUBE_MAP_NEGATIVE_Z] = SpiderGL.WebGL.Texture._FACE_NEGATIVE_Z_BIT;
+SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.prototype.TEXTURE_2D                 ] = SpiderGL.WebGL.Texture._FACE_ALL_BITS;
+SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP           ] = SpiderGL.WebGL.Texture._FACE_ALL_BITS;
+SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_POSITIVE_X] = SpiderGL.WebGL.Texture._FACE_POSITIVE_X_BIT;
+SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_NEGATIVE_X] = SpiderGL.WebGL.Texture._FACE_NEGATIVE_X_BIT;
+SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_POSITIVE_Y] = SpiderGL.WebGL.Texture._FACE_POSITIVE_Y_BIT;
+SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_NEGATIVE_Y] = SpiderGL.WebGL.Texture._FACE_NEGATIVE_Y_BIT;
+SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_POSITIVE_Z] = SpiderGL.WebGL.Texture._FACE_POSITIVE_Z_BIT;
+SpiderGL.WebGL.Texture._faceBits[WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_NEGATIVE_Z] = SpiderGL.WebGL.Texture._FACE_NEGATIVE_Z_BIT;
 
 SpiderGL.WebGL.Texture.prototype = {
 	_gl_deleteTexture : function (texture) {
@@ -13880,7 +13880,7 @@ SpiderGL.WebGL.Texture2D = function (gl, options) {
 	if (("url" in options) || ("data" in options) || (("width" in options) && ("height" in options))) { this.setImage(options); }
 }
 
-SpiderGL.WebGL.Texture2D.TARGET = WebGLRenderingContext.TEXTURE_2D;
+SpiderGL.WebGL.Texture2D.TARGET = WebGLRenderingContext.prototype.TEXTURE_2D;
 
 SpiderGL.WebGL.Texture2D.unbind = function (gl, unit) {
 	var cb  = gl.getExtension("SGL_current_binding");
@@ -14017,7 +14017,7 @@ SpiderGL.WebGL.TextureCubeMap = function (gl, options) {
 	}
 }
 
-SpiderGL.WebGL.TextureCubeMap.TARGET = WebGLRenderingContext.TEXTURE_CUBE_MAP;
+SpiderGL.WebGL.TextureCubeMap.TARGET = WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP;
 
 SpiderGL.WebGL.TextureCubeMap.unbind = function (gl, unit) {
 	var cb  = gl.getExtension("SGL_current_binding");
@@ -14031,12 +14031,12 @@ SpiderGL.WebGL.TextureCubeMap.unbind = function (gl, unit) {
 };
 
 SpiderGL.WebGL.TextureCubeMap._faceTargets = [
-	WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X,
-	WebGLRenderingContext.TEXTURE_CUBE_MAP_NEGATIVE_X,
-	WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_Y,
-	WebGLRenderingContext.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-	WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_Z,
-	WebGLRenderingContext.TEXTURE_CUBE_MAP_NEGATIVE_Z
+	WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_POSITIVE_X,
+	WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_NEGATIVE_X,
+	WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_POSITIVE_Y,
+	WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+	WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_POSITIVE_Z,
+	WebGLRenderingContext.prototype.TEXTURE_CUBE_MAP_NEGATIVE_Z
 ];
 
 SpiderGL.WebGL.TextureCubeMap.prototype = {
@@ -14349,7 +14349,7 @@ SpiderGL.Model.Model._fixDescriptorDataIndexBuffer = function (d) {
 SpiderGL.Model.Model._fixDescriptorDataBuffer = function (d) {
 	d = SpiderGL.Utility.getDefaultObject({
 		type         : SpiderGL.Type.NO_TYPE,
-		glType       : WebGLRenderingContext.NONE,
+		glType       : WebGLRenderingContext.prototype.NONE,
 		untypedArray : null,
 		typedArray   : null,
 		glBuffer     : null
