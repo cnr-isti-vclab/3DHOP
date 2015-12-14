@@ -640,7 +640,6 @@ Nexus.Renderer._sortNodeCacheFunction = function (a, b) {
 	//return b.renderError - a.renderError;
 };
 
-
 Nexus.Renderer.prototype = {
 	_reset : function () {
 		this._status  = Nexus.Renderer.STATUS_NONE;
@@ -684,9 +683,8 @@ Nexus.Renderer.prototype = {
 		var that = this;
 		var url = this._url;
 		/**Safari PATCH**/
-		/**/if (navigator.userAgent.toLowerCase().indexOf('safari')!=-1 && navigator.userAgent.toLowerCase().indexOf('chrome')==-1) {
+		/**/if (sayswho()[0]==='Safari' && sayswho()[1]!=='9') 
 		/**/  url = this._url + '?' + Math.random();
-		/**/}
 		/**Safari PATCH**/
 		var r = new SglBinaryRequest(url, {
 			range : [offset, offset+size-1],
@@ -715,9 +713,8 @@ Nexus.Renderer.prototype = {
 		var that = this;
 		var url = this._url;
 		/**Safari PATCH**/
-		/**/if (navigator.userAgent.toLowerCase().indexOf('safari')!=-1 && navigator.userAgent.toLowerCase().indexOf('chrome')==-1) {
+		/**/if (sayswho()[0]==='Safari' && sayswho()[1]!=='9') 
 		/**/  url = this._url + '?' + Math.random();
-		/**/}
 		/**Safari PATCH**/
 		var r = new SglBinaryRequest(url, {
 			range : [offset, offset+size-1],
@@ -1269,17 +1266,28 @@ Nexus.Renderer.prototype = {
 			}
 		}
 
+		var that = this;
 		var url = this._url;
 		for (var i=0; i<nodesToRequest; ++i) {
 			/**Safari PATCH**/
-			/**/if (navigator.userAgent.toLowerCase().indexOf('safari')!=-1 && navigator.userAgent.toLowerCase().indexOf('chrome')==-1) {
+			/**/if (sayswho()[0]==='Safari' && sayswho()[1]!=='9') 
 			/**/  url = this._url + '?' + Math.random();
-			/**/}
 			/**Safari PATCH**/
 			var node   = candidateNodes[i];
 			node.status  = Nexus.Renderer._NODE_PENDING;
 			node.request = new SglBinaryRequest(url, {
 				range : [node.offset, node.lastByte],
+				onError : function (err) { 
+					for (var j=0, n=candidateNodes.length; j<n; ++j) 
+						if(candidateNodes[j].requestError) return;
+//					that._updateView();
+//					that._updateCache();
+//					that._hierarchyVisit();
+					that._candidateNodes = candidateNodes;
+					for (var j=0, n=candidateNodes.length; j<n; ++j) 
+						candidateNodes[j].requestError = true;
+					that._requestNodes();
+				},
 				onSuccess : this._createNodeHandler(node)
 			});
 		}
@@ -1475,4 +1483,20 @@ Nexus.Renderer.prototype = {
 		this._render();
 		this._endRender();
 	}
+};
+
+sayswho = function() {
+	var ua= navigator.userAgent, tem, 
+	M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+	if(/trident/i.test(M[1])){
+		tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
+		return 'IE '+(tem[1] || '');
+	}
+	if(M[1]=== 'Chrome'){
+		tem= ua.match(/\b(OPR|Edge)\/(\d+)/);
+		if(tem!= null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+	}
+	M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+	if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
+	return M;
 };

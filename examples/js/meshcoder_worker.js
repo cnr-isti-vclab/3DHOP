@@ -22,9 +22,12 @@ onmessage = function(job) {
 	var node = job.data.node;
 	var signature = job.data.signature;
 	var patches = job.data.patches;
-	var now =new Date().getTime();
+	var now = new Date().getTime();
 
-	var size = node.buffer.byteLength;
+	var size;
+	if(!node.buffer) return;
+	else size = node.buffer.byteLength;
+
 	var buffer;
 	for(var i =0 ; i < 1; i++) {
 		var coder = new MeshCoder(signature, node, patches);

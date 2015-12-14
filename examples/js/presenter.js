@@ -406,7 +406,7 @@ Presenter.prototype = {
                 gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
             }                                                                     \n\
         ");
-		//if(this._isDebugging)
+		if(this._isDebugging)
 			console.log("NXS FACE Fragment Shader Log:\n" + nxsFragmentShader.log);
 
         var program = new SglProgram(gl, {
