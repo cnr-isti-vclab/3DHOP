@@ -67,6 +67,11 @@ function init3dhop() {
 			e.stopPropagation();
 		});
 
+	$('#pickpoint-output')
+		.on('contextmenu', function(e){ 
+			e.stopPropagation();
+		});		
+		
 	$('#3dhop')
 		.on('contextmenu', function(e){ 
 			return false; 
@@ -133,6 +138,26 @@ function measurementSwitch() {
   }
 }
 
+function pickPointSwitch() {
+  var on = presenter.isPickPointEnabled();
+
+  if(on){
+    $('#pick').css("visibility", "hidden");
+    $('#pick_on').css("visibility", "visible");
+    $('#pick_on').css("opacity","1.0");
+    $('#pickpointbox').css("visibility","visible");
+    $('#draw-canvas').css("cursor","crosshair");
+  }
+  else{
+    $('#pick_on').css("visibility", "hidden");
+    $('#pick').css("visibility", "visible");
+    $('#pick').css("opacity","1.0");
+    $('#pickpointbox').css("visibility","hidden");
+    $('#pickpoint-output').html("--");
+    $('#draw-canvas').css("cursor","default");
+  }
+}
+
 function hotspotSwitch() {
   var on = presenter.isSpotVisibilityEnabled();
 
@@ -194,6 +219,11 @@ function moveToolbar(l,t) {
 function moveMeasurebox(r,t) {
   $('#measurebox').css('right', r);
   $('#measurebox').css('top', t);
+}
+
+function movePickpointbox(r,t) {
+  $('#pickpointbox').css('right', r);
+  $('#pickpointbox').css('top', t);
 }
 
 function resizeCanvas(w,h) {

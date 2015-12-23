@@ -30,9 +30,11 @@ const SGL_TRACKBALL_DOLLY     = 3;
 const SGL_TRACKBALL_SCALE     = 4;
 // selectors
 const HOP_ALL     = 256;
+// starting debug mode
+const HOP_DEBUGMODE   = false;
+
 
 Presenter = function (canvas) {
-	this._isDebugging   = false;
 	this._supportsWebGL = sglHandleCanvas(canvas, this);
 };
 
@@ -181,6 +183,7 @@ Presenter.prototype = {
 	_parseConfig : function (options) {
 		options = options || { };
 		var r = sglGetDefaultObject({
+			pickedPointColor    : [1.0, 0.0, 1.0],
 			measurementColor    : [0.5, 1.0, 0.5],
 			showClippingPlanes  : true,
 			showClippingBorder  : false,
@@ -1021,7 +1024,7 @@ Presenter.prototype = {
 		var pickedPixel;
 		var ID, cursor;
 
-		if(this._onEndMeasurement||this._onPickedSpot||this._onEnterSpot||this._onLeaveSpot){
+		if(this._onEndMeasurement||this._onPickedSpot||this._onEnterSpot||this._onLeaveSpot||this._onEndPickPoint){
 			pickedPixel = this._drawScenePickingSpots();
 			ID = this._Color2ID(pickedPixel);
 			if(this._lastSpotID != ID){
@@ -1034,7 +1037,7 @@ Presenter.prototype = {
 								if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.2;
 								spots[this._pickedSpot].alpha += 0.2;
 								cursor = spots[spt].cursor;
-								if(/*!this._movingLight ||*/ !this._isMeasuring){
+								if(!this._isMeasuring || !this._isPickPoint){
 									this._lastCursor = document.getElementById(this.ui.canvas.id).style.cursor;
 									document.getElementById(this.ui.canvas.id).style.cursor = cursor;
 								}
@@ -1052,7 +1055,7 @@ Presenter.prototype = {
 					this._pickedSpot = null;
 					if(this._onHover){
 						if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha  -= 0.2;
-						if(/*!this._movingLight || */!this._isMeasuring) document.getElementById(this.ui.canvas.id).style.cursor = "default";
+						if(!this._isMeasuring || !this._isPickPoint) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 						this.ui.postDrawEvent();
 						if(this._onLeaveSpot && this._lastPickedSpot!=null)  this._onLeaveSpot(this._lastPickedSpot);
 						//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
@@ -1063,7 +1066,7 @@ Presenter.prototype = {
 			}
 		}
 
-		if(this._onEndMeasurement||this._onPickedInstance||this._onEnterInstance||this._onLeaveInstance){
+		if(this._onEndMeasurement||this._onPickedInstance||this._onEnterInstance||this._onLeaveInstance||this._onEndPickPoint){
 			pickedPixel = this._drawScenePickingInstances();
 			ID = this._Color2ID(pickedPixel);
 			if(this._lastInstanceID == ID && !(this._onPickedSpot||this._onEnterSpot||this._onLeaveSpot)) return;
@@ -1074,7 +1077,7 @@ Presenter.prototype = {
 						this._pickedInstance = inst;
 						if(this._onHover){
 							cursor = instances[inst].cursor;
-							if(/*!this._movingLight ||*/ !this._isMeasuring){
+							if(!this._isMeasuring || !this._isPickPoint){
 								this._lastCursor = cursor;
 								if(this._pickedSpot==null)document.getElementById(this.ui.canvas.id).style.cursor = cursor;
 							}
@@ -1090,7 +1093,7 @@ Presenter.prototype = {
 				this._pickedInstance = null;
 				if(this._onHover){
 					this._lastCursor = "default";
-					if((/*!this._movingLight || */!this._isMeasuring) && this._pickedSpot==null) document.getElementById(this.ui.canvas.id).style.cursor = "default";
+					if((!this._isMeasuring || !this._isPickPoint) && this._pickedSpot==null) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 					if(this._onLeaveInstance && this._lastPickedInstance!=null)  this._onLeaveInstance(this._lastPickedInstance);
 					//if(this._onEnterInstance) this._onEnterInstance(this._pickedInstance);
 				}
@@ -1141,6 +1144,37 @@ Presenter.prototype = {
 		this.ui.postDrawEvent();
 	},
 
+	_pickPointRefresh : function (button, x, y, e) {
+		if(e.target.id!=this.ui.gl.canvas.id) return;
+
+		if(this._isPickPoint){
+			this._pickpoint[0] = x;
+			this._pickpoint[1] = y;
+			var ppoint = this._drawScenePickingXYZ();
+			if (ppoint!=null)
+			{
+				this._pickedPoint = ppoint;
+				this._pickValid = true;
+				if(this._onEndPickPoint) this._onEndPickPoint(this._pickedPoint);
+			}
+		}
+    },		
+	
+	_startPickPoint : function () {
+		if (this._isPickPoint) return;
+		this._isPickPoint = true;
+		this._pickValid = false; 
+		this._pickedPoint = [0.0, 0.0, 0.0];
+		this.ui.postDrawEvent();
+	},
+
+	_stopPickPoint : function () {
+		this._isPickPoint = false;
+		this._pickValid = false; 
+		this._pickedPoint = [0.0, 0.0, 0.0];
+		this.ui.postDrawEvent();
+	},	
+	
 //----------------------------------------------------------------------------------------
 // DRAWING SUPPORT FUNCTIONS
 //----------------------------------------------------------------------------------------
@@ -1629,6 +1663,36 @@ Presenter.prototype = {
 			xform.model.pop();
 		}
 
+		// draw picked point (if valid)
+		if (this._pickValid) {
+			// GLstate setup
+			gl.enable(gl.DEPTH_TEST);
+			gl.depthFunc(gl.LESS);
+			
+			xform.model.push();
+			
+			var lineUniforms = {
+				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+				"uLineColor"                 : [config.pickedPointColor[0], config.pickedPointColor[1], config.pickedPointColor[2], 1.0],
+				"uPointA"                    : this._pickedPoint,
+				"uPointB"                    : this._pickedPoint, 
+			};	
+
+			//drawing points
+			renderer.begin();
+				renderer.setTechnique(lineTechnique);
+				renderer.setDefaultGlobals();
+				renderer.setGlobals(lineUniforms);
+				renderer.setPrimitiveMode("POINT");
+				renderer.setModel(this.simpleLineModel);
+				renderer.renderModel();
+			renderer.end();
+			
+			// GLstate cleanup
+			gl.depthMask(true);
+			gl.disable(gl.DEPTH_TEST);			
+		}			
+		
 		// draw measurement line (if any)
 		if (this._measurementStage >= 2) {// 0=inactive 1=picking pointA 2=picking pointB 3=measurement ready
 			// GLstate setup
@@ -2311,7 +2375,10 @@ Presenter.prototype = {
 //----------------------------------------------------------------------------------------
 	onInitialize : function () {
 		var gl = this.ui.gl;
-
+		
+		//debug mode
+		this._isDebugging = HOP_DEBUGMODE;
+		
 		gl.getExtension('EXT_frag_depth');
 		gl.clearColor(0.5, 0.5, 0.5, 1.0);
 
@@ -2338,7 +2405,7 @@ Presenter.prototype = {
 		this.xform      = xform;
 		this.viewMatrix = viewMatrix;
 
-		this._lightDirection   = [ 0, 0, -1];
+		this._lightDirection   = [0.0, 0.0, -1.0];
 
 		this.sceneCenter = [0.0, 0.0, 0.0];
 		this.sceneRadiusInv = 1.0;
@@ -2380,7 +2447,7 @@ Presenter.prototype = {
 		this._lastPickedSpot     = null;
 		this._lastInstanceID = 0;
 		this._lastSpotID     = 0;
-		this._pickpoint      = [10, 10];
+		this._pickpoint      = [1, 1];
 
 		// point2point measurement data
 		this._isMeasuring = false;
@@ -2389,6 +2456,12 @@ Presenter.prototype = {
 		this._pointB = [0.0, 0.0, 0.0];
 		this.measurement = 0;
 
+		// point picking
+		this._isPickPoint = false;
+		this._pickValid = false;
+		this._pickedPoint = [0.0, 0.0, 0.0];
+		this._pickedPointsList = {};
+		
 		// plane section
 		this._clipPoint = [0.0, 0.0, 0.0];
 		this._clipAxis  = [0.0, 0.0, 0.0];
@@ -2404,6 +2477,7 @@ Presenter.prototype = {
 		this._onLeaveInstance  = 0;
 		this._onLeaveSpot      = 0;
 		this._onEndMeasurement = 0;
+		this._onEndPickPoint   = 0;
 	},
 
 	onDrag : function (button, x, y, e) {
@@ -2471,6 +2545,7 @@ Presenter.prototype = {
 			if(this._onPickedSpot && this._pickedSpot!=null) this._onPickedSpot(this._pickedSpot);
 			if(this._onPickedInstance && this._pickedInstance!=null) this._onPickedInstance(this._pickedInstance);
 			this._measureRefresh(button, x, y, e);
+			this._pickPointRefresh(button, x, y, e);
 		}
 		this._clickable = false;
 	},
@@ -3296,15 +3371,30 @@ Presenter.prototype = {
 //-----------------------------------------------------------------------------
 	
 	enableMeasurementTool: function(on) {
-		this._isMeasuring = on;
-
-		if(on) this._startMeasurement();
-		else this._stopMeasurement();
+		if(on) 
+			this._startMeasurement();
+		else 
+			this._stopMeasurement();
 	},
 
 	isMeasurementToolEnabled: function() {
 		return this._isMeasuring;
-	}
+	},
 	
 //-----------------------------------------------------------------------------	
+
+	enablePickPoint: function(on) {
+		if(on) 
+			this._startPickPoint();
+		else 
+			this._stopPickPoint();
+	},
+
+	isPickPointEnabled: function() {
+		return this._isPickPoint;
+	},
+
+
+//-----------------------------------------------------------------------------	
+
 };
