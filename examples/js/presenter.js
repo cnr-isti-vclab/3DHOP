@@ -2490,7 +2490,7 @@ Presenter.prototype = {
 		this._isPickPoint = false;
 		this._pickValid = false;
 		this._pickedPoint = [0.0, 0.0, 0.0];
-		this._pickedPointsList = {};
+		this._pickedPointsList = {}; // for future use
 		
 		// plane section
 		this._clipPoint = [0.0, 0.0, 0.0];
@@ -3227,7 +3227,7 @@ Presenter.prototype = {
    		this._clipAxis[1] = cy;
 		this.ui.postDrawEvent();
     },	
-    setClippingXYZ: function(cz) {
+    setClippingZ: function(cz) {
         this._calculateBounding();
    		this._clipAxis[2] = cz;
 		this.ui.postDrawEvent();
