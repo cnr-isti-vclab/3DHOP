@@ -32,7 +32,8 @@ const SGL_TRACKBALL_SCALE     = 4;
 const HOP_ALL     = 256;
 // starting debug mode
 const HOP_DEBUGMODE   = false;
-
+// default light direction
+const HOP_DEFAULTLIGHT = [0, 0, -1];
 
 Presenter = function (canvas) {
 	this._supportsWebGL = sglHandleCanvas(canvas, this);
@@ -1377,7 +1378,7 @@ Presenter.prototype = {
 			}
 		}
 	},
-
+	
 	_destroyPickFramebuffer : function () {
 		if (this.pickFramebuffer) {
 			this.pickFramebuffer.destroy();
@@ -2423,10 +2424,10 @@ Presenter.prototype = {
 		this.colorCodedIDNXSProgram = this._createColorCodedIDNXSProgram();
 		this.colorCodedXYZNXSProgram = this._createXYZNXSProgram();
 
-		this.basicPLYTechnique  = this._createStandardPLYtechnique();
+		this.basicPLYTechnique = this._createStandardPLYtechnique();
 		this.colorShadedPLYtechnique = this._createColorShadedPLYtechnique();
-		this.colorCodedIDPLYtechnique  = this._createColorCodedIDPLYtechnique();
-		this.colorCodedXYZPLYtechnique  = this._createXYZPLYtechnique();
+		this.colorCodedIDPLYtechnique = this._createColorCodedIDPLYtechnique();
+		this.colorCodedXYZPLYtechnique = this._createXYZPLYtechnique();
 
 		this.simpleLinetechnique = this._createSimpleLinetechnique();
 
@@ -2435,7 +2436,7 @@ Presenter.prototype = {
 		this.xform      = xform;
 		this.viewMatrix = viewMatrix;
 
-		this._lightDirection   = [0.0, 0.0, -1.0];
+		this._lightDirection = HOP_DEFAULTLIGHT;
 
 		this.sceneCenter = [0.0, 0.0, 0.0];
 		this.sceneRadiusInv = 1.0;
@@ -2738,7 +2739,7 @@ Presenter.prototype = {
 		this.trackball.reset();
 		this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 		
-		this._lightDirection = [0, 0, -1]; // also reset lighting
+		this._lightDirection = HOP_DEFAULTLIGHT; // also reset lighting
 		
 		this.ui.postDrawEvent();
 	},
@@ -2763,6 +2764,68 @@ Presenter.prototype = {
 		else this._animating = false;
 		return this._animating;
 	},
+	
+//-----------------------------------------------------------------------------
+// functions to dynamically change center/radius mode
+
+	setCenterModeFirst : function () {
+		this._scene.space.centerMode = "first";
+		this.ui.postDrawEvent();
+	},
+	setCenterModeScene : function () {
+		this._scene.space.centerMode = "scene";
+		this.ui.postDrawEvent();
+	},	
+	setCenterModeSpecific : function (instancename) {
+		if(this._scene.modelInstances[instancename])
+		{
+			this._scene.space.centerMode = "specific";
+			this._scene.space.whichInstanceCenter = instancename;		
+			this.ui.postDrawEvent();
+		}
+		else
+			return "ERROR - No such instance";
+	},	
+	setCenterModeExplicit : function (newcenter) {
+		if((newcenter.constructor === Array)&&(newcenter.lenght == 3)&&(isFinite(String(newcenter[0])))&&(isFinite(String(newcenter[1])))&&(isFinite(String(newcenter[2]))))
+		{
+			this._scene.space.centerMode = "explicit";
+			this._scene.space.explicitCenter = newcenter;		
+			this.ui.postDrawEvent();
+		}
+		else
+			return "ERROR - Not a point";		
+	},
+
+	setRadiusModeFirst : function () {
+		this._scene.space.radiusMode = "first";
+		this.ui.postDrawEvent();
+	},
+	setRadiusModeScene : function () {
+		this._scene.space.radiusMode = "scene";
+		this.ui.postDrawEvent();
+	},	
+	setRadiusModeSpecific : function (instancename) {
+		if(this._scene.modelInstances[instancename])
+		{
+			this._scene.space.radiusMode = "specific";
+			this._scene.space.whichInstanceRadius = instancename;		
+			this.ui.postDrawEvent();
+		}
+		else
+			return "ERROR - No such instance";
+	},	
+	setRadiusModeExplicit : function (newradius) {
+		if(isFinite(String(newradius)))
+		{
+			this._scene.space.radiusMode = "explicit";
+			this._scene.space.explicitRadius = newradius;		
+			this.ui.postDrawEvent();
+		}
+		else
+			return "ERROR - Not a radius";		
+	},	
+	
 	
 //-----------------------------------------------------------------------------
 // instance solid color
