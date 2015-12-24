@@ -195,8 +195,38 @@ Presenter.prototype = {
 
 	_parseTransform : function (options) {
 		var r = sglGetDefaultObject({
-			matrix : SglMat4.identity()
+			matrix      : SglMat4.identity(),
+			rotation    : [0.0, 0.0, 0.0],
+			translation : [0.0, 0.0, 0.0],
+			scale       : [1.0, 1.0, 1,0],
 		}, options);
+		
+		// if any of rotation, translation or scale are defined, matrix is overwritten
+		var overwrite = false;
+		var matrixT = SglMat4.identity();
+		var matrixR = SglMat4.identity();
+		var matrixS = SglMat4.identity();
+		if((r.translation[0] != 0.0)||(r.translation[1] != 0.0)||(r.translation[2] != 0.0))
+		{
+			matrixT = SglMat4.translation(r.translation);
+			overwrite = true;
+		}
+		if((r.rotation[0] != 0.0)||(r.rotation[1] != 0.0)||(r.rotation[2] != 0.0))
+		{
+			var mrX = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[0]), [1.0, 0.0, 0.0]);
+			var mrY = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[1]), [0.0, 1.0, 0.0])
+			var mrZ = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[2]), [0.0, 0.0, 1.0])
+			matrixR = SglMat4.mul(SglMat4.mul(mrZ, mrY), mrX);
+			overwrite = true;
+		}
+		if((r.scale[0] != 1.0)||(r.scale[1] != 1.0)||(r.scale[2] != 1.0))
+		{
+			matrixS = SglMat4.scaling(r.scale);
+			overwrite = true;
+		}
+		if (overwrite)
+			r.matrix = SglMat4.mul(SglMat4.mul(matrixT, matrixR), matrixS);
+		
 		return r;
 	},
 
