@@ -174,8 +174,7 @@ PanTiltTrackball.prototype = {
 		
 		var maxtime = Math.max( timePanX, Math.max( timePanY, Math.max( timeAngleX, Math.max( timeAngleY, timeDistance ) ) ));
 		
-		if (maxtime > 1.0)
-			maxtime = 1.0;
+		maxtime = this.clamp(maxtime, 0.5, 2.0);
 			
 		this._speedPanX *= timePanX / maxtime;
 		this._speedPanY *= timePanY / maxtime;
