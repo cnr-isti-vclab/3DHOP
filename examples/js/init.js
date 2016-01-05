@@ -61,7 +61,7 @@ function init3dhop() {
 		.on('touchend', function(e) {
 			button=0;
 		});
-
+/*
 	$('#measure-output')
 		.on('contextmenu', function(e){ 
 			e.stopPropagation();
@@ -70,8 +70,8 @@ function init3dhop() {
 	$('#pickpoint-output')
 		.on('contextmenu', function(e){ 
 			e.stopPropagation();
-		});		
-		
+		});
+*/
 	$('#3dhop')
 		.on('contextmenu', function(e){ 
 			return false; 
@@ -89,7 +89,12 @@ function init3dhop() {
 
 	$('#draw-canvas')
 //		.css("cursor","default")
-		.mousedown(function() { $('#toolbar img').css("opacity","0.5"); });
+		.mousedown(function(e) { 
+			$('#toolbar img').css("opacity","0.5"); 
+			if(e.preventDefault) e.preventDefault(); 
+			if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
+			else if (document.selection && document.selection.createRange()!='') document.selection.empty();
+		});
 
 	if (window.navigator.userAgent.indexOf('Trident/') > 0) { //IE fullscreen handler 
 		$('#full').click(function(e) {enterFullscreen();});
@@ -129,14 +134,18 @@ function measurementSwitch() {
     $('#draw-canvas').css("cursor","crosshair");
   }
   else{
+    if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
+    else if (document.selection && document.selection.createRange()!='') document.selection.empty();
     $('#measure_on').css("visibility", "hidden");
     $('#measure').css("visibility", "visible");
     $('#measure').css("opacity","1.0");
     $('#measurebox').css("visibility","hidden");
     $('#measure-output').html("0.0");
-    $('#draw-canvas').css("cursor","default");
+    if (!presenter.isMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
   }
 }
+
+
 
 function pickPointSwitch() {
   var on = presenter.isPickPointEnabled();

@@ -1277,7 +1277,7 @@ Nexus.Renderer.prototype = {
 			node.status  = Nexus.Renderer._NODE_PENDING;
 			node.request = new SglBinaryRequest(url, {
 				range : [node.offset, node.lastByte],
-				onError : function (err) { 
+				onError : function () { 
 					for (var j=0, n=candidateNodes.length; j<n; ++j) 
 						if(candidateNodes[j].requestError) return;
 //					that._updateView();
@@ -1286,6 +1286,17 @@ Nexus.Renderer.prototype = {
 					that._candidateNodes = candidateNodes;
 					for (var j=0, n=candidateNodes.length; j<n; ++j) 
 						candidateNodes[j].requestError = true;
+					that._requestNodes();
+				},
+				onCancel : function () { 
+					for (var j=0, n=candidateNodes.length; j<n; ++j) 
+						if(candidateNodes[j].requestCancel) return;
+//					that._updateView();
+//					that._updateCache();
+//					that._hierarchyVisit();
+					that._candidateNodes = candidateNodes;
+					for (var j=0, n=candidateNodes.length; j<n; ++j) 
+						candidateNodes[j].requestCancel = true;
 					that._requestNodes();
 				},
 				onSuccess : this._createNodeHandler(node)
