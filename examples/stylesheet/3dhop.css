@@ -19,20 +19,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 body { width:100%; height:100%; margin:0px; }
 
-.tdhop { width:100%; height:100%; position:relative; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+.tdhop { position:relative; width:100%; height:100%; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-#tdhlg { overflow:hidden; right:2; bottom:2; width:105px; height:13px; cursor:pointer; color:#909090; text-decoration:none; font-family:verdana; font-style:italic; font-size:10px; line-height:13px; position:absolute; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+#tdhlg { position:absolute; right:2; bottom:2; width:105px; height:13px; overflow:hidden; cursor:pointer; color:#909090; text-decoration:none; font-family:verdana; font-style:italic; font-size:10px; line-height:13px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
 #toolbar { position:absolute; margin-left:10px; margin-top:10px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
 #toolbar img { margin-bottom:8px; width:50px; height:50px; opacity:0.5; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
+.output-box { visibility:hidden; position:absolute; background-color:rgba(125,125,125,0.5); display:table; border-radius:5px; margin:0; /*width:130px;*/ height:50px; cursor:default; color:#909090; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+
+.output-cell { padding:0 5; color:#f8f8f8; display:table-cell; vertical-align:middle; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent;}
+
+.output-text { cursor:text; -webkit-user-select:text; -webkit-touch-callout:text; -khtml-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text; }
+
 #draw-canvas { background-repeat:no-repeat; background-position:center top; -webkit-background-size:cover; -moz-background-size:cover; -o-background-size:cover; background-size:cover; outline:none; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-#measurebox { visibility:hidden; overflow:hidden; border-radius:5px; right:10; top:10; margin:0; width:250px; height:36px; cursor:default; color:#909090; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:15px; line-height:18px; position:absolute; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
-
+/*DEPRECATED*/
+#measurebox { visibility:hidden; overflow:hidden; border-radius:5px; right:10; top:10; margin:0; width:105px; height:26px; cursor:default; color:#909090; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:10px; line-height:13px; position:absolute; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 #measure-output { cursor:text; -webkit-user-select:text; -webkit-touch-callout:text; -khtml-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text; }
-
-#pickpointbox { visibility:hidden; overflow:hidden; border-radius:5px; right:10; top:10; margin:0; width:250px; height:36px; cursor:default; color:#909090; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:15px; line-height:18px; position:absolute; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
-
-#pickpoint-output { cursor:text; -webkit-user-select:text; -webkit-touch-callout:text; -khtml-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text; }

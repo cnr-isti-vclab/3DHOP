@@ -103,6 +103,9 @@ function init3dhop() {
 
 	resizeCanvas($('#3dhop').parent().width(),$('#3dhop').parent().height());
 
+	if ($('#pickpoint-box').length) movePickpointbox(($('#pick').offset().left + $('#pick').width() + 5), ($('#pick').offset().top));
+	if ($('#measure-box').length) moveMeasurementbox(($('#measure').offset().left + $('#measure').width() + 5), ($('#measure').offset().top));
+
 	set3dhlg();
 } 
 
@@ -123,6 +126,7 @@ function lightSwitch() {
   }
 }
 
+/*DEPRECATED*/
 function measurementSwitch() {
   var on = presenter.isMeasurementToolEnabled();
 
@@ -141,29 +145,51 @@ function measurementSwitch() {
     $('#measure').css("opacity","1.0");
     $('#measurebox').css("visibility","hidden");
     $('#measure-output').html("0.0");
-    if (!presenter.isMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
+    if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
   }
 }
 
-
-
-function pickPointSwitch() {
-  var on = presenter.isPickPointEnabled();
+function pickpointSwitch() {
+  var on = presenter.isPickpointModeEnabled();
 
   if(on){
     $('#pick').css("visibility", "hidden");
     $('#pick_on').css("visibility", "visible");
     $('#pick_on').css("opacity","1.0");
-    $('#pickpointbox').css("visibility","visible");
+    $('#pickpoint-box').css("visibility","visible");
     $('#draw-canvas').css("cursor","crosshair");
   }
   else{
+    if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
+    else if (document.selection && document.selection.createRange()!='') document.selection.empty();
     $('#pick_on').css("visibility", "hidden");
     $('#pick').css("visibility", "visible");
     $('#pick').css("opacity","1.0");
-    $('#pickpointbox').css("visibility","hidden");
-    $('#pickpoint-output').html("--");
-    $('#draw-canvas').css("cursor","default");
+    $('#pickpoint-box').css("visibility","hidden");
+    $('#pickpoint-output').html("[ 0 , 0 , 0 ]");
+    if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
+  }
+}
+
+function measureSwitch() {
+  var on = presenter.isMeasurementToolEnabled();
+
+  if(on){
+    $('#measure').css("visibility", "hidden");
+    $('#measure_on').css("visibility", "visible");
+    $('#measure_on').css("opacity","1.0");
+    $('#measure-box').css("visibility","visible");
+    $('#draw-canvas').css("cursor","crosshair");
+  }
+  else{
+    if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
+    else if (document.selection && document.selection.createRange()!='') document.selection.empty();
+    $('#measure_on').css("visibility", "hidden");
+    $('#measure').css("visibility", "visible");
+    $('#measure').css("opacity","1.0");
+    $('#measure-box').css("visibility","hidden");
+    $('#measure-output').html("0.0");
+    if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
   }
 }
 
@@ -223,16 +249,24 @@ function exitFullscreen() {
 function moveToolbar(l,t) {
   $('#toolbar').css('left', l);
   $('#toolbar').css('top', t);
+  if ($('#pickpoint-box').length) movePickpointbox(l,t);
+  if ($('#measure-box').length) moveMeasurementbox(l,t);
 }
 
+function movePickpointbox(l,t) {
+  $('#pickpoint-box').css('left', $('#pickpoint-box').offset().left+l);
+  $('#pickpoint-box').css('top', $('#pickpoint-box').offset().top+t);
+}
+
+/*DEPRECATED*/
 function moveMeasurebox(r,t) {
   $('#measurebox').css('right', r);
   $('#measurebox').css('top', t);
 }
 
-function movePickpointbox(r,t) {
-  $('#pickpointbox').css('right', r);
-  $('#pickpointbox').css('top', t);
+function moveMeasurementbox(l,t) {
+  $('#measure-box').css('left', $('#measure-box').offset().left+l);
+  $('#measure-box').css('top', $('#measure-box').offset().top+t);
 }
 
 function resizeCanvas(w,h) {

@@ -184,7 +184,7 @@ Presenter.prototype = {
 	_parseConfig : function (options) {
 		options = options || { };
 		var r = sglGetDefaultObject({
-			pickedPointColor    : [1.0, 0.0, 1.0],
+			pickedpointColor    : [1.0, 0.0, 1.0],
 			measurementColor    : [0.5, 1.0, 0.5],
 			showClippingPlanes  : true,
 			showClippingBorder  : false,
@@ -243,6 +243,7 @@ Presenter.prototype = {
             uniform   mat4 uWorldViewProjectionMatrix;                            \n\
             uniform   mat3 uViewSpaceNormalMatrix;                                \n\
             uniform   mat4 uModelMatrix;                                          \n\
+            uniform   float uPointSize;                                           \n\
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
@@ -260,7 +261,7 @@ Presenter.prototype = {
                 vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
                                                                                   \n\
                 gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-				gl_PointSize = 1.5 * aPointSize;								  \n\
+				gl_PointSize = uPointSize * aPointSize;							  \n\
             }                                                                     \n\
         ");
 		if(this._isDebugging)
@@ -340,6 +341,7 @@ Presenter.prototype = {
                 "uViewSpaceNormalMatrix"     : SglMat3.identity(),
 				"uModelMatrix" 				 : SglMat4.identity(),
                 "uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
+				"uPointSize"                 : 1.0,
 				"uAlpha"                     : 1.0,
 				"uUseSolidColor"             : false,
 				"uSolidColor"                : [1.0, 1.0, 1.0],
@@ -482,6 +484,7 @@ Presenter.prototype = {
                                                                                   \n\
             uniform   mat4 uWorldViewProjectionMatrix;                            \n\
             uniform   mat4 uModelMatrix;                                          \n\
+            uniform   float uPointSize;                                           \n\
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
@@ -494,7 +497,7 @@ Presenter.prototype = {
             {                                                                     \n\
                 vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
 				gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-				gl_PointSize = 1.5 * aPointSize;								  \n\
+				gl_PointSize = uPointSize * aPointSize;							  \n\
             }                                                                     \n\
         ");
 		if(this._isDebugging)
@@ -551,7 +554,8 @@ Presenter.prototype = {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
 				"uModelMatrix" 				 : SglMat4.identity(),
 				"uClipPoint"                 : [0.0, 0.0, 0.0],
-				"uClipAxis"                  : [0.0, 0.0, 0.0],	
+				"uClipAxis"                  : [0.0, 0.0, 0.0],
+				"uPointSize"                 : 1.0
             }
         });
 		if(this._isDebugging)
@@ -567,6 +571,7 @@ Presenter.prototype = {
             precision highp float;                                                \n\
                                                                                   \n\
             uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+            uniform   float uPointSize;                                           \n\
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
@@ -576,7 +581,7 @@ Presenter.prototype = {
             void main(void)                                                       \n\
             {                                                                     \n\
                 gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-				gl_PointSize = 1.5 * aPointSize;								  \n\
+				gl_PointSize = uPointSize * aPointSize;							  \n\
             }                                                                     \n\
         ");
 		if(this._isDebugging)
@@ -608,7 +613,8 @@ Presenter.prototype = {
             },
             uniforms   : {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
-				"uColorID"                   : [1.0, 0.5, 0.0, 1.0]
+				"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
+				"uPointSize"                 : 1.0
             }
         });
 		if(this._isDebugging)
@@ -625,6 +631,7 @@ Presenter.prototype = {
                                                                                   \n\
             uniform   mat4 uWorldViewProjectionMatrix;                            \n\
             uniform   mat3 uViewSpaceNormalMatrix;                                \n\
+            uniform   float uPointSize;                                           \n\
                                                                                   \n\
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
@@ -640,7 +647,7 @@ Presenter.prototype = {
                 vColor      = aColor;                                             \n\
                                                                                   \n\
                 gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-				gl_PointSize = 1.5 * aPointSize;								  \n\
+				gl_PointSize = uPointSize * aPointSize;							  \n\
             }                                                                     \n\
         ");
 		if(this._isDebugging)
@@ -685,7 +692,8 @@ Presenter.prototype = {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
                 "uViewSpaceNormalMatrix"     : SglMat3.identity(),
                 "uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
-				"uColorID"                   : [1.0, 0.5, 0.0, 1.0]
+				"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
+				"uPointSize"                 : 1.0
             }
         });
 		if(this._isDebugging)
@@ -1055,7 +1063,7 @@ Presenter.prototype = {
 		var pickedPixel;
 		var ID, cursor;
 
-		if(this._onEndMeasurement||this._onPickedSpot||this._onEnterSpot||this._onLeaveSpot||this._onEndPickPoint){
+		if(this._onEndPickingPoint||this._onEndMeasurement||this._onPickedSpot||this._onEnterSpot||this._onLeaveSpot){
 			pickedPixel = this._drawScenePickingSpots();
 			ID = this._Color2ID(pickedPixel);
 			if(this._lastSpotID != ID){
@@ -1068,7 +1076,7 @@ Presenter.prototype = {
 								if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.2;
 								spots[this._pickedSpot].alpha += 0.2;
 								cursor = spots[spt].cursor;
-								if(!this._isMeasuring || !this._isPickPoint){
+								if(/*!this._movingLight ||*/ !this._isMeasuring){
 									this._lastCursor = document.getElementById(this.ui.canvas.id).style.cursor;
 									document.getElementById(this.ui.canvas.id).style.cursor = cursor;
 								}
@@ -1086,7 +1094,7 @@ Presenter.prototype = {
 					this._pickedSpot = null;
 					if(this._onHover){
 						if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha  -= 0.2;
-						if(!this._isMeasuring || !this._isPickPoint) document.getElementById(this.ui.canvas.id).style.cursor = "default";
+						if(/*!this._movingLight ||*/ !this._isMeasuring) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 						this.ui.postDrawEvent();
 						if(this._onLeaveSpot && this._lastPickedSpot!=null)  this._onLeaveSpot(this._lastPickedSpot);
 						//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
@@ -1097,7 +1105,7 @@ Presenter.prototype = {
 			}
 		}
 
-		if(this._onEndMeasurement||this._onPickedInstance||this._onEnterInstance||this._onLeaveInstance||this._onEndPickPoint){
+		if(this._onEndPickingPoint||this._onEndMeasurement||this._onPickedInstance||this._onEnterInstance||this._onLeaveInstance){
 			pickedPixel = this._drawScenePickingInstances();
 			ID = this._Color2ID(pickedPixel);
 			if(this._lastInstanceID == ID && !(this._onPickedSpot||this._onEnterSpot||this._onLeaveSpot)) return;
@@ -1108,7 +1116,7 @@ Presenter.prototype = {
 						this._pickedInstance = inst;
 						if(this._onHover){
 							cursor = instances[inst].cursor;
-							if(!this._isMeasuring || !this._isPickPoint){
+							if(/*!this._movingLight ||*/ !this._isMeasuring){
 								this._lastCursor = cursor;
 								if(this._pickedSpot==null)document.getElementById(this.ui.canvas.id).style.cursor = cursor;
 							}
@@ -1124,7 +1132,7 @@ Presenter.prototype = {
 				this._pickedInstance = null;
 				if(this._onHover){
 					this._lastCursor = "default";
-					if((!this._isMeasuring || !this._isPickPoint) && this._pickedSpot==null) document.getElementById(this.ui.canvas.id).style.cursor = "default";
+					if((/*!this._movingLight ||*/ !this._isMeasuring) && this._pickedSpot==null) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 					if(this._onLeaveInstance && this._lastPickedInstance!=null)  this._onLeaveInstance(this._lastPickedInstance);
 					//if(this._onEnterInstance) this._onEnterInstance(this._pickedInstance);
 				}
@@ -1135,9 +1143,9 @@ Presenter.prototype = {
 	},
 
 	_measureRefresh : function (button, x, y, e) {
-		if(e.target.id!=this.ui.gl.canvas.id) return;
+//		if(e.target.id!=this.ui.gl.canvas.id) return;
 
-		if(this._isMeasuring){
+		if(this._isMeasuringDistance){
 			this._pickpoint[0] = x;
 			this._pickpoint[1] = y;
 			var ppoint = this._drawScenePickingXYZ();
@@ -1157,8 +1165,8 @@ Presenter.prototype = {
     },
 
 	_startMeasurement  : function () {
-		if (this._isMeasuring) return;
-		this._isMeasuring = true;
+		if (this._isMeasuringDistance) return;
+		this._isMeasuring = this._isMeasuringDistance = true;
 		this._measurementStage = 1; // 0=inactive 1=picking pointA 2=picking pointB 3=measurement ready
 		this._pointA = [0.0, 0.0, 0.0];
 		this._pointB = [0.0, 0.0, 0.0];
@@ -1167,7 +1175,8 @@ Presenter.prototype = {
 	},
 
 	_stopMeasurement  : function () {
-		this._isMeasuring = false;
+		this._isMeasuringDistance = false;
+		if (!this._isMeasuringPickpoint) this._isMeasuring = this._isMeasuringDistance;
 		this._measurementStage = 0; // 0=inactive 1=picking pointA 2=picking pointB 3=measurement ready
 		this._pointA = [0.0, 0.0, 0.0];
 		this._pointB = [0.0, 0.0, 0.0];
@@ -1175,10 +1184,10 @@ Presenter.prototype = {
 		this.ui.postDrawEvent();
 	},
 
-	_pickPointRefresh : function (button, x, y, e) {
-		if(e.target.id!=this.ui.gl.canvas.id) return;
+	_pickpointRefresh : function (button, x, y, e) {
+//		if(e.target.id!=this.ui.gl.canvas.id) return;
 
-		if(this._isPickPoint){
+		if(this._isMeasuringPickpoint){
 			this._pickpoint[0] = x;
 			this._pickpoint[1] = y;
 			var ppoint = this._drawScenePickingXYZ();
@@ -1186,21 +1195,23 @@ Presenter.prototype = {
 			{
 				this._pickedPoint = ppoint;
 				this._pickValid = true;
-				if(this._onEndPickPoint) this._onEndPickPoint(this._pickedPoint);
+				if(this._onEndPickingPoint) this._onEndPickingPoint(this._pickedPoint);
+				this.ui.postDrawEvent();
 			}
 		}
-    },		
-	
+    },
+
 	_startPickPoint : function () {
-		if (this._isPickPoint) return;
-		this._isPickPoint = true;
+		if (this._isMeasuringPickpoint) return;
+		this._isMeasuring = this._isMeasuringPickpoint = true;
 		this._pickValid = false; 
 		this._pickedPoint = [0.0, 0.0, 0.0];
 		this.ui.postDrawEvent();
 	},
 
 	_stopPickPoint : function () {
-		this._isPickPoint = false;
+		this._isMeasuringPickpoint = false;
+		if (!this._isMeasuringDistance) this._isMeasuring = this._isMeasuringPickpoint;
 		this._pickValid = false; 
 		this._pickedPoint = [0.0, 0.0, 0.0];
 		this.ui.postDrawEvent();
@@ -1378,7 +1389,7 @@ Presenter.prototype = {
 			}
 		}
 	},
-	
+
 	_destroyPickFramebuffer : function () {
 		if (this.pickFramebuffer) {
 			this.pickFramebuffer.destroy();
@@ -1503,7 +1514,7 @@ Presenter.prototype = {
 		var xform    = this.xform;
 		var renderer = this.renderer;
 		var CurrFaceProgram = this.faceNXSProgram; 
-		var CurrPointProgram = this.pointNXSProgram; 		
+		var CurrPointProgram = this.pointNXSProgram; 
 		var CurrTechnique = this.basicPLYTechnique;
 		var CCProgram   = this.colorShadedNXSProgram;
 		var CCTechnique = this.colorShadedPLYtechnique;
@@ -1552,6 +1563,7 @@ Presenter.prototype = {
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 				"uModelMatrix"               : modelMatrix,
 				"uViewSpaceLightDirection"   : this._lightDirection,
+				"uPointSize"                 : this._pointSize,
 				"uAlpha"                     : 1.0,
 				"uUseSolidColor"             : instance.useSolidColor,
 				"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
@@ -1638,6 +1650,7 @@ Presenter.prototype = {
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 				"uModelMatrix"               : modelMatrix,
 				"uViewSpaceLightDirection"   : this._lightDirection,
+				"uPointSize"                 : this._pointSize,
 				"uAlpha"                     : instance.alpha,
 				"uUseSolidColor"             : instance.useSolidColor,
 				"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
@@ -1704,11 +1717,11 @@ Presenter.prototype = {
 			
 			var lineUniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-				"uLineColor"                 : [config.pickedPointColor[0], config.pickedPointColor[1], config.pickedPointColor[2], 1.0],
+				"uLineColor"                 : [config.pickedpointColor[0], config.pickedpointColor[1], config.pickedpointColor[2], 1.0],
 				"uPointA"                    : this._pickedPoint,
-				"uPointB"                    : this._pickedPoint, 
-			};	
-
+				"uPointB"                    : this._pickedPoint
+			};
+			
 			//drawing points
 			renderer.begin();
 				renderer.setTechnique(lineTechnique);
@@ -1719,11 +1732,37 @@ Presenter.prototype = {
 				renderer.renderModel();
 			renderer.end();
 			
+			lineUniforms = {
+				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+				"uLineColor"                 : [config.pickedpointColor[0] * 0.4, config.pickedpointColor[1] * 0.5, config.pickedpointColor[2] * 0.6, 0.5],
+				"uPointA"                    : this._pickedPoint,
+				"uPointB"                    : this._pickedPoint
+			};
+
+			gl.depthFunc(gl.GREATER);
+			gl.depthMask(false);
+			gl.enable(gl.BLEND);
+			gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+			//drawing points and line
+			renderer.begin();
+				renderer.setTechnique(lineTechnique);
+				renderer.setDefaultGlobals();
+				renderer.setGlobals(lineUniforms);
+				renderer.setPrimitiveMode("POINT");
+				renderer.setModel(this.simpleLineModel);
+				renderer.renderModel();
+			renderer.end();
+
 			// GLstate cleanup
+			gl.disable(gl.BLEND);
 			gl.depthMask(true);
-			gl.disable(gl.DEPTH_TEST);			
-		}			
-		
+			gl.depthFunc(gl.LESS);
+			gl.disable(gl.DEPTH_TEST);
+
+			xform.model.pop();
+		}
+
 		// draw measurement line (if any)
 		if (this._measurementStage >= 2) {// 0=inactive 1=picking pointA 2=picking pointB 3=measurement ready
 			// GLstate setup
@@ -1810,6 +1849,7 @@ Presenter.prototype = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 				"uViewSpaceLightDirection"   : this._lightDirection,
+				"uPointSize"                 : this._pointSize,
 				"uColorID"                   : [spot.color[0], spot.color[1], spot.color[2], spot.alpha]
 			}
 
@@ -1883,7 +1923,7 @@ Presenter.prototype = {
 				renderer.end();
 
 				xform.model.pop();
-			}			
+			}
 
 			if(this._clipAxis[1] != 0.0)
 			{
@@ -1909,7 +1949,7 @@ Presenter.prototype = {
 					renderer.renderModel();
 				renderer.end();
 				
-				xform.model.pop();				
+				xform.model.pop();
 			}
 			
 			if(this._clipAxis[2] != 0.0)
@@ -1937,15 +1977,13 @@ Presenter.prototype = {
 				renderer.end();
 				
 				xform.model.pop();
-			}			
+			}
 			
 			// GLstate cleanup
 			gl.disable(gl.BLEND);
 			gl.depthMask(true);
 			gl.disable(gl.DEPTH_TEST);
-		}		
-		
-		
+		}
 	},
 
 	_drawScenePickingXYZ : function () {
@@ -1992,7 +2030,7 @@ Presenter.prototype = {
 			var modelMatrix = SglMat4.identity();
 			modelMatrix = SglMat4.mul(modelMatrix, space.transform.matrix);
 			modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
-			modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);			
+			modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 			var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
 			
 			var uniforms = {
@@ -2000,6 +2038,7 @@ Presenter.prototype = {
 				"uModelMatrix"               : modelMatrix,
 				"uClipPoint"                 : this._clipPoint,
 				"uClipAxis"                  : thisClipAxis,
+				"uPointSize"                 : this._pointSize
 			};
 
 			if(mesh.isNexus) {
@@ -2109,6 +2148,7 @@ Presenter.prototype = {
 			var colorID = this._ID2Color(instance.ID);
 			var uniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+				"uPointSize"                 : this._pointSize,
 				"uColorID"                   : colorID
 			};
 
@@ -2207,6 +2247,7 @@ Presenter.prototype = {
 
 			var uniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+				"uPointSize"                 : this._pointSize,
 				"uColorID"                   : [0.0, 0.0, 0.0, 0.0]
 			};
 
@@ -2268,6 +2309,7 @@ Presenter.prototype = {
 			var colorID = this._ID2Color(spot.ID);
 			var uniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+				"uPointSize"                 : this._pointSize,
 				"uColorID"                   : colorID
 			};
 
@@ -2434,9 +2476,11 @@ Presenter.prototype = {
 		// scene rendering support data
 		this.renderer   = renderer;
 		this.xform      = xform;
-		this.viewMatrix = viewMatrix;
+		this.viewMatrix = viewMatrix;
 
 		this._lightDirection = HOP_DEFAULTLIGHT;
+
+		this._pointSize   = 1.5;
 
 		this.sceneCenter = [0.0, 0.0, 0.0];
 		this.sceneRadiusInv = 1.0;
@@ -2480,35 +2524,38 @@ Presenter.prototype = {
 		this._lastSpotID     = 0;
 		this._pickpoint      = [1, 1];
 
-		// point2point measurement data
+		// global measurement data
 		this._isMeasuring = false;
+
+		// point2point measurement data
+		this._isMeasuringDistance = false;
 		this._measurementStage = 0; // 0=inactive 1=picking pointA 2=picking pointB 3=measurement ready
 		this._pointA = [0.0, 0.0, 0.0];
 		this._pointB = [0.0, 0.0, 0.0];
 		this.measurement = 0;
 
-		// point picking
-		this._isPickPoint = false;
+		// point picking measurement data
+		this._isMeasuringPickpoint = false;
 		this._pickValid = false;
 		this._pickedPoint = [0.0, 0.0, 0.0];
 		this._pickedPointsList = {}; // for future use
-		
+
 		// plane section
 		this._clipPoint = [0.0, 0.0, 0.0];
 		this._clipAxis  = [0.0, 0.0, 0.0];
 		this._sceneBboxMin = [0.0, 0.0, 0.0];
 		this._sceneBboxMax = [0.0, 0.0, 0.0];
-		this._sceneBboxCenter = [0.0, 0.0, 0.0];
-		
+		this._sceneBboxCenter = [0.0, 0.0, 0.0]
+
 		// handlers
-		this._onPickedInstance = 0;
-		this._onPickedSpot     = 0;
-		this._onEnterInstance  = 0;
-		this._onEnterSpot      = 0;
-		this._onLeaveInstance  = 0;
-		this._onLeaveSpot      = 0;
-		this._onEndMeasurement = 0;
-		this._onEndPickPoint   = 0;
+		this._onPickedInstance  = 0;
+		this._onPickedSpot      = 0;
+		this._onEnterInstance   = 0;
+		this._onEnterSpot       = 0;
+		this._onLeaveInstance   = 0;
+		this._onLeaveSpot       = 0;
+		this._onEndPickingPoint = 0;
+		this._onEndMeasurement  = 0;
 	},
 
 	onDrag : function (button, x, y, e) {
@@ -2558,7 +2605,7 @@ Presenter.prototype = {
 	},
 
 	onMouseMove : function (x, y, e) {
-		if(e.target.id!=this.ui.gl.canvas.id) return;
+//		if(e.target.id!=this.ui.gl.canvas.id) return;
 		if(this._onHover && !this.ui.isDragging(0) && !this.isAnimate()) this._pickingRefresh(x, y);
     },
 
@@ -2573,20 +2620,20 @@ Presenter.prototype = {
 	onMouseButtonUp : function (button, x, y, e) {
 		if(this._clickable && !this.ui.isDragging(0) && button==0 && e.detail!=-1) {
 			this._pickingRefresh(x, y);
+			if(this._pickedSpot==null && this._pickedInstance==null) return;
 			if(this._onPickedSpot && this._pickedSpot!=null) this._onPickedSpot(this._pickedSpot);
 			if(this._onPickedInstance && this._pickedInstance!=null) this._onPickedInstance(this._pickedInstance);
-			this._measureRefresh(button, x, y, e);
-			this._pickPointRefresh(button, x, y, e);
+			if(this._isMeasuringPickpoint) this._pickpointRefresh(button, x, y, e);
+			if(this._isMeasuringDistance) this._measureRefresh(button, x, y, e);
 		}
 		this._clickable = false;
 	},
 
 	onKeyPress : function (key, evt) {
-		if(this._isDebugging)	// DEBUGGING-AUTHORING keys
-		{
+		if(this._isDebugging) { // DEBUGGING-AUTHORING keys
 			if((evt.charCode == '80') || (evt.charCode == '112')) // key "P" to print trackball
 				console.log(this.trackball.getState());
-			if (evt.charCode == '49'){ // key "1" to show nexus patches
+			if (evt.charCode == '49') { // key "1" to show nexus patches
 				Nexus.Debug.nodes=!Nexus.Debug.nodes;
 				this.ui.postDrawEvent();
 			}
@@ -2596,18 +2643,30 @@ Presenter.prototype = {
     onMouseWheel: function (wheelDelta, x, y, e) {
         var ui = this.ui;
 
-        var action = SGL_TRACKBALL_SCALE;
-        var factor = wheelDelta < 0.0 ? (0.90) : (1.10);
+		var diff = false;
+		if(this._isDebugging && e.altKey) { // DEBUGGING-AUTHORING keys
+			var testValue = this._pointSize; // key "ALT" + MOUSE WHEEL to change pointclouds point set size
 
-		var testMatrix = this.trackball._matrix.slice();
+			this._pointSize += wheelDelta/10;
 
-        this.trackball.action = action;
-        this.trackball.track(this.viewMatrix, 0.0, 0.0, factor);
-        this.trackball.action = SGL_TRACKBALL_NO_ACTION;
+			if (this._pointSize < 0) this._pointSize = 0;
+			else if (this._pointSize > 5) this._pointSize = 5;
 
-		var diff;
-		for(var i=0; i<testMatrix.length; i++) {
-			if(testMatrix[i]!=this.trackball._matrix[i]) {diff=true; break;}
+			if(testValue!=this._pointSize) diff=true;
+		}
+		else {
+			var action = SGL_TRACKBALL_SCALE;
+			var factor = wheelDelta < 0.0 ? (0.90) : (1.10);
+
+			var testMatrix = this.trackball._matrix.slice();
+
+			this.trackball.action = action;
+			this.trackball.track(this.viewMatrix, 0.0, 0.0, factor);
+			this.trackball.action = SGL_TRACKBALL_NO_ACTION;
+
+			for(var i=0; i<testMatrix.length; i++) {
+				if(testMatrix[i]!=this.trackball._matrix[i]) {diff=true; break;}
+			}
 		}
 		if(diff) ui.postDrawEvent();
     },
@@ -2740,6 +2799,7 @@ Presenter.prototype = {
 		this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 		
 		this._lightDirection = HOP_DEFAULTLIGHT; // also reset lighting
+//		this.pointSize = 1.5; // also reset points sizes
 		
 		this.ui.postDrawEvent();
 	},
@@ -3471,23 +3531,28 @@ Presenter.prototype = {
 	},
 
 	isMeasurementToolEnabled: function() {
-		return this._isMeasuring;
+		return this._isMeasuringDistance;
 	},
-	
-//-----------------------------------------------------------------------------	
 
-	enablePickPoint: function(on) {
+//-----------------------------------------------------------------------------
+	
+	enablePickpointMode: function(on) {
 		if(on) 
 			this._startPickPoint();
 		else 
 			this._stopPickPoint();
 	},
 
-	isPickPointEnabled: function() {
-		return this._isPickPoint;
+	isPickpointModeEnabled: function() {
+		return this._isMeasuringPickpoint;
 	},
 
+//-----------------------------------------------------------------------------
+	
+	isAnyMeasurementEnabled: function() {
+		return this._isMeasuring;
+	}
 
-//-----------------------------------------------------------------------------	
+//-----------------------------------------------------------------------------
 
 };
