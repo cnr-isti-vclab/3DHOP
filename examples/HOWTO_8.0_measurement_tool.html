@@ -89,7 +89,8 @@ function actionsToolbar(action) {
 }
 
 function onEndMeasure(measure) {
-     $('#measure-output').html(Math.round(measure*1000)/(1000));
+	var decimalClipper = 100; // 10 = 1 decimal, 100 = 2 decimals, 1000 = 3 decimals
+	$('#measure-output').html(Math.round(measure*decimalClipper)/decimalClipper);
 }
 
 $(document).ready(function(){
