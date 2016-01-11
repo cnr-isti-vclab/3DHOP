@@ -912,6 +912,8 @@ Nexus.Renderer.prototype = {
 
 		var cachedNodes = this._cachedNodes;
 
+		console.log(readyNodes);
+
 		var newCache = cachedNodes.concat(readyNodes);
 		newCache.sort(Nexus.Renderer._sortNodeCacheFunction);
 
@@ -959,8 +961,9 @@ Nexus.Renderer.prototype = {
 		var littleEndian = Nexus.LITTLE_ENDIAN_DATA;
 		var gl           = this._gl;
 
-		for (var i=0, n=newNodes.length; i<n; ++i) {
+		for (var i = 0, n = newNodes.length; i < n; ++i) {
 			var node    = newNodes[i];
+			console.log("loading node: " + node.index);
 			var compressed = Nexus.Signature.MECO + Nexus.Signature.CTM1 + Nexus.Signature.CTM2;
 
 			if(Nexus.Debug.worker && this._header.signature.flags & compressed) {
@@ -1015,8 +1018,8 @@ Nexus.Renderer.prototype = {
 			//STEP 1: if textures not ready this will be delayed		
 			var isReady = true;	
 			var patches      = this._patches.items;			
-			for(var i = node.firstPatch; i < node.lastPatch; ++i) {
-				var patch = this._patches.items[i];
+			for(var k = node.firstPatch; k < node.lastPatch; ++k) {
+				var patch = this._patches.items[k];
 				if(patch.texture == 0xffffffff) continue;
 				if(this._textures.items[patch.texture].status != Nexus.Renderer._NODE_READY)
 					isReady = false;
@@ -1177,6 +1180,7 @@ Nexus.Renderer.prototype = {
 		//compressed use worker:
 		var that = this;
 		return function () {
+			console.log("received node: " + node.index);
 			node.request.buffer = node.request.response;
 			that._header.signature.flags & compressed
 			var compressed = Nexus.Signature.MECO + Nexus.Signature.CTM1 + Nexus.Signature.CTM2;
