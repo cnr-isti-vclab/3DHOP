@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014, Marco Callieri - Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -62,15 +62,15 @@ Nexus.Attribute._typeSizeMap[Nexus.Attribute.FLOAT         ] = 4;
 Nexus.Attribute._typeSizeMap[Nexus.Attribute.DOUBLE        ] = 8;
 
 Nexus.Attribute._typeGLMap = { };
-Nexus.Attribute._typeGLMap[Nexus.Attribute.NONE          ] = WebGLRenderingContext.prototype.NONE;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.BYTE          ] = WebGLRenderingContext.prototype.BYTE;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_BYTE ] = WebGLRenderingContext.prototype.UNSIGNED_BYTE;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.SHORT         ] = WebGLRenderingContext.prototype.SHORT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_SHORT] = WebGLRenderingContext.prototype.UNSIGNED_SHORT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.INT           ] = WebGLRenderingContext.prototype.INT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_INT  ] = WebGLRenderingContext.prototype.UNSIGNED_INT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.FLOAT         ] = WebGLRenderingContext.prototype.FLOAT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.DOUBLE        ] = WebGLRenderingContext.prototype.DOUBLE;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.NONE          ] = WebGLRenderingContext.NONE;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.BYTE          ] = WebGLRenderingContext.BYTE;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_BYTE ] = WebGLRenderingContext.UNSIGNED_BYTE;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.SHORT         ] = WebGLRenderingContext.SHORT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_SHORT] = WebGLRenderingContext.UNSIGNED_SHORT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.INT           ] = WebGLRenderingContext.INT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_INT  ] = WebGLRenderingContext.UNSIGNED_INT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.FLOAT         ] = WebGLRenderingContext.FLOAT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.DOUBLE        ] = WebGLRenderingContext.DOUBLE;
 
 Nexus.Attribute._typeNormalized = { };
 Nexus.Attribute._typeNormalized[Nexus.Attribute.NONE          ] = true;
@@ -395,7 +395,6 @@ Nexus.Node.prototype = {
 };
 
 Nexus.NodeIndex = function() {
-	this.items = [ ];
 };
 
 Nexus.NodeIndex.prototype = {
@@ -429,7 +428,7 @@ Nexus.NodeIndex.prototype = {
 Nexus.Patch = function() {
 	this.node         = 0;
 	this.lastTriangle = 0;
-	this.texture      = 0;
+	this.texture      = 0xffffffff;
 };
 
 Nexus.Patch.SIZEOF = 3 * Uint32Array.BYTES_PER_ELEMENT;
@@ -471,6 +470,10 @@ Nexus.Texture = function() {
 
 	// computed
 	this.lastByte = 0;
+	//cache
+	this.status = 0; //NONE
+	this.tex = null; //gl stuff
+	this.nodes = []; //list of depending nodes
 };
 
 Nexus.Texture.SIZEOF = 1 * Uint32Array.BYTES_PER_ELEMENT + 16 * Float32Array.BYTES_PER_ELEMENT;
@@ -478,7 +481,7 @@ Nexus.Texture.SIZEOF = 1 * Uint32Array.BYTES_PER_ELEMENT + 16 * Float32Array.BYT
 Nexus.Texture.prototype = {
 	import : function (view, offset, littleEndian) {
 		var s = 0;
-		this.offset = view.getUint32(offset + s, littleEndian); s += Uint32Array.BYTES_PER_ELEMENT;
+		this.offset = Nexus.PADDING * view.getUint32(offset + s, littleEndian); s += Uint32Array.BYTES_PER_ELEMENT;
 		for (var i=0; i<16; ++i) {
 			this.matrix[i] = view.getFloat32(offset + s, littleEndian); s += Float32Array.BYTES_PER_ELEMENT;
 		}
@@ -594,11 +597,11 @@ Nexus.Plane3f.prototype = {
 Nexus.Renderer = function (gl) {
 	this._gl = gl;
 
-	this._targetError        = Nexus.Renderer.DEFAULT_TARGET_ERROR;
+	this.targetError        = Nexus.Renderer.DEFAULT_TARGET_ERROR;
 	this._targetFps          = null; //Nexus.Renderer.DEFAULT_TARGET_FPS;
 	this._maxPendingRequests = Nexus.Renderer.DEFAULT_MAX_PENDING_REQUESTS;
 	this._maxCacheSize       = Nexus.Renderer.DEFAULT_CACHE_SIZE;
-	this._drawBudget         = Nexus.Renderer.DEFAULT_DRAW_BUDGET;
+	this.drawBudget         = Nexus.Renderer.DEFAULT_DRAW_BUDGET;
 	this._minDrawBudget      = Nexus.Renderer.DEFAULT_DRAW_BUDGET / 4;
 	this._onUpdate           = null;
 	this._onSceneReady       = null;
@@ -681,18 +684,15 @@ Nexus.Renderer.prototype = {
 		var size   = Nexus.Header.SIZEOF;
 
 		var that = this;
-		var url = this._url;
-		/**Safari PATCH**/
-		/**/if (sayswho()[0]==='Safari' && sayswho()[1]!=='9') 
-		/**/  url = this._url + '?' + Math.random();
-		/**Safari PATCH**/
-		var r = new SglBinaryRequest(url, {
-			range : [offset, offset+size-1],
-			onSuccess : function () {
-				that._handleHeader(r.buffer);
-				that._requestIndex();
-			}
-		});
+		var r = new XMLHttpRequest();
+		r.open('GET', this.url(), true);
+		r.responseType = 'arraybuffer';
+		r.setRequestHeader("Range", "bytes=" + offset + "-" + (offset + size -1));
+		r.onload = function () {
+			that._handleHeader(r.response);
+			that._requestIndex();
+		}
+		r.send();
 	},
 
 	_handleHeader : function (buffer) {
@@ -711,18 +711,15 @@ Nexus.Renderer.prototype = {
 		var size   = header.nodesCount * Nexus.Node.SIZEOF + header.patchesCount * Nexus.Patch.SIZEOF + header.texturesCount * Nexus.Texture.SIZEOF;
 
 		var that = this;
-		var url = this._url;
-		/**Safari PATCH**/
-		/**/if (sayswho()[0]==='Safari' && sayswho()[1]!=='9') 
-		/**/  url = this._url + '?' + Math.random();
-		/**Safari PATCH**/
-		var r = new SglBinaryRequest(url, {
-			range : [offset, offset+size-1],
-			onSuccess : function () {
-				that._handleIndex(r.buffer);
-				that._openReady();
-			}
-		});
+		var r = new XMLHttpRequest();
+		r.open('GET', this.url(), true);
+		r.responseType = 'arraybuffer';
+		r.setRequestHeader("Range", "bytes=" + offset + "-" + (offset + size -1));
+		r.onload = function () {
+			that._handleIndex(r.response);
+			that._openReady();
+		}
+		r.send();
 	},
 
 	_handleIndex : function (buffer) {
@@ -757,9 +754,9 @@ Nexus.Renderer.prototype = {
 			node.renderFrame = 0;
 		}
 
-		this._cachedNodes  = [ ];
-		this._readyNodes   = [ ];
-		this._pendingNodes = [ ];
+		this._cachedNodes    = [];
+		this._readyNodes     = [];
+//		this._pendingNodes   = []; not used
 
 		var nodesCount = this._header.nodesCount;
 		this._visitedNodes  = new Uint8Array(nodesCount);  //Nexus.BoolArray(nodesCount);
@@ -780,8 +777,16 @@ Nexus.Renderer.prototype = {
 		}
 	},
 
-	get gl() {
-		return this._gl;
+
+	url: function() {
+		var url = this._url;
+		/**Safari PATCH**/
+		if (navigator.userAgent.toLowerCase().indexOf('safari')!=-1 && 
+			navigator.userAgent.toLowerCase().indexOf('chrome')==-1) {
+			url = this._url + '?' + Math.random();
+		}
+		/**Safari PATCH**/
+		return url;
 	},
 
 	get isValid() {
@@ -804,10 +809,6 @@ Nexus.Renderer.prototype = {
 		this._onUpdate = f;
 	},
 
-	get status() {
-		return this._status;
-	},
-
 	get isClosed() {
 		return (this._status == Nexus.Renderer.STATUS_NONE);
 	},
@@ -818,10 +819,6 @@ Nexus.Renderer.prototype = {
 
 	get isOpen() {
 		return (this._status == Nexus.Renderer.STATUS_OPEN);
-	},
-
-	get url() {
-		return this._url;
 	},
 
 	get isReady() {
@@ -848,22 +845,6 @@ Nexus.Renderer.prototype = {
 
 	set maxPendingRequests(r) {
 		this._maxPendingRequests = r;
-	},
-
-	get targetError() {
-		return this._targetError;
-	},
-
-	set targetError(e) {
-		this._targetError = e;
-	},
-
-	get drawBudget() {
-		return this._drawBudget;
-	},
-
-	set drawBudget(e) {
-		this._drawBudget = e;
 	},
 
 	get modelMatrix() {
@@ -967,6 +948,7 @@ Nexus.Renderer.prototype = {
 					node.ibo = null;
 				}
 				node.request = null;
+				node.buffer = null;
 				node.status  = Nexus.Renderer._NODE_NONE;
 			}
 			newCache = newCache.slice(0, firstVictim);
@@ -983,8 +965,9 @@ Nexus.Renderer.prototype = {
 
 			if(Nexus.Debug.worker && this._header.signature.flags & compressed) {
 				var request = node.request;
-				var buffer = request.buffer;
+				var buffer = request.response;
 				var sig = {
+					texcoords: this._header.signature.vertex.hasTexCoord,
 					normals: this._header.signature.vertex.hasNormal,
 					colors:  this._header.signature.vertex.hasColor,
 					indices: this._header.signature.face.hasIndex
@@ -994,26 +977,29 @@ Nexus.Renderer.prototype = {
 					nface: node.facesCount,
 					firstPatch: 0, 
 					lastPatch: node.lastPatch - node.firstPatch,
-					buffer: node.request.buffer
+					buffer: node.request.response
 				};
 				var p = [];
 				for(var k = node.firstPatch; k < node.lastPatch; k++)
 					p.push(this._patches.items[k].lastTriangle);
 
 				if(this._header.signature.flags & Nexus.Signature.MECO) {
+					var now = window.performance.now();
 					var coder = new MeshCoder(sig, _node, p);
 					node.buffer = coder.decode(buffer);
+					var elapsed = window.performance.now() - now;
+
+					console.log("Z Time: " + elapsed + " Size: " + size + " KT/s: " + (node.facesCount/(elapsed)) + " Mbps " + (8*1000*node.buffer.byteLength/elapsed)/(1<<20));
+	
 				} else {
 					node.buffer = ctmDecode(sig, _node, p);
 				}
 			}
-			//this variable is never used.
-			var offset = 0;
 
 			var nv = node.verticesCount;
 			var nf = node.facesCount;
 
-			var vertexOffset = offset;
+			var vertexOffset = 0;
 			var vertexSize   = nv * vertexStride;
 			var faceOffset   = vertexOffset + vertexSize;
 			var faceSize     = nf * faceStride;
@@ -1022,12 +1008,21 @@ Nexus.Renderer.prototype = {
 			var indices  = new Uint8Array(node.buffer, faceOffset,   faceSize);
 
 			node.vbo = new SglVertexBuffer (gl, {data : vertices});
-			if (this._header.signature.face.hasIndex) {
+			if (this._header.signature.face.hasIndex)
 				node.ibo = new SglIndexBuffer  (gl, {data : indices });
-			}
 
 			node.request = null;
-			node.status  = Nexus.Renderer._NODE_READY;
+			//STEP 1: if textures not ready this will be delayed		
+			var isReady = true;	
+			var patches      = this._patches.items;			
+			for(var i = node.firstPatch; i < node.lastPatch; ++i) {
+				var patch = this._patches.items[i];
+				if(patch.texture == 0xffffffff) continue;
+				if(this._textures.items[patch.texture].status != Nexus.Renderer._NODE_READY)
+					isReady = false;
+			}
+			if(isReady)
+				node.status  = Nexus.Renderer._NODE_READY;
 
 			var nsize = node.lastByte - node.offset + 1;
 			size += nsize;
@@ -1081,7 +1076,7 @@ Nexus.Renderer.prototype = {
 		this._visitedNodes[n] = 1;
 
 		var error = this._hierarchyVisit_nodeError(n);
-		if(error < this._targetError*0.8) return;  //2% speed TODO check if needed
+		if(error < this.targetError*0.8) return;  //2% speed TODO check if needed
 
 		var node  = this._nodes.items[n];
 		node.renderError = error;
@@ -1097,12 +1092,12 @@ Nexus.Renderer.prototype = {
 	_hierarchyVisit_expandNode : function (nodeData) {
 
 		var node  = nodeData.node;
-		if(node.renderError < this._targetError) {
-//			console.log("Stop becaouse of error: " + node.renderError + " < " + this._targetError);
+		if(node.renderError < this.targetError) {
+//			console.log("Stop becaouse of error: " + node.renderError + " < " + this.targetError);
 			return false;
 		}
-		if(this._drawSize > this._drawBudget) {
-//			console.log("Stop because of draw budget: " + this._drawSize  + " > " + this._drawBudget);
+		if(this._drawSize > this.drawBudget) {
+//			console.log("Stop because of draw budget: " + this._drawSize  + " > " + this.drawBudget);
 			return false;
 		}
 
@@ -1176,21 +1171,18 @@ Nexus.Renderer.prototype = {
 			
 			this._hierarchyVisit_insertChildren(n, visitQueue, blocked);
 		}
-//		if(visitQueue.size() == 0)
-//			console.log("Stop because visitQueue finished");
-
-//		if(count == this._maxPendingRequests)
-//			console.log("Too many blocked nodes");
 	},
 
 	_createNodeHandler : function (node) {
 		//compressed use worker:
 		var that = this;
 		return function () {
+			node.request.buffer = node.request.response;
 			that._header.signature.flags & compressed
 			var compressed = Nexus.Signature.MECO + Nexus.Signature.CTM1 + Nexus.Signature.CTM2;
 			if(!Nexus.Debug.worker && that._header.signature.flags & compressed) {
 				var sig = {
+					texcoords: that._header.signature.vertex.hasTexCoord,
 					normals: that._header.signature.vertex.hasNormal,
 					colors:  that._header.signature.vertex.hasColor,
 					indices: that._header.signature.face.hasIndex
@@ -1201,7 +1193,7 @@ Nexus.Renderer.prototype = {
 					nface: node.facesCount,
 					firstPatch: 0, 
 					lastPatch: node.lastPatch - node.firstPatch,
-					buffer: node.request.buffer
+					buffer: node.request.response
 				};
 				var p = [];
 				for(var k = node.firstPatch; k < node.lastPatch; k++)
@@ -1209,7 +1201,7 @@ Nexus.Renderer.prototype = {
 				if(that._header.signature.flags & Nexus.Signature.MECO)
 					that._worker.postMessage({signature:sig, node:_node, patches:p });
 			} else {
-				that._workerFinished({data: {index:node.index, buffer:node.request.buffer}});
+				that._workerFinished({data: {index:node.index, buffer:node.request.response}});
 			}
 		}
 	},
@@ -1220,6 +1212,52 @@ Nexus.Renderer.prototype = {
 		this._readyNodes.push(node);
 		if(this._redrawOnNewNodes) { //redraw only if new nodes might improve rendering
 			this._signalUpdate();
+		}
+	},
+	_createTextureHandler : function (tex) {
+		var that = this;
+
+		return function () {
+			//TODO USE REF COUNTER INSTeAD OF LIST BOTH FOR NODES AND FOR TEXTURES
+			var blob = tex.request.response; 
+			var urlCreator = window.URL || window.webkitURL;
+			tex.img = document.createElement('img');
+			tex.img.onerror = function(e) { console.log("Failed loading texture."); };
+			tex.img.src = urlCreator.createObjectURL(blob);
+
+			tex.img.onload = function() { 
+				urlCreator.revokeObjectURL(tex.img.src); 
+
+				var gl = that._gl;
+				tex.texture = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, tex.texture);
+		    	var s = gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tex.img);
+		    	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		    	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+
+				tex.status = Nexus.Renderer._NODE_READY;
+				//find all nodes pending
+				for(var i = 0; i < tex.nodes.length; i++) {
+					var node = tex.nodes[i];
+					if(node.vbo === null) continue; //not loaded still
+					var isReady = true;
+					for(var i = node.firstPatch; i < node.lastPatch; ++i) {
+						var patch = that._patches.items[i];
+						if(patch.texture == 0xffffffff) continue;
+						var t = that._textures.items[patch.texture];
+						if(t.status != Nexus.Renderer._NODE_READY) {
+							isReady = false;
+							break;
+						}
+					} 
+					if(isReady) {
+						node.status = Nexus.Renderer._NODE_READY;
+					}
+				}
+			};
 		}
 	},
 
@@ -1266,41 +1304,38 @@ Nexus.Renderer.prototype = {
 			}
 		}
 
-		var that = this;
-		var url = this._url;
+		
+		var url = this.url();
 		for (var i=0; i<nodesToRequest; ++i) {
-			/**Safari PATCH**/
-			/**/if (sayswho()[0]==='Safari' && sayswho()[1]!=='9') 
-			/**/  url = this._url + '?' + Math.random();
-			/**Safari PATCH**/
 			var node   = candidateNodes[i];
 			node.status  = Nexus.Renderer._NODE_PENDING;
-			node.request = new SglBinaryRequest(url, {
-				range : [node.offset, node.lastByte],
-				onError : function () { 
-					for (var j=0, n=candidateNodes.length; j<n; ++j) 
-						if(candidateNodes[j].requestError) return;
-//					that._updateView();
-//					that._updateCache();
-//					that._hierarchyVisit();
-					that._candidateNodes = candidateNodes;
-					for (var j=0, n=candidateNodes.length; j<n; ++j) 
-						candidateNodes[j].requestError = true;
-					that._requestNodes();
-				},
-				onCancel : function () { 
-					for (var j=0, n=candidateNodes.length; j<n; ++j) 
-						if(candidateNodes[j].requestCancel) return;
-//					that._updateView();
-//					that._updateCache();
-//					that._hierarchyVisit();
-					that._candidateNodes = candidateNodes;
-					for (var j=0, n=candidateNodes.length; j<n; ++j) 
-						candidateNodes[j].requestCancel = true;
-					that._requestNodes();
-				},
-				onSuccess : this._createNodeHandler(node)
-			});
+			node.request = new XMLHttpRequest();
+			node.request.open('GET', url, true);
+			node.request.responseType = 'arraybuffer';
+			node.request.setRequestHeader("Range", "bytes=" + node.offset + "-" + node.lastByte);
+			node.request.onload = this._createNodeHandler(node);
+			node.request.send();
+
+			//check for textures
+			var patches      = this._patches.items;			
+			for(var i = node.firstPatch; i < node.lastPatch; ++i) {
+				var patch = patches[i];
+				if(patch.texture == 0xffffffff) continue;
+				var tex = this._textures.items[patch.texture];
+				var that = this;
+				if(tex.status == Nexus.Renderer._NODE_NONE) {
+					tex.img = new Image;
+					tex.status = Nexus.Renderer._NODE_PENDING;
+					tex.request = new XMLHttpRequest();
+					tex.request.open('GET', url, true);
+					tex.request.responseType = 'blob';
+					tex.request.setRequestHeader("Range", "bytes=" + tex.offset + "-" + tex.lastByte);
+					tex.request.onload = this._createTextureHandler(tex);
+					tex.request.send();
+				}
+				//add a 'wakeup call'
+				tex.nodes.push(node);			
+			}
 		}
 		this._candidateNodes = [];
 	},
@@ -1366,17 +1401,19 @@ Nexus.Renderer.prototype = {
 	},
 
 	_render : function () {
+		var order = [0, 3, 1, 2, 4];
+
+
 		var gl = this._gl;
 		gl.glDrawElements = gl._spidergl.wn._ext.glFunctions.drawElements;
 
-		var vertexStride = this._header.signature.vertex.byteLength;
-
+		var vertexStride       = this._header.signature.vertex.byteLength;
 		var vertexAttributes   = this._header.signature.vertex.attributes;
 		var vertexAttribsCount = this._header.signature.vertex.lastAttribute + 1;
 
-		for (var i=0; i<vertexAttribsCount; ++i) {
-			if (vertexAttributes[i].isNull) continue;
-			gl.enableVertexAttribArray(i);
+		for (var i=0; i<4; ++i) {
+			if (vertexAttributes[order[i]].isNull) continue;
+			gl.enableVertexAttribArray(order[i]);
 		}
 
 		gl.vertexAttrib4fv(Nexus.VertexElement.COLOR, [0.8, 0.8, 0.8, 1.0]);
@@ -1393,6 +1430,7 @@ Nexus.Renderer.prototype = {
 		var nodesCount = nodes.length;
 		this._rendered = 0;
 
+		var last_texture = -1;
 		for (var i=0; i<nodesCount; ++i) {
 			if (!selectedNodes[i]) continue;
 
@@ -1418,10 +1456,11 @@ Nexus.Renderer.prototype = {
 			}
 
 			var attribOffset = 0;
-			for (var j=0; j<vertexAttribsCount; ++j) {
-				var attrib = vertexAttributes[j];
+			//order is needed because attributes are oredere by vertex normal colors tex, while data inverts tex and normal for alignment
+			for (var j=0; j<4; ++j) { //vertexAttribsCount; ++j) {
+				var attrib = vertexAttributes[order[j]];
 				if (attrib.isNull) continue;
-				gl.vertexAttribPointer(j, attrib.size, attrib.glType, attrib.normalized, attrib.stride, attrib.offset + attribOffset);
+				gl.vertexAttribPointer(order[j], attrib.size, attrib.glType, attrib.normalized, attrib.stride, attrib.offset + attribOffset);
 				attribOffset += attrib.offset + attrib.stride * node.verticesCount;
 			}
 
@@ -1446,18 +1485,26 @@ Nexus.Renderer.prototype = {
 				continue;
 			}
 
-			//concatenate renderings to remove useless calls.
+			//concatenate renderings to remove useless calls. except we have textures.
 			var first = 0;
 			var last = 0;
 			for (var p = node.firstPatch; p < node.lastPatch; ++p) {
 				var patch = patches[p];
-				if(!selectedNodes[patch.node]) { //draw this patch
+
+				if(!selectedNodes[patch.node]) { //skip this patch
 					last = patch.lastTriangle;
-					if(p < node.lastPatch-1) 
+					if(p < node.lastPatch-1) //if textures we do not join. TODO: should actually check for same texture of last one. 
 						continue;
 				} 
-				//here either we skip or is the last node
-				if(last > first) { //might be a double skip
+				if(last > first) {
+					//here either we skip or is the last node
+					
+					if(patch.texture != 0xffffffff && patch.texture != last_texture) { //bind texture
+						var tex = this._textures.items[patch.texture].texture;
+						gl.activeTexture(gl.TEXTURE0);
+						gl.bindTexture(gl.TEXTURE_2D, tex);
+						var error = gl.getError(); 
+					}
 					gl.glDrawElements(gl.TRIANGLES, (last - first) * 3, gl.UNSIGNED_SHORT, first * 3 * Uint16Array.BYTES_PER_ELEMENT);
 					this._rendered += last - first;
 				}
@@ -1465,9 +1512,9 @@ Nexus.Renderer.prototype = {
 			}
 		} 
 
-		for (var i = 0; i < vertexAttribsCount; ++i) {
-			if (vertexAttributes[i].isNull) continue;
-			gl.disableVertexAttribArray(i);
+		for (var i = 0; i < 4; ++i) {
+			if (vertexAttributes[order[i]].isNull) continue;
+			gl.disableVertexAttribArray(order[i]);
 		}
 
 		SglVertexBuffer.unbind(gl);
@@ -1494,20 +1541,4 @@ Nexus.Renderer.prototype = {
 		this._render();
 		this._endRender();
 	}
-};
-
-sayswho = function() {
-	var ua= navigator.userAgent, tem, 
-	M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
-	if(/trident/i.test(M[1])){
-		tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
-		return 'IE '+(tem[1] || '');
-	}
-	if(M[1]=== 'Chrome'){
-		tem= ua.match(/\b(OPR|Edge)\/(\d+)/);
-		if(tem!= null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
-	}
-	M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
-	if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
-	return M;
 };

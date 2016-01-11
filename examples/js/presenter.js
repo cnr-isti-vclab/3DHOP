@@ -31,7 +31,7 @@ const SGL_TRACKBALL_SCALE     = 4;
 // selectors
 const HOP_ALL     = 256;
 // starting debug mode
-const HOP_DEBUGMODE   = false;
+const HOP_DEBUGMODE   = true;
 // default light direction
 const HOP_DEFAULTLIGHT = [0, 0, -1];
 
@@ -258,9 +258,9 @@ Presenter.prototype = {
             {                                                                     \n\
                 vNormal     = uViewSpaceNormalMatrix * aNormal;                   \n\
                 vColor      = aColor;                                             \n\
-                vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
+                vModelPos   = uModelMatrix * vec4(aPosition, 1.0);                \n\
                                                                                   \n\
-                gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
+                gl_Position  = uWorldViewProjectionMatrix * vec4(aPosition, 1.0); \n\
 				gl_PointSize = uPointSize * aPointSize;							  \n\
             }                                                                     \n\
         ");
@@ -369,16 +369,19 @@ Presenter.prototype = {
             attribute vec3 aPosition;                                             \n\
             attribute vec3 aNormal;                                               \n\
             attribute vec4 aColor;                                                \n\
+			attribute vec2 aTextureCoord;                                         \n\
                                                                                   \n\
             varying   vec3 vNormal;                                               \n\
             varying   vec4 vColor;                                                \n\
             varying   vec4 vModelPos;                                             \n\
+			varying   vec2 vTextureCoord;                            			  \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
-                vNormal     = uViewSpaceNormalMatrix * aNormal;                   \n\
-                vColor      = aColor;                                             \n\
-                vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
+                vNormal       = uViewSpaceNormalMatrix * aNormal;                 \n\
+                vColor        = aColor;                                           \n\
+                vModelPos     = uModelMatrix * vec4(aPosition, 1.0);              \n\
+				vTextureCoord = aTextureCoord;                       			  \n\
                                                                                   \n\
                 gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
             }                                                                     \n\
@@ -387,7 +390,6 @@ Presenter.prototype = {
 			console.log("NXS FACE Vertex Shader Log:\n" + nxsVertexShader.log);
 
         var nxsFragmentShader = new SglFragmentShader(gl, "\
-			#extension GL_EXT_frag_depth : enable								  \n\
             precision highp float;                                                \n\
                                                                                   \n\
             uniform   vec3 uViewSpaceLightDirection;                              \n\
@@ -398,10 +400,12 @@ Presenter.prototype = {
             uniform   vec3 uClipAxis;                                             \n\
             uniform   vec3 uClipColor;                                            \n\
             uniform   float uClipColorSize;                                       \n\
+			uniform   sampler2D uSampler;                                         \n\
                                                                         		  \n\
             varying   vec3 vNormal;                                               \n\
             varying   vec4 vColor;                                                \n\
             varying   vec4 vModelPos;                                             \n\
+			varying   vec2 vTextureCoord;                         				  \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
@@ -431,6 +435,9 @@ Presenter.prototype = {
                 }                                                                 \n\
 				else if(!gl_FrontFacing)                                          \n\
 					diffuse = diffuse * vec3(0.4, 0.3, 0.3);                      \n\
+																				  \n\
+				if((vTextureCoord.x != 0.0) && (!uUseSolidColor))                 \n\
+                	diffuse = diffuse * texture2D(uSampler, vTextureCoord).xyz;   \n\
 				                                                                  \n\
 			    if((uClipAxis[0] == 1.0)&&((uClipPoint[0]-vModelPos[0])<uClipColorSize)) diffuse = uClipColor;  \n\
 			    else if((uClipAxis[0] == -1.0)&&((vModelPos[0]-uClipPoint[0])<uClipColorSize)) diffuse = uClipColor; \n\
@@ -454,7 +461,8 @@ Presenter.prototype = {
                 "aPosition" : 0,
                 "aNormal"   : 1,
                 "aColor"    : 2,
-				"aPointSize": 4				
+				"aTextureCoord" : 3,
+				"aPointSize": 4
             },
             uniforms   : {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
@@ -468,6 +476,7 @@ Presenter.prototype = {
 				"uClipAxis"                  : [0.0, 0.0, 0.0],
 				"uClipColor"				 : [1.0, 1.0, 1.0],
 				"uClipColorSize"			 : 0.0,
+                "uSampler"                   : 0,				
             }
         });
 		if(this._isDebugging)
