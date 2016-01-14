@@ -519,8 +519,6 @@ Presenter.prototype = {
             uniform   vec3 uClipAxis;                                             \n\
                                                                                   \n\
             varying   vec4 vModelPos;                                             \n\
-			                                                                      \n\
-			#extension GL_EXT_frag_depth : enable								  \n\
                                                                                   \n\
 			vec4 pack_depth(const in float depth)                                         \n\
 			{                                                                             \n\
@@ -2653,7 +2651,7 @@ Presenter.prototype = {
         var ui = this.ui;
 
 		var diff = false;
-		if(this._isDebugging && e.altKey) { // DEBUGGING-AUTHORING keys
+		if(e.altKey) { 
 			var testValue = this._pointSize; // key "ALT" + MOUSE WHEEL to change pointclouds point set size
 
 			this._pointSize += wheelDelta/10;

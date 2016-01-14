@@ -912,7 +912,7 @@ Nexus.Renderer.prototype = {
 
 		var cachedNodes = this._cachedNodes;
 
-		console.log(readyNodes);
+		//console.log(readyNodes);
 
 		var newCache = cachedNodes.concat(readyNodes);
 		newCache.sort(Nexus.Renderer._sortNodeCacheFunction);
@@ -963,7 +963,7 @@ Nexus.Renderer.prototype = {
 
 		for (var i = 0, n = newNodes.length; i < n; ++i) {
 			var node    = newNodes[i];
-			console.log("loading node: " + node.index);
+			//console.log("loading node: " + node.index);
 			var compressed = Nexus.Signature.MECO + Nexus.Signature.CTM1 + Nexus.Signature.CTM2;
 
 			if(Nexus.Debug.worker && this._header.signature.flags & compressed) {
@@ -992,7 +992,7 @@ Nexus.Renderer.prototype = {
 					node.buffer = coder.decode(buffer);
 					var elapsed = window.performance.now() - now;
 
-					console.log("Z Time: " + elapsed + " Size: " + size + " KT/s: " + (node.facesCount/(elapsed)) + " Mbps " + (8*1000*node.buffer.byteLength/elapsed)/(1<<20));
+					//console.log("Z Time: " + elapsed + " Size: " + size + " KT/s: " + (node.facesCount/(elapsed)) + " Mbps " + (8*1000*node.buffer.byteLength/elapsed)/(1<<20));
 	
 				} else {
 					node.buffer = ctmDecode(sig, _node, p);
@@ -1180,7 +1180,7 @@ Nexus.Renderer.prototype = {
 		//compressed use worker:
 		var that = this;
 		return function () {
-			console.log("received node: " + node.index);
+//			console.log("received node: " + node.index);
 			node.request.buffer = node.request.response;
 			that._header.signature.flags & compressed
 			var compressed = Nexus.Signature.MECO + Nexus.Signature.CTM1 + Nexus.Signature.CTM2;
