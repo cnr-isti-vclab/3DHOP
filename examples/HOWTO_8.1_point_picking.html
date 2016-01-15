@@ -35,7 +35,7 @@
   <img id="full_on"    title="Exit Full Screen"      src="skins/dark/full_on.png" style="position:absolute; visibility:hidden;"/>
   <img id="full"       title="Full Screen"           src="skins/dark/full.png"   />
  </div>
- <div id="pickpoint-box" class="output-box"><span class="output-cell">XYZ picked point:<br/><span id="pickpoint-output" class="output-text" onmousedown="event.stopPropagation()">[ 0 , 0 , 0 ]</span></span></div>
+ <div id="pickpoint-box" class="output-box">XYZ picked point:<br/><span id="pickpoint-output" class="output-text" onmousedown="event.stopPropagation()">[ 0 , 0 , 0 ]</span></div>
  <canvas id="draw-canvas" style="background-image: url(skins/backgrounds/light.jpg)"/>
 </div> 
 </body>
@@ -61,18 +61,19 @@ function setup3dhop() {
 			}
 		},
 		trackball: {
-			type : PanTiltTrackball,
+			type : TurnTableTrackball,
 			trackOptions : {
-				startDistance : 3.0,
-				minMaxDist    : [2.0, 5.0],
-				minMaxAngleY  : [-90.0, 90.0],
+				startPhi: 40.0,
+				startTheta: 20.0,
+				startDistance: 1.3,
+				minMaxPhi: [-180, 180],
+				minMaxTheta: [-30.0, 70.0],
+				minMaxDist: [0.2, 2.2]
 			}
 		},
 		space: {
-			centerMode: "explicit",
-			radiusMode: "explicit",
-			explicitRadius: 75,
-			explicitCenter: [0.0, 50.0, 0.0]
+			centerMode: "scene",
+			radiusMode: "scene",
 		}
 	});
 
@@ -102,7 +103,6 @@ $(document).ready(function(){
 	setup3dhop();
 
 //	moveToolbar(0, 150);
-
 //	movePickpointbox(10,0);
 });
 </script>

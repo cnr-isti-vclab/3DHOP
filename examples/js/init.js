@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 function init3dhop() {
 	var interval, id, ismousedown;
 	var button = 0;
-
+	
 	$('#toolbar img')
 		.mouseenter(function(e) {
 			id = $(this).attr('id');
@@ -61,17 +61,7 @@ function init3dhop() {
 		.on('touchend', function(e) {
 			button=0;
 		});
-/*
-	$('#measure-output')
-		.on('contextmenu', function(e){ 
-			e.stopPropagation();
-		});
 
-	$('#pickpoint-output')
-		.on('contextmenu', function(e){ 
-			e.stopPropagation();
-		});
-*/
 	$('#3dhop')
 		.on('contextmenu', function(e){ 
 			return false; 
@@ -88,7 +78,6 @@ function init3dhop() {
 		});
 
 	$('#draw-canvas')
-//		.css("cursor","default")
 		.mousedown(function(e) { 
 			$('#toolbar img').css("opacity","0.5"); 
 			if(e.preventDefault) e.preventDefault(); 
@@ -105,6 +94,8 @@ function init3dhop() {
 
 	if ($('#pickpoint-box').length) movePickpointbox(($('#pick').offset().left + $('#pick').width() + 5), ($('#pick').offset().top));
 	if ($('#measure-box').length) moveMeasurementbox(($('#measure').offset().left + $('#measure').width() + 5), ($('#measure').offset().top));
+	if ($('#sections-box').length) moveSectionsbox(($('#sections').offset().left + $('#sections').width() + 5), ($('#sections').offset().top));
+	if ($('#pointsize-box').length) movePointsizebox(($('#pointsize').offset().left + $('#pointsize').width() + 5), ($('#pointsize').offset().top));
 
 	set3dhlg();
 } 
@@ -116,13 +107,11 @@ function lightSwitch() {
     $('#light').css("visibility", "hidden");
     $('#light_on').css("visibility", "visible");
     $('#light_on').css("opacity","1.0");
-//    $('#draw-canvas').css("cursor","url(./skins/icons/cursor_light.png), auto");
   }
   else{
     $('#light_on').css("visibility", "hidden");
     $('#light').css("visibility", "visible");
     $('#light').css("opacity","1.0");
-//    $('#draw-canvas').css("cursor","default");
   }
 }
 
@@ -208,6 +197,127 @@ function hotspotSwitch() {
   }
 }
 
+function showSectionTool(on) 
+{  
+	if(on){
+		// default section value
+		presenter.setClippingXYZ(0, 0, 0);
+		presenter.setClippingPointXYZ(0.5, 0.5, 0.5);	
+	
+		// setup interface 
+		var xplaneSlider = document.getElementById("xplaneSlider");
+		xplaneSlider.min = 0.0;
+		xplaneSlider.max = 1.0;
+		xplaneSlider.step = 0.01;
+		xplaneSlider.defaultValue = 0.5;
+		xplaneSlider.oninput=function(){presenter.setClippingPointX(this.valueAsNumber);};
+		document.getElementById("xplaneFlip").checked = false;		
+		document.getElementById("xplaneFlip").onchange=function(){
+			if(presenter._clipAxis[0]!=0){
+				if(this.checked) presenter.setClippingX(-1);
+				else presenter.setClippingX(1);
+			}
+		};
+
+		var yplaneSlider = document.getElementById("yplaneSlider");
+		yplaneSlider.min = 0.0;
+		yplaneSlider.max = 1.0;
+		yplaneSlider.step = 0.01;		
+		yplaneSlider.defaultValue = 0.5;
+		yplaneSlider.oninput=function(){presenter.setClippingPointY(this.valueAsNumber);};
+		document.getElementById("yplaneFlip").checked = false;
+		document.getElementById("yplaneFlip").onchange=function(){
+			if(presenter._clipAxis[1]!=0){
+				if(this.checked) presenter.setClippingY(-1);
+				else presenter.setClippingY(1);
+			}
+		};
+
+		var zplaneSlider = document.getElementById("zplaneSlider");
+		zplaneSlider.min = 0.0;
+		zplaneSlider.max = 1.0;
+		zplaneSlider.step = 0.01;
+		zplaneSlider.defaultValue = 0.5;
+		zplaneSlider.oninput=function(){presenter.setClippingPointZ(this.valueAsNumber);};
+		document.getElementById("zplaneFlip").checked = false;		
+		document.getElementById("zplaneFlip").onchange=function(){
+			if(presenter._clipAxis[2]!=0){
+				if(this.checked) presenter.setClippingZ(-1);
+				else presenter.setClippingZ(1);
+			}
+		};
+
+		document.getElementById("showPlane").onchange=function(){
+			if(this.checked) presenter._scene.config.showClippingPlanes = 1;
+			else presenter._scene.config.showClippingPlanes = 0;
+			presenter.ui.postDrawEvent();
+		};
+
+		document.getElementById("showBorder").onchange=function(){
+			if(this.checked) presenter._scene.config.showClippingBorder = 1;
+			else presenter._scene.config.showClippingBorder = 0;
+			presenter.ui.postDrawEvent();
+		}; 	
+	
+		$('#sections').css("visibility", "hidden");
+		$('#sections_on').css("visibility", "visible");
+		$('#sections_on').css("opacity","1.0");
+		$('#sections-box').css("visibility","visible");
+		$('#sections-box .button').css("visibility", "visible");
+	}
+	else{
+		$('#sections_on').css("visibility", "hidden");
+		$('#sections').css("visibility", "visible");
+		$('#sections').css("opacity","1.0");
+		$('#sections-box').css("visibility","hidden");
+		$('#sections-box .button, #sections-box .button_on').css("visibility", "hidden");
+		presenter.setClippingXYZ(0, 0, 0);
+		presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
+	}
+}
+
+function xSwitch() {
+	if(presenter._clipAxis[0]==0) {
+		$('#xplane').css("visibility", "hidden");
+		$('#xplane_on').css("visibility", "visible");
+		if(document.getElementById("xplaneFlip").checked) presenter.setClippingX(-1);
+		else presenter.setClippingX(1);
+	}
+	else {
+		$('#xplane_on').css("visibility", "hidden");
+		$('#xplane').css("visibility", "visible");
+		presenter.setClippingX(0);
+	}
+}
+
+function ySwitch() {
+	if(presenter._clipAxis[1]==0) {
+		$('#yplane').css("visibility", "hidden");
+		$('#yplane_on').css("visibility", "visible");
+		if(document.getElementById("yplaneFlip").checked) presenter.setClippingY(-1);
+		else presenter.setClippingY(1);
+	}
+	else {
+		$('#yplane_on').css("visibility", "hidden");
+		$('#yplane').css("visibility", "visible");
+		presenter.setClippingY(0);
+	}
+}
+
+function zSwitch() {
+	if(presenter._clipAxis[2]==0) {
+		$('#zplane').css("visibility", "hidden");
+		$('#zplane_on').css("visibility", "visible");
+		if(document.getElementById("zplaneFlip").checked) presenter.setClippingZ(-1);
+		else presenter.setClippingZ(1);
+	}
+	else {
+		$('#zplane_on').css("visibility", "hidden");
+		$('#zplane').css("visibility", "visible");
+		presenter.setClippingZ(0);
+	}
+}
+
 function fullscreenSwitch() {
   if($('#full').css("visibility")=="visible"){
     if (window.navigator.userAgent.indexOf('Trident/') < 0) enterFullscreen();
@@ -251,6 +361,8 @@ function moveToolbar(l,t) {
   $('#toolbar').css('top', t);
   if ($('#pickpoint-box').length) movePickpointbox(l,t);
   if ($('#measure-box').length) moveMeasurementbox(l,t);
+  if ($('#sections-box').length) moveSectionsbox(l,t);
+  if ($('#pointsize-box').length) movePointsizebox(l,t);
 }
 
 function movePickpointbox(l,t) {
@@ -267,6 +379,16 @@ function moveMeasurebox(r,t) {
 function moveMeasurementbox(l,t) {
   $('#measure-box').css('left', $('#measure-box').offset().left+l);
   $('#measure-box').css('top', $('#measure-box').offset().top+t);
+}
+
+function moveSectionsbox(l,t) {
+  $('#sections-box').css('left', $('#sections-box').offset().left+l);
+  $('#sections-box').css('top', $('#sections-box').offset().top+t);
+}
+
+function movePointsizebox(l,t) {
+  $('#pointsize-box').css('left', $('#pointsize-box').offset().left+l);
+  $('#pointsize-box').css('top', $('#pointsize-box').offset().top+t);
 }
 
 function resizeCanvas(w,h) {

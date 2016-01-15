@@ -2487,8 +2487,6 @@ Presenter.prototype = {
 
 		this._lightDirection = HOP_DEFAULTLIGHT;
 
-		this._pointSize   = 1.5;
-
 		this.sceneCenter = [0.0, 0.0, 0.0];
 		this.sceneRadiusInv = 1.0;
 
@@ -2552,7 +2550,10 @@ Presenter.prototype = {
 		this._clipAxis  = [0.0, 0.0, 0.0];
 		this._sceneBboxMin = [0.0, 0.0, 0.0];
 		this._sceneBboxMax = [0.0, 0.0, 0.0];
-		this._sceneBboxCenter = [0.0, 0.0, 0.0]
+		this._sceneBboxCenter = [0.0, 0.0, 0.0];
+
+		// point size control
+		this._pointSize   = 2.0;
 
 		// handlers
 		this._onPickedInstance  = 0;
@@ -2659,7 +2660,8 @@ Presenter.prototype = {
 			if (this._pointSize < 0) this._pointSize = 0;
 			else if (this._pointSize > 5) this._pointSize = 5;
 
-			if(testValue!=this._pointSize) diff=true;
+			if(testValue!=this._pointSize) 
+				diff=true;
 		}
 		else {
 			var action = SGL_TRACKBALL_SCALE;
@@ -2675,6 +2677,7 @@ Presenter.prototype = {
 				if(testMatrix[i]!=this.trackball._matrix[i]) {diff=true; break;}
 			}
 		}
+		
 		if(diff) ui.postDrawEvent();
     },
 
@@ -3558,8 +3561,7 @@ Presenter.prototype = {
 	
 	isAnyMeasurementEnabled: function() {
 		return this._isMeasuring;
-	}
+	},
 
-//-----------------------------------------------------------------------------
-
+//-----------------------------------------------------------------------------	
 };
