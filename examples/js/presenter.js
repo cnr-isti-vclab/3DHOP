@@ -29,11 +29,11 @@ const SGL_TRACKBALL_PAN       = 2;
 const SGL_TRACKBALL_DOLLY     = 3; 
 const SGL_TRACKBALL_SCALE     = 4;
 // selectors
-const HOP_ALL     = 256;
+const HOP_ALL                 = 256;
 // starting debug mode
-const HOP_DEBUGMODE   = true;
+const HOP_DEBUGMODE           = false;
 // default light direction
-const HOP_DEFAULTLIGHT = [0, 0, -1];
+const HOP_DEFAULTLIGHT        = [0, 0, -1];
 
 Presenter = function (canvas) {
 	this._supportsWebGL = sglHandleCanvas(canvas, this);
@@ -2529,6 +2529,8 @@ Presenter.prototype = {
 		this._lastSpotID     = 0;
 		this._pickpoint      = [1, 1];
 
+		this._keycombo = false;
+
 		// global measurement data
 		this._isMeasuring = false;
 
@@ -2553,7 +2555,8 @@ Presenter.prototype = {
 		this._sceneBboxCenter = [0.0, 0.0, 0.0];
 
 		// point size control
-		this._pointSize   = 2.0;
+		this._pointSize   = 1.0;
+		this._pointSizeMinMax   = [0.0, 2.0];
 
 		// handlers
 		this._onPickedInstance  = 0;
@@ -2637,14 +2640,21 @@ Presenter.prototype = {
 		this._clickable = false;
 	},
 
-	onKeyPress : function (key, evt) {
+	onKeyPress : function (key, e) {
 		if(this._isDebugging) { // DEBUGGING-AUTHORING keys
-			if((evt.charCode == '80') || (evt.charCode == '112')) // key "P" to print trackball
+			if((e.charCode == '80') || (e.charCode == '112')) // key "P" to print trackball
 				console.log(this.trackball.getState());
-			if (evt.charCode == '49') { // key "1" to show nexus patches
+			if (e.charCode == '49') { // key "1" to show nexus patches
 				Nexus.Debug.nodes=!Nexus.Debug.nodes;
 				this.ui.postDrawEvent();
 			}
+		}
+	},
+
+	onKeyUp : function (key, e) {
+		if(this._keycombo && e.keyCode == '18') {
+			e.preventDefault();
+			this._keycombo = false;
 		}
 	},
 
@@ -2652,20 +2662,24 @@ Presenter.prototype = {
         var ui = this.ui;
 
 		var diff = false;
-		if(e.altKey) { 
-			var testValue = this._pointSize; // key "ALT" + MOUSE WHEEL to change pointclouds point set size
+
+		if(e && e.altKey) { // key "ALT" + MOUSE WHEEL to change pointclouds point set size
+			this._keycombo = true;
+
+			var testValue = this._pointSize; 
 
 			this._pointSize += wheelDelta/10;
 
-			if (this._pointSize < 0) this._pointSize = 0;
-			else if (this._pointSize > 5) this._pointSize = 5;
+			if (this._pointSize < this._pointSizeMinMax[0]) this._pointSize = this._pointSizeMinMax[0];
+			else if (this._pointSize > this._pointSizeMinMax[1]) this._pointSize = this._pointSizeMinMax[1];
 
-			if(testValue!=this._pointSize) 
+			if(testValue!=this._pointSize) { 
 				diff=true;
+			}
 		}
 		else {
 			var action = SGL_TRACKBALL_SCALE;
-			var factor = wheelDelta < 0.0 ? (0.90) : (1.10);
+			var factor = wheelDelta > 0.0 ? (0.90) : (1.10);
 
 			var testMatrix = this.trackball._matrix.slice();
 
@@ -2677,7 +2691,7 @@ Presenter.prototype = {
 				if(testMatrix[i]!=this.trackball._matrix[i]) {diff=true; break;}
 			}
 		}
-		
+
 		if(diff) ui.postDrawEvent();
     },
 
@@ -3490,11 +3504,11 @@ Presenter.prototype = {
 //-----------------------------------------------------------------------------	
 	
     zoomIn: function() {
-       this.onMouseWheel(-1);
+       this.onMouseWheel(1);
     },
 
     zoomOut: function() {
-       this.onMouseWheel(1);
+       this.onMouseWheel(-1);
     },
 
 //-----------------------------------------------------------------------------	
@@ -3563,5 +3577,6 @@ Presenter.prototype = {
 		return this._isMeasuring;
 	},
 
-//-----------------------------------------------------------------------------	
+//-----------------------------------------------------------------------------
+
 };

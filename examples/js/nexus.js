@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -62,15 +62,15 @@ Nexus.Attribute._typeSizeMap[Nexus.Attribute.FLOAT         ] = 4;
 Nexus.Attribute._typeSizeMap[Nexus.Attribute.DOUBLE        ] = 8;
 
 Nexus.Attribute._typeGLMap = { };
-Nexus.Attribute._typeGLMap[Nexus.Attribute.NONE          ] = WebGLRenderingContext.NONE;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.BYTE          ] = WebGLRenderingContext.BYTE;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_BYTE ] = WebGLRenderingContext.UNSIGNED_BYTE;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.SHORT         ] = WebGLRenderingContext.SHORT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_SHORT] = WebGLRenderingContext.UNSIGNED_SHORT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.INT           ] = WebGLRenderingContext.INT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_INT  ] = WebGLRenderingContext.UNSIGNED_INT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.FLOAT         ] = WebGLRenderingContext.FLOAT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.DOUBLE        ] = WebGLRenderingContext.DOUBLE;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.NONE          ] = WebGLRenderingContext.prototype.NONE;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.BYTE          ] = WebGLRenderingContext.prototype.BYTE;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_BYTE ] = WebGLRenderingContext.prototype.UNSIGNED_BYTE;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.SHORT         ] = WebGLRenderingContext.prototype.SHORT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_SHORT] = WebGLRenderingContext.prototype.UNSIGNED_SHORT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.INT           ] = WebGLRenderingContext.prototype.INT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_INT  ] = WebGLRenderingContext.prototype.UNSIGNED_INT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.FLOAT         ] = WebGLRenderingContext.prototype.FLOAT;
+Nexus.Attribute._typeGLMap[Nexus.Attribute.DOUBLE        ] = WebGLRenderingContext.prototype.DOUBLE;
 
 Nexus.Attribute._typeNormalized = { };
 Nexus.Attribute._typeNormalized[Nexus.Attribute.NONE          ] = true;
@@ -777,14 +777,11 @@ Nexus.Renderer.prototype = {
 		}
 	},
 
-
 	url: function() {
 		var url = this._url;
 		/**Safari PATCH**/
-		if (navigator.userAgent.toLowerCase().indexOf('safari')!=-1 && 
-			navigator.userAgent.toLowerCase().indexOf('chrome')==-1) {
-			url = this._url + '?' + Math.random();
-		}
+		/**/if (sayswho()[0]==='Safari' && sayswho()[1]!=='9') 
+		/**/  url = this._url + '?' + Math.random();
 		/**Safari PATCH**/
 		return url;
 	},
@@ -1015,9 +1012,9 @@ Nexus.Renderer.prototype = {
 				node.ibo = new SglIndexBuffer  (gl, {data : indices });
 
 			node.request = null;
-			//STEP 1: if textures not ready this will be delayed		
+			//STEP 1: if textures not ready this will be delayed
 			var isReady = true;	
-			var patches      = this._patches.items;			
+			var patches      = this._patches.items;
 			for(var k = node.firstPatch; k < node.lastPatch; ++k) {
 				var patch = this._patches.items[k];
 				if(patch.texture == 0xffffffff) continue;
@@ -1308,7 +1305,7 @@ Nexus.Renderer.prototype = {
 			}
 		}
 
-		
+		var that = this;
 		var url = this.url();
 		for (var i=0; i<nodesToRequest; ++i) {
 			var node   = candidateNodes[i];
@@ -1318,10 +1315,32 @@ Nexus.Renderer.prototype = {
 			node.request.responseType = 'arraybuffer';
 			node.request.setRequestHeader("Range", "bytes=" + node.offset + "-" + node.lastByte);
 			node.request.onload = this._createNodeHandler(node);
+			node.request.onerror= function () { //NODES RECOVERY DRAFT
+				for (var j=0, n=candidateNodes.length; j<n; ++j) 
+					if(candidateNodes[j].requestError) return;
+//				that._updateView();
+//				that._updateCache();
+//				that._hierarchyVisit();
+				that._candidateNodes = candidateNodes;
+				for (var j=0, n=candidateNodes.length; j<n; ++j) 
+					candidateNodes[j].requestError = true;
+				that._requestNodes();
+			}
+			node.request.onabort= function () { //NODES RECOVERY DRAFT
+				for (var j=0, n=candidateNodes.length; j<n; ++j) 
+					if(candidateNodes[j].requestCancel) return;
+//				that._updateView();
+//				that._updateCache();
+//				that._hierarchyVisit();
+				that._candidateNodes = candidateNodes;
+				for (var j=0, n=candidateNodes.length; j<n; ++j) 
+					candidateNodes[j].requestCancel = true;
+				that._requestNodes();
+			}
 			node.request.send();
 
 			//check for textures
-			var patches      = this._patches.items;			
+			var patches      = this._patches.items;
 			for(var i = node.firstPatch; i < node.lastPatch; ++i) {
 				var patch = patches[i];
 				if(patch.texture == 0xffffffff) continue;
@@ -1338,7 +1357,7 @@ Nexus.Renderer.prototype = {
 					tex.request.send();
 				}
 				//add a 'wakeup call'
-				tex.nodes.push(node);			
+				tex.nodes.push(node);
 			}
 		}
 		this._candidateNodes = [];
@@ -1545,4 +1564,20 @@ Nexus.Renderer.prototype = {
 		this._render();
 		this._endRender();
 	}
+};
+
+sayswho = function() {
+	var ua= navigator.userAgent, tem, 
+	M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+	if(/trident/i.test(M[1])){
+		tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
+		return 'IE '+(tem[1] || '');
+	}
+	if(M[1]=== 'Chrome'){
+		tem= ua.match(/\b(OPR|Edge)\/(\d+)/);
+		if(tem!= null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+	}
+	M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+	if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
+	return M;
 };

@@ -27,17 +27,19 @@ body { width:100%; height:100%; margin:0px; }
 
 #toolbar img { margin-bottom:8px; width:50px; height:50px; opacity:0.5; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.output-box { visibility:hidden; position:absolute; background-color:rgba(125,125,125,0.5); display:table; border-radius:5px; margin:0; /*width:130px;*/ height:50px; padding:0 5; cursor:default; color:#f8f8f8; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+.output-box { visibility:hidden; position:absolute; background-color:rgba(125,125,125,0.5); display:table; border-radius:5px; margin:0; height:45px; padding:5px 5px 0 5px; cursor:default; color:#f8f8f8; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+
+.output-box input { cursor:pointer;}
 
 .output-text { cursor:text; -webkit-user-select:text; -webkit-touch-callout:text; -khtml-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text; }
 
-.sections-table {width:100%; /*border:1px solid black;*/ text-align:center; vertical-align:middle; margin:0; cursor:default; color:#f8f8f8; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+.sections-table {width:100%; text-align:center; vertical-align:middle; margin:-5px 0 0 0; cursor:default; color:#f8f8f8; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.sections-table .button { border:1px outset; width:35px; height:25px; cursor:hand;}
+.sections-table .button { background-color:rgba(125,125,125,0.25); border:1px outset; border-radius:5px; height:25px; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.sections-table .button_on { border:1px inset; width:35px; height:25px; cursor:hand; position:absolute; visibility:hidden;}
+.sections-table .button_on { background-color:rgba(125,125,125,0.25); border:1px inset; border-radius:5px; height:25px; cursor:pointer; position:absolute; visibility:hidden; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.sections-table input { cursor:hand;}
+.sections-table img:hover { background-color:rgba(125,125,125,0.8); }
 
 #draw-canvas { background-repeat:no-repeat; background-position:center top; -webkit-background-size:cover; -moz-background-size:cover; -o-background-size:cover; background-size:cover; outline:none; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 

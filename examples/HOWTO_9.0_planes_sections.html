@@ -131,7 +131,7 @@ function actionsToolbar(action) {
 	else if(action=='zoomout') presenter.zoomOut(); 
 	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
 	else if(action=='sections') { showSectionTool(true); } 
-	else if(action=='sections_on') { showSectionTool(false); } 	
+	else if(action=='sections_on') { showSectionTool(false); } 
 	else if(action=='full' || action=='full_on') fullscreenSwitch(); 
 }
 
@@ -140,8 +140,7 @@ $(document).ready(function(){
 
 	setup3dhop();
 
-//	moveToolbar(0, 150);
-//	moveSectionsbox(10,0);
+	moveSectionsbox(-1,0);
 });
 </script>
 

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 function init3dhop() {
 	var interval, id, ismousedown;
 	var button = 0;
-	
+
 	$('#toolbar img')
 		.mouseenter(function(e) {
 			id = $(this).attr('id');
@@ -62,8 +62,9 @@ function init3dhop() {
 			button=0;
 		});
 
+
 	$('#3dhop')
-		.on('contextmenu', function(e){ 
+		.on('contextmenu', function(e) { 
 			return false; 
 		})
 		.on('touchstart', function(e) {
@@ -85,20 +86,27 @@ function init3dhop() {
 			else if (document.selection && document.selection.createRange()!='') document.selection.empty();
 		});
 
+	$(document).on('MSFullscreenChange mozfullscreenchange webkitfullscreenchange', function() { //fullscreen handler 
+		if(!document.msFullscreenElement&&!document.mozFullScreen&&!document.webkitIsFullScreen) exitFullscreen();
+	});
+
 	if (window.navigator.userAgent.indexOf('Trident/') > 0) { //IE fullscreen handler 
-		$('#full').click(function(e) {enterFullscreen();});
-		$('#full_on').click(function(e) {exitFullscreen();});
+		$('#full').click(function() {enterFullscreen();});
+		$('#full_on').click(function() {exitFullscreen();});
 	}
+
+	$(window).on('load mouseup touchend dragend', function() { //focus handler
+		$('#draw-canvas').focus();
+	});
 
 	resizeCanvas($('#3dhop').parent().width(),$('#3dhop').parent().height());
 
 	if ($('#pickpoint-box').length) movePickpointbox(($('#pick').offset().left + $('#pick').width() + 5), ($('#pick').offset().top));
 	if ($('#measure-box').length) moveMeasurementbox(($('#measure').offset().left + $('#measure').width() + 5), ($('#measure').offset().top));
 	if ($('#sections-box').length) moveSectionsbox(($('#sections').offset().left + $('#sections').width() + 5), ($('#sections').offset().top));
-	if ($('#pointsize-box').length) movePointsizebox(($('#pointsize').offset().left + $('#pointsize').width() + 5), ($('#pointsize').offset().top));
 
 	set3dhlg();
-} 
+}
 
 function lightSwitch() {
   var on = presenter.isLightTrackballEnabled();
@@ -197,22 +205,25 @@ function hotspotSwitch() {
   }
 }
 
-function showSectionTool(on) 
-{  
+function showSectionTool(on) {  
 	if(on){
 		// default section value
 		presenter.setClippingXYZ(0, 0, 0);
-		presenter.setClippingPointXYZ(0.5, 0.5, 0.5);	
-	
+		presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
+
 		// setup interface 
 		var xplaneSlider = document.getElementById("xplaneSlider");
+		if(!xplaneSlider) return; 
 		xplaneSlider.min = 0.0;
 		xplaneSlider.max = 1.0;
 		xplaneSlider.step = 0.01;
 		xplaneSlider.defaultValue = 0.5;
+		xplaneSlider.value = xplaneSlider.defaultValue;
 		xplaneSlider.oninput=function(){presenter.setClippingPointX(this.valueAsNumber);};
-		document.getElementById("xplaneFlip").checked = false;		
-		document.getElementById("xplaneFlip").onchange=function(){
+		var xplaneFlip = document.getElementById("xplaneFlip");
+		if(!xplaneFlip) return; 
+		xplaneFlip.checked = false;
+		xplaneFlip.onchange=function(){
 			if(presenter._clipAxis[0]!=0){
 				if(this.checked) presenter.setClippingX(-1);
 				else presenter.setClippingX(1);
@@ -220,13 +231,17 @@ function showSectionTool(on)
 		};
 
 		var yplaneSlider = document.getElementById("yplaneSlider");
+		if(!yplaneSlider) return; 
 		yplaneSlider.min = 0.0;
 		yplaneSlider.max = 1.0;
-		yplaneSlider.step = 0.01;		
+		yplaneSlider.step = 0.01;
 		yplaneSlider.defaultValue = 0.5;
+		yplaneSlider.value = yplaneSlider.defaultValue;
 		yplaneSlider.oninput=function(){presenter.setClippingPointY(this.valueAsNumber);};
-		document.getElementById("yplaneFlip").checked = false;
-		document.getElementById("yplaneFlip").onchange=function(){
+		var yplaneFlip = document.getElementById("yplaneFlip");
+		if(!yplaneFlip) return; 
+		yplaneFlip.checked = false;
+		yplaneFlip.onchange=function(){
 			if(presenter._clipAxis[1]!=0){
 				if(this.checked) presenter.setClippingY(-1);
 				else presenter.setClippingY(1);
@@ -234,31 +249,39 @@ function showSectionTool(on)
 		};
 
 		var zplaneSlider = document.getElementById("zplaneSlider");
+		if(!zplaneSlider) return;  
 		zplaneSlider.min = 0.0;
 		zplaneSlider.max = 1.0;
 		zplaneSlider.step = 0.01;
 		zplaneSlider.defaultValue = 0.5;
+		zplaneSlider.value = zplaneSlider.defaultValue;
 		zplaneSlider.oninput=function(){presenter.setClippingPointZ(this.valueAsNumber);};
-		document.getElementById("zplaneFlip").checked = false;		
-		document.getElementById("zplaneFlip").onchange=function(){
+		var zplaneFlip = document.getElementById("zplaneFlip");
+		if(!zplaneFlip) return;
+		zplaneFlip.checked = false;
+		zplaneFlip.onchange=function(){
 			if(presenter._clipAxis[2]!=0){
 				if(this.checked) presenter.setClippingZ(-1);
 				else presenter.setClippingZ(1);
 			}
 		};
 
-		document.getElementById("showPlane").onchange=function(){
+		var planesCheck = document.getElementById("showPlane");
+		if(!planesCheck) return;
+		planesCheck.onchange=function(){
 			if(this.checked) presenter._scene.config.showClippingPlanes = 1;
 			else presenter._scene.config.showClippingPlanes = 0;
 			presenter.ui.postDrawEvent();
 		};
 
-		document.getElementById("showBorder").onchange=function(){
+		var edgesCheck = document.getElementById("showBorder");
+		if(!edgesCheck) return;
+		edgesCheck.onchange=function(){
 			if(this.checked) presenter._scene.config.showClippingBorder = 1;
 			else presenter._scene.config.showClippingBorder = 0;
 			presenter.ui.postDrawEvent();
-		}; 	
-	
+		};
+
 		$('#sections').css("visibility", "hidden");
 		$('#sections_on').css("visibility", "visible");
 		$('#sections_on').css("opacity","1.0");
@@ -280,7 +303,9 @@ function xSwitch() {
 	if(presenter._clipAxis[0]==0) {
 		$('#xplane').css("visibility", "hidden");
 		$('#xplane_on').css("visibility", "visible");
-		if(document.getElementById("xplaneFlip").checked) presenter.setClippingX(-1);
+		var xflip = document.getElementById("xplaneFlip");
+		if(!xflip) return;  
+		if(xflip.checked) presenter.setClippingX(-1);
 		else presenter.setClippingX(1);
 	}
 	else {
@@ -294,7 +319,9 @@ function ySwitch() {
 	if(presenter._clipAxis[1]==0) {
 		$('#yplane').css("visibility", "hidden");
 		$('#yplane_on').css("visibility", "visible");
-		if(document.getElementById("yplaneFlip").checked) presenter.setClippingY(-1);
+		var yflip = document.getElementById("yplaneFlip");
+		if(!yflip) return;  
+		if(yflip.checked) presenter.setClippingY(-1);
 		else presenter.setClippingY(1);
 	}
 	else {
@@ -308,7 +335,9 @@ function zSwitch() {
 	if(presenter._clipAxis[2]==0) {
 		$('#zplane').css("visibility", "hidden");
 		$('#zplane_on').css("visibility", "visible");
-		if(document.getElementById("zplaneFlip").checked) presenter.setClippingZ(-1);
+		var zflip = document.getElementById("zplaneFlip");
+		if(!zflip) return;  
+		if(zflip.checked) presenter.setClippingZ(-1);
 		else presenter.setClippingZ(1);
 	}
 	else {
@@ -328,7 +357,8 @@ function fullscreenSwitch() {
 }
 
 function enterFullscreen() {
-  var el = document.getElementById('3dhop');
+  var viewer = document.getElementById('3dhop');
+  if(!viewer) return; 
   presenter.native_width  = presenter.ui.width;
   presenter.native_height = presenter.ui.height;
   $('#full').css("visibility", "hidden");
@@ -336,9 +366,9 @@ function enterFullscreen() {
   $('#full_on').css("opacity","0.5");
   resizeCanvas(screen.width,screen.height);
 
-  if (el.msRequestFullscreen) el.msRequestFullscreen();
-  else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
-  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  if (viewer.msRequestFullscreen) viewer.msRequestFullscreen();
+  else if (viewer.mozRequestFullScreen) viewer.mozRequestFullScreen();
+  else if (viewer.webkitRequestFullscreen) viewer.webkitRequestFullscreen();
 
   presenter.ui.postDrawEvent();
 }
@@ -362,7 +392,6 @@ function moveToolbar(l,t) {
   if ($('#pickpoint-box').length) movePickpointbox(l,t);
   if ($('#measure-box').length) moveMeasurementbox(l,t);
   if ($('#sections-box').length) moveSectionsbox(l,t);
-  if ($('#pointsize-box').length) movePointsizebox(l,t);
 }
 
 function movePickpointbox(l,t) {
@@ -386,11 +415,6 @@ function moveSectionsbox(l,t) {
   $('#sections-box').css('top', $('#sections-box').offset().top+t);
 }
 
-function movePointsizebox(l,t) {
-  $('#pointsize-box').css('left', $('#pointsize-box').offset().left+l);
-  $('#pointsize-box').css('top', $('#pointsize-box').offset().top+t);
-}
-
 function resizeCanvas(w,h) {
   $('#draw-canvas').attr('width', w);
   $('#draw-canvas').attr('height',h);
@@ -412,13 +436,3 @@ function set3dhlg() {
 	 });
   $('#tdhlg').click(function() { window.open('http://vcg.isti.cnr.it/3dhop/', '_blank') });
 }
-
-document.addEventListener("MSFullscreenChange", function () {
-    if(!document.msFullscreenElement) exitFullscreen();
-}, false);
-document.addEventListener("mozfullscreenchange", function () {
-    if(!document.mozFullScreen) exitFullscreen();
-}, false);
-document.addEventListener("webkitfullscreenchange", function () {
-    if(!document.webkitIsFullScreen) exitFullscreen();
-}, false);
