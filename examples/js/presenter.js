@@ -1561,7 +1561,7 @@ Presenter.prototype = {
 			var modelMatrix = SglMat4.identity();
 			modelMatrix = SglMat4.mul(modelMatrix, space.transform.matrix);
 			modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
-			modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);	
+			modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 			var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
 			var thisClipBordersize = config.showClippingBorder?config.clippingBorderSize:0.0;
 		
@@ -3348,37 +3348,47 @@ Presenter.prototype = {
 		return visibility;
 	},
 
-//-----------------------------------------------------------------------------	
-// sections	
+//-----------------------------------------------------------------------------
+// sections
 	
     resetClippingXYZ: function() {
         this._calculateBounding();
    		this._clipAxis = [0.0, 0.0, 0.0];
-		this._clipPoint = [0.0, 0.0, 0.0];		
+		this._clipPoint = [0.0, 0.0, 0.0];
 		this.ui.postDrawEvent();
-    },	
-	
+    },
+
     setClippingXYZ: function(cx, cy, cz) {
         this._calculateBounding();
    		this._clipAxis = [cx,cy,cz];
 		this.ui.postDrawEvent();
-    },	
-	
+    },
+
     setClippingX: function(cx) {
         this._calculateBounding();
    		this._clipAxis[0] = cx;
 		this.ui.postDrawEvent();
-    },	
+    },
     setClippingY: function(cy) {
         this._calculateBounding();
    		this._clipAxis[1] = cy;
 		this.ui.postDrawEvent();
-    },	
+    },
     setClippingZ: function(cz) {
         this._calculateBounding();
    		this._clipAxis[2] = cz;
 		this.ui.postDrawEvent();
-    },	
+    },
+
+	getClippingX : function () {
+		return this._clipAxis[0];
+	},
+	getClippingY : function () {
+		return this._clipAxis[1];
+	},
+	getClippingZ : function () {
+		return this._clipAxis[2];
+	},
 
 	setClippingPointXYZabs: function(clx, cly, clz) {
         this._calculateBounding();
@@ -3426,7 +3436,7 @@ Presenter.prototype = {
         nClipPoint = this._sceneBboxMin[0] + clx * (this._sceneBboxMax[0] - this._sceneBboxMin[0]);
 		this._clipPoint[0] = nClipPoint;        
 		this.ui.postDrawEvent();
-    },	
+    },
     setClippingPointY: function(cly) {
         var nClipPoint = 0.0;
         this._calculateBounding();        
@@ -3434,7 +3444,7 @@ Presenter.prototype = {
         nClipPoint = this._sceneBboxMin[1] + cly * (this._sceneBboxMax[1] - this._sceneBboxMin[1]);
 		this._clipPoint[1] = nClipPoint;        
 		this.ui.postDrawEvent();
-    },	
+    },
     setClippingPointZ: function(clz) {
         var nClipPoint = 0.0;
         this._calculateBounding();        
@@ -3442,7 +3452,7 @@ Presenter.prototype = {
         nClipPoint = this._sceneBboxMin[2] + clz * (this._sceneBboxMax[2] - this._sceneBboxMin[2]);
 		this._clipPoint[2] = nClipPoint;
 		this.ui.postDrawEvent();
-    },		
+    },
 	
 	_calculateBounding: function() {		var meshes    = this._scene.meshes;
 		var instances = this._scene.modelInstances;
@@ -3451,7 +3461,7 @@ Presenter.prototype = {
 		this._sceneBboxCenter = [0.0, 0.0, 0.0];
 		var imin = [0.0, 0.0, 0.0];
 		var imax = [0.0, 0.0, 0.0];
-							
+		
 		for (var inst in instances) {
 			var mesh = meshes[instances[inst].mesh];
 			if((mesh)&&(mesh.renderable)){
@@ -3460,7 +3470,7 @@ Presenter.prototype = {
 				instCenter = SglMat4.mul4(instances[inst].transform.matrix, instCenter);
 				instCenter = SglMat4.mul4(this._scene.space.transform.matrix, instCenter);
 				instCenter = SglVec4.to3(instCenter);
-					
+				
 				var radius = mesh.renderable.datasetRadius;
 				var vector111 = SglVec3.one();
 				vector111 = SglMat3.mul3(SglMat4.to33(mesh.transform.matrix), vector111);
@@ -3468,14 +3478,14 @@ Presenter.prototype = {
 				vector111 = SglMat3.mul3(SglMat4.to33(this._scene.space.transform.matrix), vector111);
 				var scalefactor = SglVec3.length(vector111) / SglVec3.length([1,1,1]);
 				radius = radius*scalefactor;
-					
+				
 				imin[0] = instCenter[0] - radius;
 				imin[1] = instCenter[1] - radius;
 				imin[2] = instCenter[2] - radius;
 				imax[0] = instCenter[0] + radius;
 				imax[1] = instCenter[1] + radius;
 				imax[2] = instCenter[2] + radius;
-					
+				
 				if(imin[0] < this._sceneBboxMin[0]) this._sceneBboxMin[0] = imin[0];
 				if(imin[1] < this._sceneBboxMin[1]) this._sceneBboxMin[1] = imin[1];
 				if(imin[2] < this._sceneBboxMin[2]) this._sceneBboxMin[2] = imin[2];
@@ -3491,15 +3501,20 @@ Presenter.prototype = {
     },
 	
     setClippingRendermode: function(showPlanes, showBorder, borderSize, borderColor) {
-        this._calculateBounding();	
-		this._scene.config.showClippingPlanes = showPlanes;	
+        this._calculateBounding();
+		this._scene.config.showClippingPlanes = showPlanes;
 		this._scene.config.showClippingBorder = showBorder;
 		if(borderSize)
 			this._scene.config.clippingBorderSize = borderSize;
 		if(borderColor)
-			this._scene.config.clippingBorderColor = borderColor;		
-		this.ui.postDrawEvent();			
-    },	
+			this._scene.config.clippingBorderColor = borderColor;
+		this.ui.postDrawEvent();
+    },
+	
+    getClippingRendermode: function() {
+		var rendermode = [this._scene.config.showClippingPlanes, this._scene.config.showClippingBorder, this._scene.config.clippingBorderSize, this._scene.config.clippingBorderColor];
+		return rendermode;
+    },
 	
 //-----------------------------------------------------------------------------	
 	

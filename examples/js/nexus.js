@@ -1179,7 +1179,7 @@ Nexus.Renderer.prototype = {
 		return function () {
 //			console.log("received node: " + node.index);
 			node.request.buffer = node.request.response;
-			that._header.signature.flags & compressed
+
 			var compressed = Nexus.Signature.MECO + Nexus.Signature.CTM1 + Nexus.Signature.CTM2;
 			if(!Nexus.Debug.worker && that._header.signature.flags & compressed) {
 				var sig = {
@@ -1245,8 +1245,8 @@ Nexus.Renderer.prototype = {
 					var node = tex.nodes[i];
 					if(node.vbo === null) continue; //not loaded still
 					var isReady = true;
-					for(var i = node.firstPatch; i < node.lastPatch; ++i) {
-						var patch = that._patches.items[i];
+					for(var k = node.firstPatch; k < node.lastPatch; ++k) {
+						var patch = that._patches.items[k];
 						if(patch.texture == 0xffffffff) continue;
 						var t = that._textures.items[patch.texture];
 						if(t.status != Nexus.Renderer._NODE_READY) {

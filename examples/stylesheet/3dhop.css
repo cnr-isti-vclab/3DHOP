@@ -27,23 +27,23 @@ body { width:100%; height:100%; margin:0px; }
 
 #toolbar img { margin-bottom:8px; width:50px; height:50px; opacity:0.5; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.output-box { visibility:hidden; position:absolute; background-color:rgba(125,125,125,0.5); display:table; border-radius:5px; margin:0; height:45px; padding:5px 5px 0 5px; cursor:default; color:#f8f8f8; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
-
-.output-box input { cursor:pointer;}
+.output-box { position:absolute; visibility:hidden;  background-color:rgba(125,125,125,0.5); display:table; border-radius:5px; margin:0; height:45px; padding:5px 5px 0 5px; cursor:default; color:#f8f8f8; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
 .output-text { cursor:text; -webkit-user-select:text; -webkit-touch-callout:text; -khtml-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text; }
 
-.sections-table {width:100%; text-align:center; vertical-align:middle; margin:-5px 0 0 0; cursor:default; color:#f8f8f8; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+.output-input { position:relative; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent;  }
 
-.sections-table .button { background-color:rgba(125,125,125,0.25); border:1px outset; border-radius:5px; height:25px; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+.output-table { margin-top:-5px; width:100%; color:#f8f8f8; text-align:center; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.sections-table .button_on { background-color:rgba(125,125,125,0.25); border:1px inset; border-radius:5px; height:25px; cursor:pointer; position:absolute; visibility:hidden; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+.output-table img { cursor:pointer; background-color:rgba(125,125,125,0.25); border:1px outset; border-radius:5px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.sections-table img:hover { background-color:rgba(125,125,125,0.8); }
+.output-table img:hover { background-color:rgba(125,125,125,0.8); }
+
+.output-table tr:nth-child(n+2) td { background-color:rgba(125,125,125,0.25); border-radius:5px; }
 
 #draw-canvas { background-repeat:no-repeat; background-position:center top; -webkit-background-size:cover; -moz-background-size:cover; -o-background-size:cover; background-size:cover; outline:none; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
 
 /*DEPRECATED*/
-#measurebox { visibility:hidden; overflow:hidden; border-radius:5px; right:10; top:10; margin:0; width:105px; height:26px; cursor:default; color:#909090; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:10px; line-height:13px; position:absolute; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+#measurebox { position:absolute; visibility:hidden; overflow:hidden; border-radius:5px; right:10; top:10; margin:0; width:105px; height:26px; cursor:default; color:#909090; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:10px; line-height:13px;  -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 #measure-output { cursor:text; -webkit-user-select:text; -webkit-touch-callout:text; -khtml-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text; }

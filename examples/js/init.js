@@ -108,6 +108,8 @@ function init3dhop() {
 	set3dhlg();
 }
 
+// +++ INTERFACE SWITCHING FUNCTIONS +++ //
+
 function lightSwitch() {
   var on = presenter.isLightTrackballEnabled();
 
@@ -205,107 +207,137 @@ function hotspotSwitch() {
   }
 }
 
-function showSectionTool(on) {  
-	if(on){
-		// default section value
-		presenter.setClippingXYZ(0, 0, 0);
-		presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
+function sectiontoolSwitch() {
+  var on = $('#sections').css("visibility")=="visible";
 
-		// setup interface 
-		var xplaneSlider = document.getElementById("xplaneSlider");
-		if(!xplaneSlider) return; 
-		xplaneSlider.min = 0.0;
-		xplaneSlider.max = 1.0;
-		xplaneSlider.step = 0.01;
-		xplaneSlider.defaultValue = 0.5;
-		xplaneSlider.value = xplaneSlider.defaultValue;
-		xplaneSlider.oninput=function(){presenter.setClippingPointX(this.valueAsNumber);};
-		var xplaneFlip = document.getElementById("xplaneFlip");
-		if(!xplaneFlip) return; 
-		xplaneFlip.checked = false;
-		xplaneFlip.onchange=function(){
-			if(presenter._clipAxis[0]!=0){
-				if(this.checked) presenter.setClippingX(-1);
-				else presenter.setClippingX(1);
-			}
-		};
-
-		var yplaneSlider = document.getElementById("yplaneSlider");
-		if(!yplaneSlider) return; 
-		yplaneSlider.min = 0.0;
-		yplaneSlider.max = 1.0;
-		yplaneSlider.step = 0.01;
-		yplaneSlider.defaultValue = 0.5;
-		yplaneSlider.value = yplaneSlider.defaultValue;
-		yplaneSlider.oninput=function(){presenter.setClippingPointY(this.valueAsNumber);};
-		var yplaneFlip = document.getElementById("yplaneFlip");
-		if(!yplaneFlip) return; 
-		yplaneFlip.checked = false;
-		yplaneFlip.onchange=function(){
-			if(presenter._clipAxis[1]!=0){
-				if(this.checked) presenter.setClippingY(-1);
-				else presenter.setClippingY(1);
-			}
-		};
-
-		var zplaneSlider = document.getElementById("zplaneSlider");
-		if(!zplaneSlider) return;  
-		zplaneSlider.min = 0.0;
-		zplaneSlider.max = 1.0;
-		zplaneSlider.step = 0.01;
-		zplaneSlider.defaultValue = 0.5;
-		zplaneSlider.value = zplaneSlider.defaultValue;
-		zplaneSlider.oninput=function(){presenter.setClippingPointZ(this.valueAsNumber);};
-		var zplaneFlip = document.getElementById("zplaneFlip");
-		if(!zplaneFlip) return;
-		zplaneFlip.checked = false;
-		zplaneFlip.onchange=function(){
-			if(presenter._clipAxis[2]!=0){
-				if(this.checked) presenter.setClippingZ(-1);
-				else presenter.setClippingZ(1);
-			}
-		};
-
-		var planesCheck = document.getElementById("showPlane");
-		if(!planesCheck) return;
-		planesCheck.onchange=function(){
-			if(this.checked) presenter._scene.config.showClippingPlanes = 1;
-			else presenter._scene.config.showClippingPlanes = 0;
-			presenter.ui.postDrawEvent();
-		};
-
-		var edgesCheck = document.getElementById("showBorder");
-		if(!edgesCheck) return;
-		edgesCheck.onchange=function(){
-			if(this.checked) presenter._scene.config.showClippingBorder = 1;
-			else presenter._scene.config.showClippingBorder = 0;
-			presenter.ui.postDrawEvent();
-		};
-
-		$('#sections').css("visibility", "hidden");
-		$('#sections_on').css("visibility", "visible");
-		$('#sections_on').css("opacity","1.0");
-		$('#sections-box').css("visibility","visible");
-		$('#sections-box .button').css("visibility", "visible");
-	}
-	else{
-		$('#sections_on').css("visibility", "hidden");
-		$('#sections').css("visibility", "visible");
-		$('#sections').css("opacity","1.0");
-		$('#sections-box').css("visibility","hidden");
-		$('#sections-box .button, #sections-box .button_on').css("visibility", "hidden");
-		presenter.setClippingXYZ(0, 0, 0);
-		presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
-	}
+  if(on){
+	$('#sections').css("visibility", "hidden");
+	$('#sections_on').css("visibility", "visible");
+	$('#sections_on').css("opacity","1.0");
+	$('#sections-box').css("visibility","visible");
+	$('#xplane, #yplane, #zplane').css("visibility", "visible");
+	sectiontoolInit(); //TO REMOVE
+  }
+  else{
+	$('#sections_on').css("visibility", "hidden");
+	$('#sections').css("visibility", "visible");
+	$('#sections').css("opacity","1.0");
+	$('#sections-box').css("visibility","hidden");
+	$('#sections-box img').css("visibility", "hidden");
+	presenter.setClippingXYZ(0, 0, 0);
+	sectiontoolReset(); //TO REMOVE
+  }
 }
 
-function xSwitch() {
-	if(presenter._clipAxis[0]==0) {
+function sectiontoolInit() {
+	// set sections value
+	presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
+
+	// set sliders 
+	var xplaneSlider = $('#xplaneSlider')[0];
+	xplaneSlider.min = 0.0;
+	xplaneSlider.max = 1.0;
+	xplaneSlider.step = 0.01;
+	xplaneSlider.defaultValue = 0.5;
+//	xplaneSlider.value = xplaneSlider.defaultValue;
+	xplaneSlider.oninput=function(){presenter.setClippingPointX(this.valueAsNumber);};
+
+	var yplaneSlider = $('#yplaneSlider')[0];
+	yplaneSlider.min = 0.0;
+	yplaneSlider.max = 1.0;
+	yplaneSlider.step = 0.01;
+	yplaneSlider.defaultValue = 0.5;
+//	yplaneSlider.value = yplaneSlider.defaultValue;
+	yplaneSlider.oninput=function(){presenter.setClippingPointY(this.valueAsNumber);};
+
+	var zplaneSlider = $('#zplaneSlider')[0];
+	zplaneSlider.min = 0.0;
+	zplaneSlider.max = 1.0;
+	zplaneSlider.step = 0.01;
+	zplaneSlider.defaultValue = 0.5;
+//	zplaneSlider.value = zplaneSlider.defaultValue;
+	zplaneSlider.oninput=function(){presenter.setClippingPointZ(this.valueAsNumber);};
+
+	// set checkboxes
+	var xplaneFlip = $('#xplaneFlip')[0];
+	xplaneFlip.checked = false;
+	xplaneFlip.onchange=function(){
+		if(presenter.getClippingX()!=0){
+			if(this.checked) presenter.setClippingX(-1);
+			else presenter.setClippingX(1);
+		}
+	};
+
+	var yplaneFlip = $('#yplaneFlip')[0];
+	yplaneFlip.checked = false;
+	yplaneFlip.onchange=function(){
+		if(presenter.getClippingY()!=0){
+			if(this.checked) presenter.setClippingY(-1);
+			else presenter.setClippingY(1);
+		}
+	};
+
+	var zplaneFlip = $('#zplaneFlip')[0];
+	zplaneFlip.checked = false;
+	zplaneFlip.onchange=function(){
+		if(presenter.getClippingZ()!=0){
+			if(this.checked) presenter.setClippingZ(-1);
+			else presenter.setClippingZ(1);
+		}
+	};
+	
+	var planesCheck = $('#showPlane')[0];
+	planesCheck.checked = presenter.getClippingRendermode()[0];
+	planesCheck.onchange=function(){
+		if(this.checked) presenter.setClippingRendermode(true, presenter.getClippingRendermode()[1]);
+		else presenter.setClippingRendermode(false, presenter.getClippingRendermode()[1]);
+	};
+
+	var edgesCheck = $('#showBorder')[0];
+	edgesCheck.checked = presenter.getClippingRendermode()[1];
+	edgesCheck.onchange=function(){
+		if(this.checked) presenter.setClippingRendermode(presenter.getClippingRendermode()[0], true);
+		else presenter.setClippingRendermode(presenter.getClippingRendermode()[0], false);
+	};
+}
+
+function sectiontoolReset() {
+	// reset sections value
+	presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
+
+	// reset sliders 
+	var xplaneSlider = $('#xplaneSlider')[0];
+	xplaneSlider.value = xplaneSlider.defaultValue;
+
+	var yplaneSlider = $('#yplaneSlider')[0];
+	yplaneSlider.value = yplaneSlider.defaultValue;
+
+	var zplaneSlider = $('#zplaneSlider')[0]; 
+	zplaneSlider.value = zplaneSlider.defaultValue;
+
+	// reset checkboxes
+	var xplaneFlip = $('#xplaneFlip')[0];
+	xplaneFlip.checked = false;
+
+	var yplaneFlip = $('#yplaneFlip')[0];
+	yplaneFlip.checked = false;
+
+	var zplaneFlip = $('#zplaneFlip')[0];
+	zplaneFlip.checked = false;
+
+	// as these are rendering parameters, we are not resetting them
+	var planesCheck = $('#showPlane')[0];
+	planesCheck.checked = presenter.getClippingRendermode()[0];
+	var edgesCheck = $('#showBorder')[0];
+	edgesCheck.checked = presenter.getClippingRendermode()[1];
+}
+
+function sectionxSwitch() {
+	if(presenter.getClippingX()==0) {
 		$('#xplane').css("visibility", "hidden");
 		$('#xplane_on').css("visibility", "visible");
-		var xflip = document.getElementById("xplaneFlip");
-		if(!xflip) return;  
-		if(xflip.checked) presenter.setClippingX(-1);
+		var xplaneFlip = $('#xplaneFlip')[0]; 
+		if(xplaneFlip.checked) presenter.setClippingX(-1);
 		else presenter.setClippingX(1);
 	}
 	else {
@@ -315,13 +347,12 @@ function xSwitch() {
 	}
 }
 
-function ySwitch() {
-	if(presenter._clipAxis[1]==0) {
+function sectionySwitch() {
+	if(presenter.getClippingY()==0) {
 		$('#yplane').css("visibility", "hidden");
 		$('#yplane_on').css("visibility", "visible");
-		var yflip = document.getElementById("yplaneFlip");
-		if(!yflip) return;  
-		if(yflip.checked) presenter.setClippingY(-1);
+		var yplaneFlip = $('#yplaneFlip')[0];
+		if(yplaneFlip.checked) presenter.setClippingY(-1);
 		else presenter.setClippingY(1);
 	}
 	else {
@@ -331,13 +362,12 @@ function ySwitch() {
 	}
 }
 
-function zSwitch() {
-	if(presenter._clipAxis[2]==0) {
+function sectionzSwitch() {
+	if(presenter.getClippingZ()==0) {
 		$('#zplane').css("visibility", "hidden");
 		$('#zplane_on').css("visibility", "visible");
-		var zflip = document.getElementById("zplaneFlip");
-		if(!zflip) return;  
-		if(zflip.checked) presenter.setClippingZ(-1);
+		var zplaneFlip = $('#zplaneFlip')[0];
+		if(zplaneFlip.checked) presenter.setClippingZ(-1);
 		else presenter.setClippingZ(1);
 	}
 	else {
@@ -357,8 +387,7 @@ function fullscreenSwitch() {
 }
 
 function enterFullscreen() {
-  var viewer = document.getElementById('3dhop');
-  if(!viewer) return; 
+  var viewer = $('#3dhop')[0];
   presenter.native_width  = presenter.ui.width;
   presenter.native_height = presenter.ui.height;
   $('#full').css("visibility", "hidden");
@@ -385,6 +414,8 @@ function exitFullscreen() {
 
   presenter.ui.postDrawEvent(); 
 }
+
+// +++ INTERFACE POSITIONING FUNCTIONS +++ //
 
 function moveToolbar(l,t) {
   $('#toolbar').css('left', l);
