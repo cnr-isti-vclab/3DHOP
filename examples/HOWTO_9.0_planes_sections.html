@@ -81,7 +81,8 @@ function setup3dhop() {
 			},
 			"Base" : {
 				mesh : "Cube",
-				transform : { matrix: SglMat4.mul(SglMat4.translation([0.0, -5.0, 0.0]), SglMat4.scaling([ 3.0, 0.2, 3.0])) }
+				transform : { matrix: SglMat4.mul(SglMat4.translation([0.0, -5.0, 0.0]), SglMat4.scaling([ 3.0, 0.2, 3.0])) },
+				clippable : false,
 			}
 		},
 		trackball: {
@@ -124,7 +125,7 @@ $(document).ready(function(){
 
 //	sectiontoolInit();
 
-	moveSectionsbox(-1,0);
+//	moveSectionsbox(-1,0);
 });
 </script>
 

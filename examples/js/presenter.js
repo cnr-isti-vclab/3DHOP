@@ -3464,7 +3464,7 @@ Presenter.prototype = {
 		
 		for (var inst in instances) {
 			var mesh = meshes[instances[inst].mesh];
-			if((mesh)&&(mesh.renderable)){
+			if((mesh)&&(mesh.renderable)&&(instances[inst].clippable)){
 				var instCenter = SglVec3.to4(mesh.renderable.datasetCenter,1);
 				instCenter = SglMat4.mul4(mesh.transform.matrix, instCenter);
 				instCenter = SglMat4.mul4(instances[inst].transform.matrix, instCenter);
