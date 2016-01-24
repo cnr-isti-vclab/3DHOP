@@ -96,28 +96,17 @@ function init3dhop() {
 	}
 
 	$(window).on('load mouseup touchend dragend', function() { //focus handler
+		var x = window.scrollX, y = window.scrollY;
 		$('#draw-canvas').focus();
+		window.scrollTo(x, y);
 	});
 
 	resizeCanvas($('#3dhop').parent().width(),$('#3dhop').parent().height());
 
-	// the last +10 is the margin of the toolbar
-	if ($('#pickpoint-box').length && $('#pick').length) 
-	{
-		$('#pickpoint-box').css('left', $('#pick').position().left + $('#pick').width() + 5 + 10);
-		$('#pickpoint-box').css('top', $('#pick').position().top + 10);	
-	}
-	if ($('#measure-box').length && $('#measure').length)
-	{
-		$('#measure-box').css('left', $('#measure').position().left + $('#measure').width() + 5 + 10);
-		$('#measure-box').css('top', $('#measure').position().top + 10);		
-	}
-	if ($('#sections-box').length && $('#sections').length) 
-	{
-		$('#sections-box').css('left', $('#sections').position().left + $('#sections').width() + 5 + 10);
-		$('#sections-box').css('top', $('#sections').position().top + 10);		
-	}
-	
+	if ($('#pickpoint-box').length) movePickpointbox(($('#pick').position().left + $('#pick').width() + parseInt($('#toolbar').css('margin-left')) + 5), ($('#pick').position().top + parseInt($('#toolbar').css('margin-top'))));
+	if ($('#measure-box').length) moveMeasurementbox(($('#measure').position().left + $('#measure').width() + parseInt($('#toolbar').css('margin-left')) + 5), ($('#measure').position().top + parseInt($('#toolbar').css('margin-top'))));
+	if ($('#sections-box').length) moveSectionsbox(($('#sections').position().left + $('#sections').width() + parseInt($('#toolbar').css('margin-left')) + 5), ($('#sections').position().top + parseInt($('#toolbar').css('margin-top'))));
+
 	set3dhlg();
 }
 
@@ -156,15 +145,7 @@ function hotspotSwitch() {
 function pickpointSwitch() {
   var on = presenter.isPickpointModeEnabled();
 
-  if(on){
-  
-	if ($('#pickpoint-box').length && $('#pick').length) 
-	{
-		// the last +10 is the margin of the toolbar
-		$('#pickpoint-box').css('left', $('#pick').position().left + $('#pick').width() + 5 + 10);
-		$('#pickpoint-box').css('top', $('#pick').position().top + 10);
-	}
-  
+  if(on){  
     $('#pick').css("visibility", "hidden");
     $('#pick_on').css("visibility", "visible");
     $('#pick_on').css("opacity","1.0");
@@ -186,15 +167,7 @@ function pickpointSwitch() {
 function measureSwitch() {
   var on = presenter.isMeasurementToolEnabled();
 
-  if(on){
-  
-	if ($('#measure-box').length && $('#measure').length)
-	{
-		// the last +10 is the margin of the toolbar
-		$('#measure-box').css('left', $('#measure').position().left + $('#measure').width() + 5 + 10);
-		$('#measure-box').css('top', $('#measure').position().top + 10);
-	} 
-  
+  if(on){  
     $('#measure').css("visibility", "hidden");
     $('#measure_on').css("visibility", "visible");
     $('#measure_on').css("opacity","1.0");
@@ -217,20 +190,11 @@ function sectiontoolSwitch() {
   var on = $('#sections').css("visibility")=="visible";
 
   if(on){
-  
-	if ($('#sections-box').length && $('#sections').length) 
-	{
-		// the last +10 is the margin of the toolbar
-		$('#sections-box').css('left', $('#sections').position().left + $('#sections').width() + 5 + 10);
-		$('#sections-box').css('top', $('#sections').position().top + 10);
-	}  
-  
 	$('#sections').css("visibility", "hidden");
 	$('#sections_on').css("visibility", "visible");
 	$('#sections_on').css("opacity","1.0");
 	$('#sections-box').css("visibility","visible");
 	$('#xplane, #yplane, #zplane').css("visibility", "visible");
-	sectiontoolInit(); //TO REMOVE
   }
   else{
 	$('#sections_on').css("visibility", "hidden");
@@ -239,7 +203,6 @@ function sectiontoolSwitch() {
 	$('#sections-box').css("visibility","hidden");
 	$('#sections-box img').css("visibility", "hidden");
 	presenter.setClippingXYZ(0, 0, 0);
-	sectiontoolReset(); //TO REMOVE
   }
 }
 
@@ -253,7 +216,6 @@ function sectiontoolInit() {
 	xplaneSlider.max = 1.0;
 	xplaneSlider.step = 0.01;
 	xplaneSlider.defaultValue = 0.5;
-//	xplaneSlider.value = xplaneSlider.defaultValue;
 	xplaneSlider.oninput=function(){presenter.setClippingPointX(this.valueAsNumber);};
 
 	var yplaneSlider = $('#yplaneSlider')[0];
@@ -261,7 +223,6 @@ function sectiontoolInit() {
 	yplaneSlider.max = 1.0;
 	yplaneSlider.step = 0.01;
 	yplaneSlider.defaultValue = 0.5;
-//	yplaneSlider.value = yplaneSlider.defaultValue;
 	yplaneSlider.oninput=function(){presenter.setClippingPointY(this.valueAsNumber);};
 
 	var zplaneSlider = $('#zplaneSlider')[0];
@@ -269,12 +230,11 @@ function sectiontoolInit() {
 	zplaneSlider.max = 1.0;
 	zplaneSlider.step = 0.01;
 	zplaneSlider.defaultValue = 0.5;
-//	zplaneSlider.value = zplaneSlider.defaultValue;
 	zplaneSlider.oninput=function(){presenter.setClippingPointZ(this.valueAsNumber);};
 
 	// set checkboxes
 	var xplaneFlip = $('#xplaneFlip')[0];
-	xplaneFlip.checked = false;
+	xplaneFlip.defaultChecked = false;
 	xplaneFlip.onchange=function(){
 		if(presenter.getClippingX()!=0){
 			if(this.checked) presenter.setClippingX(-1);
@@ -283,7 +243,7 @@ function sectiontoolInit() {
 	};
 
 	var yplaneFlip = $('#yplaneFlip')[0];
-	yplaneFlip.checked = false;
+	yplaneFlip.defaultChecked = false;
 	yplaneFlip.onchange=function(){
 		if(presenter.getClippingY()!=0){
 			if(this.checked) presenter.setClippingY(-1);
@@ -292,7 +252,7 @@ function sectiontoolInit() {
 	};
 
 	var zplaneFlip = $('#zplaneFlip')[0];
-	zplaneFlip.checked = false;
+	zplaneFlip.defaultChecked = false;
 	zplaneFlip.onchange=function(){
 		if(presenter.getClippingZ()!=0){
 			if(this.checked) presenter.setClippingZ(-1);
@@ -301,18 +261,12 @@ function sectiontoolInit() {
 	};
 	
 	var planesCheck = $('#showPlane')[0];
-	planesCheck.checked = presenter.getClippingRendermode()[0];
-	planesCheck.onchange=function(){
-		if(this.checked) presenter.setClippingRendermode(true, presenter.getClippingRendermode()[1]);
-		else presenter.setClippingRendermode(false, presenter.getClippingRendermode()[1]);
-	};
+	planesCheck.defaultChecked = presenter.getClippingRendermode()[0];
+	planesCheck.onchange = function(){ presenter.setClippingRendermode(this.checked, presenter.getClippingRendermode()[1]); };
 
 	var edgesCheck = $('#showBorder')[0];
-	edgesCheck.checked = presenter.getClippingRendermode()[1];
-	edgesCheck.onchange=function(){
-		if(this.checked) presenter.setClippingRendermode(presenter.getClippingRendermode()[0], true);
-		else presenter.setClippingRendermode(presenter.getClippingRendermode()[0], false);
-	};
+	edgesCheck.defaultChecked = presenter.getClippingRendermode()[1];
+	edgesCheck.onchange=function(){ presenter.setClippingRendermode(presenter.getClippingRendermode()[0], this.checked); };
 }
 
 function sectiontoolReset() {
@@ -331,19 +285,27 @@ function sectiontoolReset() {
 
 	// reset checkboxes
 	var xplaneFlip = $('#xplaneFlip')[0];
-	xplaneFlip.checked = false;
+	xplaneFlip.checked = xplaneFlip.defaultChecked;
 
 	var yplaneFlip = $('#yplaneFlip')[0];
-	yplaneFlip.checked = false;
+	yplaneFlip.checked = xplaneFlip.defaultChecked;
 
 	var zplaneFlip = $('#zplaneFlip')[0];
-	zplaneFlip.checked = false;
+	zplaneFlip.checked = xplaneFlip.defaultChecked;
+
+	var planesCheck = $('#showPlane')[0];
+	planesCheck.checked = planesCheck.defaultChecked;
+	presenter.setClippingRendermode(planesCheck.checked, presenter.getClippingRendermode()[1]);
+
+	var edgesCheck = $('#showBorder')[0];
+	edgesCheck.checked = edgesCheck.defaultChecked;
+	presenter.setClippingRendermode(presenter.getClippingRendermode()[0], edgesCheck.checked);
 
 	// as these are rendering parameters, we are not resetting them
-	var planesCheck = $('#showPlane')[0];
-	planesCheck.checked = presenter.getClippingRendermode()[0];
-	var edgesCheck = $('#showBorder')[0];
-	edgesCheck.checked = presenter.getClippingRendermode()[1];
+//	var planesCheck = $('#showPlane')[0];
+//	planesCheck.checked = presenter.getClippingRendermode()[0];
+//	var edgesCheck = $('#showBorder')[0];
+//	edgesCheck.checked = presenter.getClippingRendermode()[1];
 }
 
 function sectionxSwitch() {
@@ -463,8 +425,8 @@ function moveToolbar(l,t) {
 }
 
 function movePickpointbox(l,t) {
-  $('#pickpoint-box').css('left', $('#pickpoint-box').offset().left+l);
-  $('#pickpoint-box').css('top', $('#pickpoint-box').offset().top+t);
+  $('#pickpoint-box').css('left', $('#pickpoint-box').position().left + l);
+  $('#pickpoint-box').css('top', $('#pickpoint-box').position().top + t);
 }
 
 /*DEPRECATED*/
@@ -474,13 +436,13 @@ function moveMeasurebox(r,t) {
 }
 
 function moveMeasurementbox(l,t) {
-  $('#measure-box').css('left', $('#measure-box').offset().left+l);
-  $('#measure-box').css('top', $('#measure-box').offset().top+t);
+  $('#measure-box').css('left', $('#measure-box').position().left + l);
+  $('#measure-box').css('top', $('#measure-box').position().top + t);
 }
 
 function moveSectionsbox(l,t) {
-  $('#sections-box').css('left', $('#sections-box').offset().left+l);
-  $('#sections-box').css('top', $('#sections-box').offset().top+t);
+  $('#sections-box').css('left', $('#sections-box').position().left + l);
+  $('#sections-box').css('top', $('#sections-box').position().top + t);
 }
 
 function resizeCanvas(w,h) {

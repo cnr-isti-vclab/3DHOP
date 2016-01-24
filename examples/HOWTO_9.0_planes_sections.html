@@ -25,32 +25,32 @@
 <body>
 <div id="3dhop" class="tdhop" onmousedown="if (event.preventDefault) event.preventDefault()"><div id="tdhlg"></div>
  <div id="toolbar">
-  <img id="home"         title="Home"                     src="skins/dark/home.png"   /><br/>
-  <img id="zoomin"       title="Zoom In"                  src="skins/dark/zoomin.png" /><br/>
-  <img id="zoomout"      title="Zoom Out"                 src="skins/dark/zoomout.png"/><br/>
-  <img id="light_on"     title="Disable Light Control"    src="skins/dark/light_on.png" style="position:absolute; visibility:hidden;"/>
-  <img id="light"        title="Enable Light Control"     src="skins/dark/light.png"/><br/>
-  <img id="sections_on"  title="Disable Plane Sections"   src="skins/dark/sections_on.png" style="position:absolute; visibility:hidden;"/>
-  <img id="sections"     title="Enable Plane Sections"    src="skins/dark/sections.png"/><br/>
-  <img id="full_on"      title="Exit Full Screen"         src="skins/dark/full_on.png" style="position:absolute; visibility:hidden;"/>
-  <img id="full"         title="Full Screen"              src="skins/dark/full.png"   />
+  <img id="home"        title="Home"                   src="skins/dark/home.png"     /><br/>
+  <img id="zoomin"      title="Zoom In"                src="skins/dark/zoomin.png"   /><br/>
+  <img id="zoomout"     title="Zoom Out"               src="skins/dark/zoomout.png"  /><br/>
+  <img id="light_on"    title="Disable Light Control"  src="skins/dark/light_on.png"    style="position:absolute; visibility:hidden;"/>
+  <img id="light"       title="Enable Light Control"   src="skins/dark/light.png"    /><br/>
+  <img id="sections_on" title="Disable Plane Sections" src="skins/dark/sections_on.png" style="position:absolute; visibility:hidden;"/>
+  <img id="sections"    title="Enable Plane Sections"  src="skins/dark/sections.png" /><br/>
+  <img id="full_on"     title="Exit Full Screen"       src="skins/dark/full_on.png"     style="position:absolute; visibility:hidden;"/>
+  <img id="full"        title="Full Screen"            src="skins/dark/full.png"     />
  </div>
  <div id="sections-box" class="output-box">
   <table class="output-table" onmousedown="event.stopPropagation()">
 	<tr><td>Plane</td><td>Position</td><td>Flip</td></tr>
 	<tr>
-		<td><img   id="xplane_on" title="Disable X Axis Section" src="skins/icons/sectionX_on.png" onclick="sectionxSwitch()" style="position:absolute; visibility:hidden; border:1px inset;"/>
-			<img   id="xplane"    title="Enable X Axis Section"  src="skins/icons/sectionX.png"  onclick="sectionxSwitch()"/><br/></td>
+		<td><img   id="xplane_on"    title="Disable X Axis Section" src="skins/icons/sectionX_on.png" onclick="sectionxSwitch()" style="position:absolute; visibility:hidden; border:1px inset;"/>
+			<img   id="xplane"       title="Enable X Axis Section"  src="skins/icons/sectionX.png"  onclick="sectionxSwitch()"/><br/></td>
 		<td><input id="xplaneSlider" class="output-input"  type="range"    title="Move X Axis Section Position"/></td> 
 		<td><input id="xplaneFlip"   class="output-input"  type="checkbox" title="Flip X Axis Section Direction"/></td></tr>
 	<tr>
-		<td><img   id="yplane_on" title="Disable Y Axis Section" src="skins/icons/sectionY_on.png" onclick="sectionySwitch()" style="position:absolute; visibility:hidden; border:1px inset;"/>
-			<img   id="yplane"    title="Enable Y Axis Section"  src="skins/icons/sectionY.png"  onclick="sectionySwitch()"/><br/></td>
+		<td><img   id="yplane_on"    title="Disable Y Axis Section" src="skins/icons/sectionY_on.png" onclick="sectionySwitch()" style="position:absolute; visibility:hidden; border:1px inset;"/>
+			<img   id="yplane"       title="Enable Y Axis Section"  src="skins/icons/sectionY.png"  onclick="sectionySwitch()"/><br/></td>
 		<td><input id="yplaneSlider" class="output-input"  type="range"    title="Move Y Axis Section Position"/></td> 
 		<td><input id="yplaneFlip"   class="output-input"  type="checkbox" title="Flip Y Axis Section Direction"/></td></tr>
 	<tr>
-		<td><img   id="zplane_on" title="Disable Z Axis Section" src="skins/icons/sectionZ_on.png" onclick="sectionzSwitch()" style="position:absolute; visibility:hidden; border:1px inset;"/>
-			<img   id="zplane"    title="Enable Z Axis Section"  src="skins/icons/sectionZ.png"  onclick="sectionzSwitch()"/><br/></td>
+		<td><img   id="zplane_on"    title="Disable Z Axis Section" src="skins/icons/sectionZ_on.png" onclick="sectionzSwitch()" style="position:absolute; visibility:hidden; border:1px inset;"/>
+			<img   id="zplane"       title="Enable Z Axis Section"  src="skins/icons/sectionZ.png"  onclick="sectionzSwitch()"/><br/></td>
 		<td><input id="zplaneSlider" class="output-input"  type="range"    title="Move Y Axis Section Position"/></td> 
 		<td><input id="zplaneFlip"   class="output-input"  type="checkbox" title="Flip Z Axis Section Direction"/></td></tr></table>
   <table class="output-table" onmousedown="event.stopPropagation()" style="text-align:right;">
@@ -82,7 +82,7 @@ function setup3dhop() {
 			"Base" : {
 				mesh : "Cube",
 				transform : { matrix: SglMat4.mul(SglMat4.translation([0.0, -5.0, 0.0]), SglMat4.scaling([ 3.0, 0.2, 3.0])) },
-				clippable : false,
+				clippable : false
 			}
 		},
 		trackball: {
@@ -102,6 +102,14 @@ function setup3dhop() {
 				minMaxPanZ    : [-0.3, 0.3]
 			}
 		},
+		config : {
+//			pickedpointColor    : [1.0, 0.0, 1.0],
+//			measurementColor    : [0.5, 1.0, 0.5],
+			showClippingPlanes  : true,
+			showClippingBorder  : true,
+//			clippingBorderSize  : 0.5,
+//			clippingBorderColor : [0.0, 1.0, 1.0]
+		},
 		space: {
 			centerMode: "scene",
 			radiusMode: "scene"
@@ -114,7 +122,7 @@ function actionsToolbar(action) {
 	else if(action=='zoomin') presenter.zoomIn();
 	else if(action=='zoomout') presenter.zoomOut(); 
 	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
-	else if(action=='sections' || action=='sections_on') { /*sectiontoolReset();*/ sectiontoolSwitch(); } 
+	else if(action=='sections' || action=='sections_on') { sectiontoolReset(); sectiontoolSwitch(); } 
 	else if(action=='full' || action=='full_on') fullscreenSwitch(); 
 }
 
@@ -123,9 +131,9 @@ $(document).ready(function(){
 
 	setup3dhop();
 
-//	sectiontoolInit();
+	sectiontoolInit();
 
-//	moveSectionsbox(-1,0);
+	moveSectionsbox(-1,0);
 });
 </script>
 
