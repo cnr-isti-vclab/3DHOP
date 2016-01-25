@@ -112,18 +112,18 @@ function init3dhop() {
 function anchorPanels() {
 	if ($('#pickpoint-box').length && $('#pick').length) 
 	{
-		$('#pickpoint-box').css('left', ($('#pick').position().left + $('#pick').width() + parseInt($('#toolbar').css('margin-left')) + 5));
-		$('#pickpoint-box').css('top', ($('#pick').position().top + parseInt($('#toolbar').css('margin-top'))));	
+		$('#pickpoint-box').css('left', ($('#pick').position().left + $('#pick').width() + $('#toolbar').position().left + 5));
+		$('#pickpoint-box').css('top', ($('#pick').position().top + $('#toolbar').position().top));
 	}
 	if ($('#measure-box').length && $('#measure').length)
 	{
-		$('#measure-box').css('left', ($('#measure').position().left + $('#measure').width() + parseInt($('#toolbar').css('margin-left')) + 5));
-		$('#measure-box').css('top', ($('#measure').position().top + parseInt($('#toolbar').css('margin-top'))));		
+		$('#measure-box').css('left', ($('#measure').position().left + $('#measure').width() + $('#toolbar').position().left + 5));
+		$('#measure-box').css('top', ($('#measure').position().top + $('#toolbar').position().top));
 	}
 	if ($('#sections-box').length && $('#sections').length) 
 	{
-		$('#sections-box').css('left', ($('#sections').position().left + $('#sections').width() + parseInt($('#toolbar').css('margin-left')) + 5));
-		$('#sections-box').css('top', ($('#sections').position().top + parseInt($('#toolbar').css('margin-top'))));		
+		$('#sections-box').css('left', ($('#sections').position().left + $('#sections').width() + $('#toolbar').position().left + 5));
+		$('#sections-box').css('top', ($('#sections').position().top + $('#toolbar').position().top));
 	}
 }
 
