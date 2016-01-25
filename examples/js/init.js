@@ -103,11 +103,28 @@ function init3dhop() {
 
 	resizeCanvas($('#3dhop').parent().width(),$('#3dhop').parent().height());
 
-	if ($('#pickpoint-box').length) movePickpointbox(($('#pick').position().left + $('#pick').width() + parseInt($('#toolbar').css('margin-left')) + 5), ($('#pick').position().top + parseInt($('#toolbar').css('margin-top'))));
-	if ($('#measure-box').length) moveMeasurementbox(($('#measure').position().left + $('#measure').width() + parseInt($('#toolbar').css('margin-left')) + 5), ($('#measure').position().top + parseInt($('#toolbar').css('margin-top'))));
-	if ($('#sections-box').length) moveSectionsbox(($('#sections').position().left + $('#sections').width() + parseInt($('#toolbar').css('margin-left')) + 5), ($('#sections').position().top + parseInt($('#toolbar').css('margin-top'))));
-
+	anchorPanels();
+	
 	set3dhlg();
+}
+
+// anchor pickpoint, measurement and sections panels to the respective buttons
+function anchorPanels() {
+	if ($('#pickpoint-box').length && $('#pick').length) 
+	{
+		$('#pickpoint-box').css('left', ($('#pick').position().left + $('#pick').width() + parseInt($('#toolbar').css('margin-left')) + 5));
+		$('#pickpoint-box').css('top', ($('#pick').position().top + parseInt($('#toolbar').css('margin-top'))));	
+	}
+	if ($('#measure-box').length && $('#measure').length)
+	{
+		$('#measure-box').css('left', ($('#measure').position().left + $('#measure').width() + parseInt($('#toolbar').css('margin-left')) + 5));
+		$('#measure-box').css('top', ($('#measure').position().top + parseInt($('#toolbar').css('margin-top'))));		
+	}
+	if ($('#sections-box').length && $('#sections').length) 
+	{
+		$('#sections-box').css('left', ($('#sections').position().left + $('#sections').width() + parseInt($('#toolbar').css('margin-left')) + 5));
+		$('#sections-box').css('top', ($('#sections').position().top + parseInt($('#toolbar').css('margin-top'))));		
+	}
 }
 
 // +++ INTERFACE SWITCHING FUNCTIONS +++ //
@@ -300,12 +317,6 @@ function sectiontoolReset() {
 	var edgesCheck = $('#showBorder')[0];
 	edgesCheck.checked = edgesCheck.defaultChecked;
 	presenter.setClippingRendermode(presenter.getClippingRendermode()[0], edgesCheck.checked);
-
-	// as these are rendering parameters, we are not resetting them
-//	var planesCheck = $('#showPlane')[0];
-//	planesCheck.checked = presenter.getClippingRendermode()[0];
-//	var edgesCheck = $('#showBorder')[0];
-//	edgesCheck.checked = presenter.getClippingRendermode()[1];
 }
 
 function sectionxSwitch() {
@@ -417,32 +428,30 @@ function measurementSwitch() {
 // +++ INTERFACE POSITIONING FUNCTIONS +++ //
 
 function moveToolbar(l,t) {
-  $('#toolbar').css('left', l);
-  $('#toolbar').css('top', t);
-  if ($('#pickpoint-box').length) movePickpointbox(l,t);
-  if ($('#measure-box').length) moveMeasurementbox(l,t);
-  if ($('#sections-box').length) moveSectionsbox(l,t);
+	$('#toolbar').css('left', l);
+	$('#toolbar').css('top', t);
+	anchorPanels();
 }
 
 function movePickpointbox(l,t) {
-  $('#pickpoint-box').css('left', $('#pickpoint-box').position().left + l);
-  $('#pickpoint-box').css('top', $('#pickpoint-box').position().top + t);
+	$('#pickpoint-box').css('left', l);
+	$('#pickpoint-box').css('top', t);
+}
+
+function moveMeasurementbox(l,t) {
+	$('#measure-box').css('left', l);
+	$('#measure-box').css('top', t);
+}
+
+function moveSectionsbox(l,t) {
+	$('#sections-box').css('left', l);
+	$('#sections-box').css('top', t);
 }
 
 /*DEPRECATED*/
 function moveMeasurebox(r,t) {
   $('#measurebox').css('right', r);
   $('#measurebox').css('top', t);
-}
-
-function moveMeasurementbox(l,t) {
-  $('#measure-box').css('left', $('#measure-box').position().left + l);
-  $('#measure-box').css('top', $('#measure-box').position().top + t);
-}
-
-function moveSectionsbox(l,t) {
-  $('#sections-box').css('left', $('#sections-box').position().left + l);
-  $('#sections-box').css('top', $('#sections-box').position().top + t);
 }
 
 function resizeCanvas(w,h) {
