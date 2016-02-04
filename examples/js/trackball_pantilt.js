@@ -186,6 +186,16 @@ PanTiltTrackball.prototype = {
 		this._isAnimating = true;
 	},	
 	
+	recenter : function (newpoint) {
+		// stop animation
+		this._isAnimating = false;
+		
+		var newpanX = -(newpoint[0]-presenter.sceneCenter[0]) * presenter.sceneRadiusInv;
+		var newpanY = -(newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
+		
+		this.animateToState([newpanX, newpanY, sglRadToDeg(this._angleX), sglRadToDeg(this._angleY), (this._distance * 0.8)]);
+	},	
+	
 	tick : function (dt) {
 		if(!this._isAnimating) return false;
 		

@@ -145,7 +145,7 @@ TurntablePanTrackball.prototype = {
 
 		this._computeMatrix();
 	},	
-
+	
 	animateToState : function (newstate) {
 		// stop animation
 		this._isAnimating = false;
@@ -229,6 +229,17 @@ TurntablePanTrackball.prototype = {
 		this._isAnimating = true;
 	},
 
+	recenter : function (newpoint) {
+		// stop animation
+		this._isAnimating = false;
+		
+		var newpanX = (newpoint[0]-presenter.sceneCenter[0]) * presenter.sceneRadiusInv;
+		var newpanY = (newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
+		var newpanZ = (newpoint[2]-presenter.sceneCenter[2]) * presenter.sceneRadiusInv;
+		
+		this.animateToState([sglRadToDeg(this._phi), sglRadToDeg(this._theta), newpanX, newpanY, newpanZ, (this._distance * 0.8)]);
+	},	
+	
 	tick : function (dt) {
 		if(!this._isAnimating) return false;
 

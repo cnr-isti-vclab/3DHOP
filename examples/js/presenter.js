@@ -2640,6 +2640,21 @@ Presenter.prototype = {
 		this._clickable = false;
 	},
 
+	onDoubleClick : function (button, x, y, e) {
+		//only if trackball does support recentering, we do it
+		if(this.trackball.recenter){		
+			this._pickpoint[0] = x;
+			this._pickpoint[1] = y;
+			var ppoint = this._drawScenePickingXYZ();
+			if (ppoint!=null)
+			{
+				this.ui.animateRate = 30;			
+				this.trackball.recenter(ppoint);
+				this.ui.postDrawEvent();
+			}		
+		}
+	},	
+	
 	onKeyPress : function (key, e) {
 		if(this._isDebugging) { // DEBUGGING-AUTHORING keys
 			if((e.charCode == '80') || (e.charCode == '112')) // key "P" to print trackball
