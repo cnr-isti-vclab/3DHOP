@@ -49,7 +49,7 @@ function setup3dhop() {
 			"Gargoyle" : { url: "models/multires/gargo.nxs" },
 			"Box" : { 
 				url: "models/singleres/cube.ply",
-				transform : { scale: [ 13.0, 0.5, 10.0] },
+				transform : {  matrix: SglMat4.scaling([13.0, 0.5, 10.0]) },
 			}
 		},
 		modelInstances : {
