@@ -16105,7 +16105,7 @@ SpiderGL.UserInterface.CanvasHandler._touchHandler = function (event) {
 		}
 
 		var dist = Math.sqrt(Math.pow((touches[0].clientX - touches[1].clientX),2)+Math.pow((touches[0].clientY - touches[1].clientY),2));
-		var diff = dist - SpiderGL.UserInterface.CanvasHandler._multiTouch.tmp;
+		diff = dist - SpiderGL.UserInterface.CanvasHandler._multiTouch.tmp;
 		SpiderGL.UserInterface.CanvasHandler._multiTouch.tmp = dist;
 		/**IE PATCH**/
 		/**/if(event.type=="pointerup") { 
@@ -16176,7 +16176,7 @@ SpiderGL.UserInterface.CanvasHandler._touchHandler = function (event) {
 
 	if(first){
 		simulatedEvent.initMouseEvent(
-			type, true, true, window, diff, 
+			type, true, true, window, -diff, 
 			first.screenX, first.screenY, 
 			first.clientX, first.clientY, false, 
 			false, false, false, button, null

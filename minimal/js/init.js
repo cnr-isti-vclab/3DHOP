@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -62,13 +62,9 @@ function init3dhop() {
 			button=0;
 		});
 
-	$('#measure-output')
-		.on('contextmenu', function(e){ 
-			e.stopPropagation();
-		});
 
 	$('#3dhop')
-		.on('contextmenu', function(e){ 
+		.on('contextmenu', function(e) { 
 			return false; 
 		})
 		.on('touchstart', function(e) {
@@ -83,18 +79,55 @@ function init3dhop() {
 		});
 
 	$('#draw-canvas')
-//		.css("cursor","default")
-		.mousedown(function() { $('#toolbar img').css("opacity","0.5"); });
+		.mousedown(function(e) { 
+			$('#toolbar img').css("opacity","0.5"); 
+			if(e.preventDefault) e.preventDefault(); 
+			if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
+			else if (document.selection && document.selection.createRange()!='') document.selection.empty();
+		});
+
+	$(document).on('MSFullscreenChange mozfullscreenchange webkitfullscreenchange', function() { //fullscreen handler 
+		if(!document.msFullscreenElement&&!document.mozFullScreen&&!document.webkitIsFullScreen) exitFullscreen();
+	});
 
 	if (window.navigator.userAgent.indexOf('Trident/') > 0) { //IE fullscreen handler 
-		$('#full').click(function(e) {enterFullscreen();});
-		$('#full_on').click(function(e) {exitFullscreen();});
+		$('#full').click(function() {enterFullscreen();});
+		$('#full_on').click(function() {exitFullscreen();});
 	}
+
+	$(window).on('load mouseup touchend dragend', function() { //focus handler
+		var x = window.scrollX, y = window.scrollY;
+		$('#draw-canvas').focus();
+		window.scrollTo(x, y);
+	});
 
 	resizeCanvas($('#3dhop').parent().width(),$('#3dhop').parent().height());
 
+	anchorPanels();
+	
 	set3dhlg();
-} 
+}
+
+// anchor pickpoint, measurement and sections panels to the respective buttons
+function anchorPanels() {
+	if ($('#pickpoint-box').length && $('#pick').length) 
+	{
+		$('#pickpoint-box').css('left', ($('#pick').position().left + $('#pick').width() + $('#toolbar').position().left + 5));
+		$('#pickpoint-box').css('top', ($('#pick').position().top + $('#toolbar').position().top));
+	}
+	if ($('#measure-box').length && $('#measure').length)
+	{
+		$('#measure-box').css('left', ($('#measure').position().left + $('#measure').width() + $('#toolbar').position().left + 5));
+		$('#measure-box').css('top', ($('#measure').position().top + $('#toolbar').position().top));
+	}
+	if ($('#sections-box').length && $('#sections').length) 
+	{
+		$('#sections-box').css('left', ($('#sections').position().left + $('#sections').width() + $('#toolbar').position().left + 5));
+		$('#sections-box').css('top', ($('#sections').position().top + $('#toolbar').position().top));
+	}
+}
+
+// +++ INTERFACE SWITCHING FUNCTIONS +++ //
 
 function lightSwitch() {
   var on = presenter.isLightTrackballEnabled();
@@ -103,33 +136,11 @@ function lightSwitch() {
     $('#light').css("visibility", "hidden");
     $('#light_on').css("visibility", "visible");
     $('#light_on').css("opacity","1.0");
-//    $('#draw-canvas').css("cursor","url(./skins/icons/cursor_light.png), auto");
   }
   else{
     $('#light_on').css("visibility", "hidden");
     $('#light').css("visibility", "visible");
     $('#light').css("opacity","1.0");
-//    $('#draw-canvas').css("cursor","default");
-  }
-}
-
-function measurementSwitch() {
-  var on = presenter.isMeasurementToolEnabled();
-
-  if(on){
-    $('#measure').css("visibility", "hidden");
-    $('#measure_on').css("visibility", "visible");
-    $('#measure_on').css("opacity","1.0");
-    $('#measurebox').css("visibility","visible");
-    $('#draw-canvas').css("cursor","crosshair");
-  }
-  else{
-    $('#measure_on').css("visibility", "hidden");
-    $('#measure').css("visibility", "visible");
-    $('#measure').css("opacity","1.0");
-    $('#measurebox').css("visibility","hidden");
-    $('#measure-output').html("0.0");
-    $('#draw-canvas').css("cursor","default");
   }
 }
 
@@ -148,6 +159,211 @@ function hotspotSwitch() {
   }
 }
 
+function pickpointSwitch() {
+  var on = presenter.isPickpointModeEnabled();
+
+  if(on){  
+    $('#pick').css("visibility", "hidden");
+    $('#pick_on').css("visibility", "visible");
+    $('#pick_on').css("opacity","1.0");
+    $('#pickpoint-box').css("visibility","visible");
+    $('#draw-canvas').css("cursor","crosshair");
+  }
+  else{
+    if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
+    else if (document.selection && document.selection.createRange()!='') document.selection.empty();
+    $('#pick_on').css("visibility", "hidden");
+    $('#pick').css("visibility", "visible");
+    $('#pick').css("opacity","1.0");
+    $('#pickpoint-box').css("visibility","hidden");
+    $('#pickpoint-output').html("[ 0 , 0 , 0 ]");
+    if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
+  }
+}
+
+function measureSwitch() {
+  var on = presenter.isMeasurementToolEnabled();
+
+  if(on){  
+    $('#measure').css("visibility", "hidden");
+    $('#measure_on').css("visibility", "visible");
+    $('#measure_on').css("opacity","1.0");
+    $('#measure-box').css("visibility","visible");
+    $('#draw-canvas').css("cursor","crosshair");
+  }
+  else{
+    if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
+    else if (document.selection && document.selection.createRange()!='') document.selection.empty();
+    $('#measure_on').css("visibility", "hidden");
+    $('#measure').css("visibility", "visible");
+    $('#measure').css("opacity","1.0");
+    $('#measure-box').css("visibility","hidden");
+    $('#measure-output').html("0.0");
+    if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
+  }
+}
+
+function sectiontoolSwitch() {
+  var on = $('#sections').css("visibility")=="visible";
+
+  if(on){
+	$('#sections').css("visibility", "hidden");
+	$('#sections_on').css("visibility", "visible");
+	$('#sections_on').css("opacity","1.0");
+	$('#sections-box').css("visibility","visible");
+	$('#xplane, #yplane, #zplane').css("visibility", "visible");
+  }
+  else{
+	$('#sections_on').css("visibility", "hidden");
+	$('#sections').css("visibility", "visible");
+	$('#sections').css("opacity","1.0");
+	$('#sections-box').css("visibility","hidden");
+	$('#sections-box img').css("visibility", "hidden");
+	presenter.setClippingXYZ(0, 0, 0);
+  }
+}
+
+function sectiontoolInit() {
+	// set sections value
+	presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
+
+	// set sliders 
+	var xplaneSlider = $('#xplaneSlider')[0];
+	xplaneSlider.min = 0.0;
+	xplaneSlider.max = 1.0;
+	xplaneSlider.step = 0.01;
+	xplaneSlider.defaultValue = 0.5;
+	xplaneSlider.oninput=function(){presenter.setClippingPointX(this.valueAsNumber);};
+
+	var yplaneSlider = $('#yplaneSlider')[0];
+	yplaneSlider.min = 0.0;
+	yplaneSlider.max = 1.0;
+	yplaneSlider.step = 0.01;
+	yplaneSlider.defaultValue = 0.5;
+	yplaneSlider.oninput=function(){presenter.setClippingPointY(this.valueAsNumber);};
+
+	var zplaneSlider = $('#zplaneSlider')[0];
+	zplaneSlider.min = 0.0;
+	zplaneSlider.max = 1.0;
+	zplaneSlider.step = 0.01;
+	zplaneSlider.defaultValue = 0.5;
+	zplaneSlider.oninput=function(){presenter.setClippingPointZ(this.valueAsNumber);};
+
+	// set checkboxes
+	var xplaneFlip = $('#xplaneFlip')[0];
+	xplaneFlip.defaultChecked = false;
+	xplaneFlip.onchange=function(){
+		if(presenter.getClippingX()!=0){
+			if(this.checked) presenter.setClippingX(-1);
+			else presenter.setClippingX(1);
+		}
+	};
+
+	var yplaneFlip = $('#yplaneFlip')[0];
+	yplaneFlip.defaultChecked = false;
+	yplaneFlip.onchange=function(){
+		if(presenter.getClippingY()!=0){
+			if(this.checked) presenter.setClippingY(-1);
+			else presenter.setClippingY(1);
+		}
+	};
+
+	var zplaneFlip = $('#zplaneFlip')[0];
+	zplaneFlip.defaultChecked = false;
+	zplaneFlip.onchange=function(){
+		if(presenter.getClippingZ()!=0){
+			if(this.checked) presenter.setClippingZ(-1);
+			else presenter.setClippingZ(1);
+		}
+	};
+	
+	var planesCheck = $('#showPlane')[0];
+	planesCheck.defaultChecked = presenter.getClippingRendermode()[0];
+	planesCheck.onchange = function(){ presenter.setClippingRendermode(this.checked, presenter.getClippingRendermode()[1]); };
+
+	var edgesCheck = $('#showBorder')[0];
+	edgesCheck.defaultChecked = presenter.getClippingRendermode()[1];
+	edgesCheck.onchange=function(){ presenter.setClippingRendermode(presenter.getClippingRendermode()[0], this.checked); };
+}
+
+function sectiontoolReset() {
+	// reset sections value
+	presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
+
+	// reset sliders 
+	var xplaneSlider = $('#xplaneSlider')[0];
+	xplaneSlider.value = xplaneSlider.defaultValue;
+
+	var yplaneSlider = $('#yplaneSlider')[0];
+	yplaneSlider.value = yplaneSlider.defaultValue;
+
+	var zplaneSlider = $('#zplaneSlider')[0]; 
+	zplaneSlider.value = zplaneSlider.defaultValue;
+
+	// reset checkboxes
+	var xplaneFlip = $('#xplaneFlip')[0];
+	xplaneFlip.checked = xplaneFlip.defaultChecked;
+
+	var yplaneFlip = $('#yplaneFlip')[0];
+	yplaneFlip.checked = xplaneFlip.defaultChecked;
+
+	var zplaneFlip = $('#zplaneFlip')[0];
+	zplaneFlip.checked = xplaneFlip.defaultChecked;
+
+	var planesCheck = $('#showPlane')[0];
+	planesCheck.checked = planesCheck.defaultChecked;
+	presenter.setClippingRendermode(planesCheck.checked, presenter.getClippingRendermode()[1]);
+
+	var edgesCheck = $('#showBorder')[0];
+	edgesCheck.checked = edgesCheck.defaultChecked;
+	presenter.setClippingRendermode(presenter.getClippingRendermode()[0], edgesCheck.checked);
+}
+
+function sectionxSwitch() {
+	if(presenter.getClippingX()==0) {
+		$('#xplane').css("visibility", "hidden");
+		$('#xplane_on').css("visibility", "visible");
+		var xplaneFlip = $('#xplaneFlip')[0]; 
+		if(xplaneFlip.checked) presenter.setClippingX(-1);
+		else presenter.setClippingX(1);
+	}
+	else {
+		$('#xplane_on').css("visibility", "hidden");
+		$('#xplane').css("visibility", "visible");
+		presenter.setClippingX(0);
+	}
+}
+
+function sectionySwitch() {
+	if(presenter.getClippingY()==0) {
+		$('#yplane').css("visibility", "hidden");
+		$('#yplane_on').css("visibility", "visible");
+		var yplaneFlip = $('#yplaneFlip')[0];
+		if(yplaneFlip.checked) presenter.setClippingY(-1);
+		else presenter.setClippingY(1);
+	}
+	else {
+		$('#yplane_on').css("visibility", "hidden");
+		$('#yplane').css("visibility", "visible");
+		presenter.setClippingY(0);
+	}
+}
+
+function sectionzSwitch() {
+	if(presenter.getClippingZ()==0) {
+		$('#zplane').css("visibility", "hidden");
+		$('#zplane_on').css("visibility", "visible");
+		var zplaneFlip = $('#zplaneFlip')[0];
+		if(zplaneFlip.checked) presenter.setClippingZ(-1);
+		else presenter.setClippingZ(1);
+	}
+	else {
+		$('#zplane_on').css("visibility", "hidden");
+		$('#zplane').css("visibility", "visible");
+		presenter.setClippingZ(0);
+	}
+}
+
 function fullscreenSwitch() {
   if($('#full').css("visibility")=="visible"){
     if (window.navigator.userAgent.indexOf('Trident/') < 0) enterFullscreen();
@@ -158,7 +374,7 @@ function fullscreenSwitch() {
 }
 
 function enterFullscreen() {
-  var el = document.getElementById('3dhop');
+  var viewer = $('#3dhop')[0];
   presenter.native_width  = presenter.ui.width;
   presenter.native_height = presenter.ui.height;
   $('#full').css("visibility", "hidden");
@@ -166,9 +382,9 @@ function enterFullscreen() {
   $('#full_on').css("opacity","0.5");
   resizeCanvas(screen.width,screen.height);
 
-  if (el.msRequestFullscreen) el.msRequestFullscreen();
-  else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
-  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  if (viewer.msRequestFullscreen) viewer.msRequestFullscreen();
+  else if (viewer.mozRequestFullScreen) viewer.mozRequestFullScreen();
+  else if (viewer.webkitRequestFullscreen) viewer.webkitRequestFullscreen();
 
   presenter.ui.postDrawEvent();
 }
@@ -186,11 +402,53 @@ function exitFullscreen() {
   presenter.ui.postDrawEvent(); 
 }
 
-function moveToolbar(l,t) {
-  $('#toolbar').css('left', l);
-  $('#toolbar').css('top', t);
+/*DEPRECATED*/
+function measurementSwitch() {
+  var on = presenter.isMeasurementToolEnabled();
+
+  if(on){
+    $('#measure').css("visibility", "hidden");
+    $('#measure_on').css("visibility", "visible");
+    $('#measure_on').css("opacity","1.0");
+    $('#measurebox').css("visibility","visible");
+    $('#draw-canvas').css("cursor","crosshair");
+  }
+  else{
+    if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
+    else if (document.selection && document.selection.createRange()!='') document.selection.empty();
+    $('#measure_on').css("visibility", "hidden");
+    $('#measure').css("visibility", "visible");
+    $('#measure').css("opacity","1.0");
+    $('#measurebox').css("visibility","hidden");
+    $('#measure-output').html("0.0");
+    if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
+  }
 }
 
+// +++ INTERFACE POSITIONING FUNCTIONS +++ //
+
+function moveToolbar(l,t) {
+	$('#toolbar').css('left', l);
+	$('#toolbar').css('top', t);
+	anchorPanels();
+}
+
+function movePickpointbox(l,t) {
+	$('#pickpoint-box').css('left', l);
+	$('#pickpoint-box').css('top', t);
+}
+
+function moveMeasurementbox(l,t) {
+	$('#measure-box').css('left', l);
+	$('#measure-box').css('top', t);
+}
+
+function moveSectionsbox(l,t) {
+	$('#sections-box').css('left', l);
+	$('#sections-box').css('top', t);
+}
+
+/*DEPRECATED*/
 function moveMeasurebox(r,t) {
   $('#measurebox').css('right', r);
   $('#measurebox').css('top', t);
@@ -217,13 +475,3 @@ function set3dhlg() {
 	 });
   $('#tdhlg').click(function() { window.open('http://vcg.isti.cnr.it/3dhop/', '_blank') });
 }
-
-document.addEventListener("MSFullscreenChange", function () {
-    if(!document.msFullscreenElement) exitFullscreen();
-}, false);
-document.addEventListener("mozfullscreenchange", function () {
-    if(!document.mozFullScreen) exitFullscreen();
-}, false);
-document.addEventListener("webkitfullscreenchange", function () {
-    if(!document.webkitIsFullScreen) exitFullscreen();
-}, false);
