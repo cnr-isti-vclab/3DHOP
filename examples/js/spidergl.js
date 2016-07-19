@@ -10047,7 +10047,7 @@ SpiderGL.WebGL.Context.hijack = function (gl) {
  */
 SpiderGL.WebGL.Context.isHijacked = function (gl) {
 	return !!gl && !!gl._spidergl;
-	return (SpiderGL.Type.instanceOf(gl, WebGLRenderingContext) && gl._spidergl);
+//	return (SpiderGL.Type.instanceOf(gl, WebGLRenderingContext) && gl._spidergl);
 }
 
 /**
@@ -16176,7 +16176,7 @@ SpiderGL.UserInterface.CanvasHandler._touchHandler = function (event) {
 
 	if(first){
 		simulatedEvent.initMouseEvent(
-			type, true, true, window, -diff, 
+			type, true, true, window, diff, 
 			first.screenX, first.screenY, 
 			first.clientX, first.clientY, false, 
 			false, false, false, button, null
@@ -16454,7 +16454,7 @@ SpiderGL.UserInterface.CanvasHandler.prototype = {
 			}
 		}
 		else if (e.detail) {
-			delta = -e.detail / 3;
+			delta = e.detail / 3;
 		}
 		if (delta) {
 			this._dispatch("onMouseWheel", delta, xy[0], xy[1], e);

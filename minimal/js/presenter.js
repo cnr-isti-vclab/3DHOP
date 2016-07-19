@@ -2607,7 +2607,7 @@ Presenter.prototype = {
 	},
 
 	onMouseButtonUp : function (button, x, y, e) {
-		if(this._clickable && button==0 && !(this.ui.isDragging(0) && (Math.abs(this.ui.dragDeltaX(0))>=3 || Math.abs(this.ui.dragDeltaY(0)>=3))) && e.detail!=1) {
+		if(this._clickable && button==0 && !(this.ui.isDragging(0) && (Math.abs(this.ui.dragDeltaX(0))>=3 || Math.abs(this.ui.dragDeltaY(0)>=3))) && e.detail!=-1) {
 		this._pickingRefresh(x, y);
 			if(this._onPickedSpot && this._pickedSpot!=null) this._onPickedSpot(this._pickedSpot);
 			if(this._onPickedInstance && this._pickedInstance!=null) this._onPickedInstance(this._pickedInstance);
