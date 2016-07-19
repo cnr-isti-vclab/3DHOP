@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -145,7 +145,7 @@ TurntablePanTrackball.prototype = {
 
 		this._computeMatrix();
 	},	
-
+	
 	animateToState : function (newstate) {
 		// stop animation
 		this._isAnimating = false;
@@ -160,6 +160,7 @@ TurntablePanTrackball.prototype = {
 		//check limits
 		if(this._limitPhi)
 			this._targetPhi = this.clamp(this._targetPhi, this._minMaxPhi[0], this._minMaxPhi[1]);
+		this._targetPhi = this._targetPhi %	(2*Math.PI);
 		this._targetTheta = this.clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);
 		this._targetPanX = this.clamp(this._targetPanX, this._minMaxPanX[0], this._minMaxPanX[1]);
 		this._targetPanY = this.clamp(this._targetPanY, this._minMaxPanY[0], this._minMaxPanY[1]);
@@ -176,18 +177,12 @@ TurntablePanTrackball.prototype = {
 
 		//if phi unconstrained rotation, it is necessary to find a good rotation direction
 		if(!this._limitPhi){ 
-			// clamp current phi angle, to prevent endless unwinding
-			while(this._phi > 2*Math.PI)
-				this._phi -= 2*Math.PI;
-			while(this._phi < 0) 
-				this._phi += 2*Math.PI;	
+			// normalize (-2pi 2pi) current phi angle, to prevent endless unwinding
+			this._phi = this._phi % (2*Math.PI);
 
-			// determine minimal, clamped target phi angle
+			// determine minimal, normalized target phi angle, to prevent endless unwinding
 			var clampedangle = this._targetPhi;
-			while(clampedangle > 2*Math.PI)
-				clampedangle -= 2*Math.PI;
-			while(clampedangle < 0) 
-				clampedangle += 2*Math.PI;
+			clampedangle = clampedangle % (2*Math.PI);
 			
 			if(Math.abs(clampedangle - this._phi) < Math.PI) { // standard rotation
 				if(clampedangle > this._phi){
@@ -234,6 +229,17 @@ TurntablePanTrackball.prototype = {
 		this._isAnimating = true;
 	},
 
+	recenter : function (newpoint) {
+		// stop animation
+		this._isAnimating = false;
+		
+		var newpanX = (newpoint[0]-presenter.sceneCenter[0]) * presenter.sceneRadiusInv;
+		var newpanY = (newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
+		var newpanZ = (newpoint[2]-presenter.sceneCenter[2]) * presenter.sceneRadiusInv;
+		
+		this.animateToState([sglRadToDeg(this._phi), sglRadToDeg(this._theta), newpanX, newpanY, newpanZ, (this._distance * 0.8)]);
+	},	
+	
 	tick : function (dt) {
 		if(!this._isAnimating) return false;
 
@@ -388,8 +394,8 @@ TurntablePanTrackball.prototype = {
 			this._phi = this.clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
 
 		// avoid eternal accumulation of rotation, just for the sake of cleanliness
-		if (this._phi > 20.0) this._phi = this._phi - 20.0;
-		if (this._phi < -20.0) this._phi = this._phi + 20.0;
+		if (this._phi > 10.0) this._phi = this._phi - 10.0;
+		if (this._phi < -10.0) this._phi = this._phi + 10.0;
 
 		this._theta += dy; 
 		this._theta = this.clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);

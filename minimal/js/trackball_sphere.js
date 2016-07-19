@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -122,6 +122,23 @@ SphereTrackball.prototype = {
 		this._computeMatrix();
 	},
 
+	recenter : function (newpoint) {	
+		var newpanX = (newpoint[0]-presenter.sceneCenter[0]) * presenter.sceneRadiusInv;
+		var newpanY = (newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
+		var newpanZ = (newpoint[2]-presenter.sceneCenter[2]) * presenter.sceneRadiusInv;
+		
+		this._sphereMatrix[12] = -newpanX;
+		this._sphereMatrix[13] = -newpanY;
+		this._sphereMatrix[14] = -newpanZ;
+		this._distance *= 0.8;
+		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);		
+		this._computeMatrix();
+	},		
+	
+	tick : function (dt) {
+		return false;
+	},
+	
 	get action()  { return this._action; },
 
 	set action(a) { if(this._action != a) this._new_action = true; this._action = a; },

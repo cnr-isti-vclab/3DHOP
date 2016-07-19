@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -174,8 +174,7 @@ PanTiltTrackball.prototype = {
 		
 		var maxtime = Math.max( timePanX, Math.max( timePanY, Math.max( timeAngleX, Math.max( timeAngleY, timeDistance ) ) ));
 		
-		if (maxtime > 1.0)
-			maxtime = 1.0;
+		maxtime = this.clamp(maxtime, 0.5, 2.0);
 			
 		this._speedPanX *= timePanX / maxtime;
 		this._speedPanY *= timePanY / maxtime;
@@ -185,6 +184,16 @@ PanTiltTrackball.prototype = {
 		
 		// start animation
 		this._isAnimating = true;
+	},	
+	
+	recenter : function (newpoint) {
+		// stop animation
+		this._isAnimating = false;
+		
+		var newpanX = -(newpoint[0]-presenter.sceneCenter[0]) * presenter.sceneRadiusInv;
+		var newpanY = -(newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
+		
+		this.animateToState([newpanX, newpanY, sglRadToDeg(this._angleX), sglRadToDeg(this._angleY), (this._distance * 0.8)]);
 	},	
 	
 	tick : function (dt) {

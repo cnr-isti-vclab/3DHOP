@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -22,18 +22,20 @@ onmessage = function(job) {
 	var node = job.data.node;
 	var signature = job.data.signature;
 	var patches = job.data.patches;
-	var now =new Date().getTime();
+//	var now =new Date().getTime();
 
-	var size = node.buffer.byteLength;
+	var size;
+	if(!node.buffer) return;
+	else size = node.buffer.byteLength;
 	var buffer;
 	for(var i =0 ; i < 1; i++) {
 		var coder = new MeshCoder(signature, node, patches);
 		buffer = coder.decode(node.buffer);
 	}
 	node.buffer = buffer;
-	var elapsed = new Date().getTime() - now;
+//	var elapsed = new Date().getTime() - now;
 	var t = node.nface;
-	//console.log("Z Time: " + elapsed + " Size: " + size + " KT/s " + (t/(elapsed)) + " Mbps " + (8*1000*node.buffer.byteLength/elapsed)/(1<<20));
+//	console.log("Z Time: " + elapsed + " Size: " + size + " KT/s " + (t/(elapsed)) + " Mbps " + (8*1000*node.buffer.byteLength/elapsed)/(1<<20));
 	postMessage(node);
 }
 
@@ -303,11 +305,15 @@ MeshCoder.prototype = {
 decode: function(input) {
 	var t = this;
 
-	t.buffer = new ArrayBuffer(t.node.nvert*(12 + t.sig.normals*6 + t.sig.colors*4) + t.node.nface*t.sig.indices*6);
+	t.buffer = new ArrayBuffer(t.node.nvert*(12 + t.sig.texcoords*8 + t.sig.normals*6 + t.sig.colors*4) + t.node.nface*t.sig.indices*6);
 
 	var size = t.node.nvert*12; //float
 	t.coords = new Float32Array(t.buffer, 0, t.node.nvert*3);
 
+	if(t.sig.texcoords) {
+		t.texcoords = new Float32Array(t.buffer, size, t.node.nvert*2);
+		size += t.node.nvert*8; //float
+	}
 	if(t.sig.normals) {
 		t.normals = new Int16Array(t.buffer, size, t.node.nvert*3);
 		size += t.node.nvert*6; //short
@@ -323,12 +329,8 @@ decode: function(input) {
 
 	t.stream = new Stream(input);
 	
-	t.stack = new Float32Array(7); //min0, min1, min2, step
-//	var min = [];
-//	min[0] = t.stream.readInt();
-//	min[1] = t.stream.readInt();
-//	min[2] = t.stream.readInt();
-//	t.min = min;
+	t.stack = new Float32Array(12); //min0, min1, min2, step, tmin0, tmin1, tstep
+
 	t.stack[3] = t.stream.readInt();
 	t.stack[4] = t.stream.readInt();
 	t.stack[5] = t.stream.readInt();
@@ -338,8 +340,18 @@ decode: function(input) {
 
 	t.stack[6] = Math.pow(2.0, t.coord_q);
 
+	if(t.sig.texcoords) {
+		t.stack[9] = t.stream.readInt();
+		t.stack[10] = t.stream.readInt();
+
+		t.texcoord_q = t.stream.readChar();
+		t.texcoord_bits = t.stream.readChar()*2;
+		t.stack[11] = Math.pow(2.0, t.texcoord_q);
+	}
+
 	if(t.sig.indices) {
 		t.decodeFaces();
+
 //	var faces = window.performance.now() - start;
 //	start += faces;
 	} else {
@@ -363,6 +375,7 @@ decode: function(input) {
 
 decodeCoordinates: function() {
 	var t = this;
+	t.min = [t.stack[3], t.stack[4], t.stack[5]];
 
 	var step = Math.pow(2.0, t.coord_q);
 
@@ -404,7 +417,6 @@ decodeCoordinates: function() {
 },
 
 decodeFaces: function() {
-	var r = Math.random();
 	if(!this.node.nface) return;
 	
 	this.vertex_count = 0;
@@ -422,6 +434,14 @@ decodeFaces: function() {
 		coords[i] = (coords[i] + stack[3])*stack[6]; i++;
 		coords[i] = (coords[i] + stack[4])*stack[6]; i++;
 		coords[i] = (coords[i] + stack[5])*stack[6]; i++;
+	}
+	if(this.sig.texcoords) {
+		var t_tot = this.node.nvert*2;
+		var t_coords = this.texcoords;
+		for(var i = 0; i < tot; ) {
+			t_coords[i] = (t_coords[i] + stack[9])*stack[11]; i++;
+			t_coords[i] = (t_coords[i] + stack[10])*stack[11]; i++;
+		}		
 	}
 },
 
@@ -466,6 +486,9 @@ decodeNormals: function() {
 
 	var boundary = this.markBoundary();
 	this.computeNormals();
+
+	if(this.sig.texcoords) //hack, fixing normals makes it worse actually
+		return;
 
 	var stat = 0;
 	//get difference between original and predicted
@@ -692,6 +715,13 @@ decodeConnectivity: function(length, start) {
 	var diffs = dtunstall.decompress(this.stream);
 	var diff_count = 0;
 
+	var tdiffs;
+	var tdiff_count = 0;
+	if(t.sig.texcoords) {
+		var ttunstall = new Tunstall;
+		tdiffs = ttunstall.decompress(this.stream);	
+	}
+
 	var bitstream = this.stream.readBitStream(bitstream);
 
 	var current_face = 0;          //keep track of connected component start
@@ -725,27 +755,31 @@ decodeConnectivity: function(length, start) {
 //	var estimated = [0, 0, 0]; //no! use stack.
 	var stack = this.stack;
 	var coords = this.coords;
+	var texcoords = this.texcoords;
+	var hasTexCoords = t.sig.texcoords;
 
 	while(totfaces > 0) {
 		if(!faceorder.length && !delayed.length) {
 			if(current_face == this.node.nface) break; //no more faces to encode exiting
 
-//			estimated[0] = estimated[1] = estimated[2] = 0;
 			stack[0] = stack[1] = stack[2] = 0;
-
+			stack[7] = stack[8] = 0; //texcoords
 			var last_index = -1;
 			var index = [];
 			for(var k = 0; k < 3; k++) {
 				this.last[this.last_count++] = last_index;
-				var v = this.decodeVertex(/*estimated, */bitstream, diffs[diff_count++]);
+				var diff = diffs[diff_count++];
+				var tdiff = diff && hasTexCoords? tdiffs[tdiff_count++] : 0;
+				var v = this.decodeVertex(bitstream, diff, tdiff);
 				index[k] = v; 
 				this.faces[faces_count++] = v;
-/*				estimated[0] = coords[v*3];
-				estimated[1] = coords[v*3+1];
-				estimated[2] = coords[v*3+2]; */
 				stack[0] = coords[v*3];
 				stack[1] = coords[v*3+1];
 				stack[2] = coords[v*3+2]; 
+				if(t.sig.texcoords) {
+					stack[7] = texcoords[v*2];
+					stack[8] = texcoords[v*2+1];
+				}
 				last_index = v;
 			}
 			var current_edge = front_count;
@@ -789,9 +823,14 @@ decodeConnectivity: function(length, start) {
 			//predict position based on v0, v1 and v2
 			for(var k = 0; k < 3; k++) 
 				stack[k] = coords[v0*3 + k] + coords[v1*3 + k] - coords[v2*3 + k];
+
+			if(hasTexCoords)
+				for(var k = 0; k < 2; k++)
+					stack[7+k] = texcoords[v0*2 + k]  + texcoords[v1*2 + k] - texcoords[v2*2 + k];
 			
 			var diff = diffs[diff_count++];
-			opposite = this.decodeVertex(bitstream, diff);
+			var tdiff = diff && hasTexCoords? tdiffs[tdiff_count++] : 0;
+			opposite = this.decodeVertex(bitstream, diff, tdiff);
 			if(diff != 0)
 				this.last[this.last_count++] = v1;
 
@@ -869,7 +908,7 @@ decodeConnectivity: function(length, start) {
 	}
 },
    
-decodeVertex: function(bitstream, diff) {
+decodeVertex: function(bitstream, diff, tdiff) {
 	if(diff == 0) 
 		return bitstream.read(16);
 
@@ -880,6 +919,13 @@ decodeVertex: function(bitstream, diff) {
 	for(var k = 0; k < 3; k++) {
 		var d = bitstream.read(diff) - max;
 		this.coords[v*3+k] = this.stack[k] + d; //stack 0-3 is used as extimated
+	}
+	if(this.sig.texcoords) {
+		var tmax = 1<<(tdiff-1);
+		for(var k = 0; k < 2; k++) {
+			var d = bitstream.read(tdiff) - tmax;
+			this.texcoords[v*2+k] = this.stack[7+k] + d; //stack 7-9 is used as extimated
+		}
 	}
 	return v;
 },
@@ -902,5 +948,7 @@ decodeDiff: function(diff, bitstream) {
 }
 
 };
+
+var tot = 0;
 
 

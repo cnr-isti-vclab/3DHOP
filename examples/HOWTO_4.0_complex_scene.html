@@ -49,7 +49,7 @@ function setup3dhop() {
 			"Gargoyle" : { url: "models/multires/gargo.nxs" },
 			"Box" : { 
 				url: "models/singleres/cube.ply",
-				transform : { matrix: SglMat4.scaling([ 13.0, 0.5, 10.0]) },
+				transform : {  matrix: SglMat4.scaling([13.0, 0.5, 10.0]) },
 			}
 		},
 		modelInstances : {
@@ -60,13 +60,17 @@ function setup3dhop() {
 				mesh : "Laurana",
 				transform : { matrix: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 250.0, -50.0, 1.0] },
 			},
+			"Left" : {
+				mesh : "Gargoyle",
+				transform : { 
+					translation : [-120.0, 12.5, 150.0],
+					rotation : [0.0, 90, 0.0], 
+					scale : [1.5, 1.5, 1.5]
+				}
+			},
 			"Right" : {
 				mesh : "Gargoyle",
 				transform : { matrix: SglMat4.mul(SglMat4.translation([120.0, 12.5, 150.0]), SglMat4.rotationAngleAxis(sglDegToRad(-90.0), [0.0, 1.0, 0.0])) }
-			},
-			"Left" : {
-				mesh : "Gargoyle",
-				transform : { matrix: SglMat4.translation([-120.0, 12.5, 120.0]) }
 			}
 		},
 		space : {
