@@ -62,6 +62,7 @@ function init3dhop() {
 			button=0;
 		});
 
+	$('.output-table td:has(.output-text,.output-input)').css("border-radius", "5px").css("background-color", "rgba(125,125,125,0.25)");
 
 	$('#3dhop')
 		.on('contextmenu', function(e) { 
@@ -110,17 +111,17 @@ function init3dhop() {
 
 // anchor pickpoint, measurement and sections panels to the respective buttons
 function anchorPanels() {
-	if ($('#pickpoint-box').length && $('#pick').length) 
+	if ($('#pickpoint-box')[0] && $('#pick')[0]) 
 	{
 		$('#pickpoint-box').css('left', ($('#pick').position().left + $('#pick').width() + $('#toolbar').position().left + 5));
 		$('#pickpoint-box').css('top', ($('#pick').position().top + $('#toolbar').position().top));
 	}
-	if ($('#measure-box').length && $('#measure').length)
+	if ($('#measure-box')[0] && $('#measure')[0])
 	{
 		$('#measure-box').css('left', ($('#measure').position().left + $('#measure').width() + $('#toolbar').position().left + 5));
 		$('#measure-box').css('top', ($('#measure').position().top + $('#toolbar').position().top));
 	}
-	if ($('#sections-box').length && $('#sections').length) 
+	if ($('#sections-box')[0] && $('#sections')[0]) 
 	{
 		$('#sections-box').css('left', ($('#sections').position().left + $('#sections').width() + $('#toolbar').position().left + 5));
 		$('#sections-box').css('top', ($('#sections').position().top + $('#toolbar').position().top));
@@ -129,44 +130,39 @@ function anchorPanels() {
 
 // +++ INTERFACE SWITCHING FUNCTIONS +++ //
 
-function lightSwitch() {
-  var on = presenter.isLightTrackballEnabled();
+function lightSwitch(on) {
+  if(on === undefined) on = presenter.isLightTrackballEnabled();
 
   if(on){
     $('#light').css("visibility", "hidden");
     $('#light_on').css("visibility", "visible");
-    $('#light_on').css("opacity","1.0");
   }
   else{
     $('#light_on').css("visibility", "hidden");
     $('#light').css("visibility", "visible");
-    $('#light').css("opacity","1.0");
   }
 }
 
-function hotspotSwitch() {
-  var on = presenter.isSpotVisibilityEnabled();
+function hotspotSwitch(on) {
+  if(on === undefined) on = presenter.isSpotVisibilityEnabled();
 
   if(on){
     $('#hotspot').css("visibility", "hidden");
     $('#hotspot_on').css("visibility", "visible");
-    $('#hotspot_on').css("opacity","1.0");
   }
   else{
     $('#hotspot_on').css("visibility", "hidden");
     $('#hotspot').css("visibility", "visible");
-    $('#hotspot').css("opacity","1.0");
   }
 }
 
-function pickpointSwitch() {
-  var on = presenter.isPickpointModeEnabled();
+function pickpointSwitch(on) {
+  if(on === undefined) on = presenter.isPickpointModeEnabled();
 
   if(on){  
     $('#pick').css("visibility", "hidden");
     $('#pick_on').css("visibility", "visible");
-    $('#pick_on').css("opacity","1.0");
-    $('#pickpoint-box').css("visibility","visible");
+    $('#pickpoint-box').fadeIn().css("display","table");
     $('#draw-canvas').css("cursor","crosshair");
   }
   else{
@@ -174,21 +170,19 @@ function pickpointSwitch() {
     else if (document.selection && document.selection.createRange()!='') document.selection.empty();
     $('#pick_on').css("visibility", "hidden");
     $('#pick').css("visibility", "visible");
-    $('#pick').css("opacity","1.0");
-    $('#pickpoint-box').css("visibility","hidden");
+    $('#pickpoint-box').css("display","none");
     $('#pickpoint-output').html("[ 0 , 0 , 0 ]");
     if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
   }
 }
 
-function measureSwitch() {
-  var on = presenter.isMeasurementToolEnabled();
+function measureSwitch(on) {
+  if(on === undefined) on = presenter.isMeasurementToolEnabled();
 
   if(on){  
     $('#measure').css("visibility", "hidden");
     $('#measure_on').css("visibility", "visible");
-    $('#measure_on').css("opacity","1.0");
-    $('#measure-box').css("visibility","visible");
+    $('#measure-box').fadeIn().css("display","table");
     $('#draw-canvas').css("cursor","crosshair");
   }
   else{
@@ -196,28 +190,25 @@ function measureSwitch() {
     else if (document.selection && document.selection.createRange()!='') document.selection.empty();
     $('#measure_on').css("visibility", "hidden");
     $('#measure').css("visibility", "visible");
-    $('#measure').css("opacity","1.0");
-    $('#measure-box').css("visibility","hidden");
+    $('#measure-box').css("display","none");
     $('#measure-output').html("0.0");
     if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
   }
 }
 
-function sectiontoolSwitch() {
-  var on = $('#sections').css("visibility")=="visible";
+function sectiontoolSwitch(on) {
+  if(on === undefined) on = $('#sections').css("visibility")=="visible";
 
   if(on){
 	$('#sections').css("visibility", "hidden");
 	$('#sections_on').css("visibility", "visible");
-	$('#sections_on').css("opacity","1.0");
-	$('#sections-box').css("visibility","visible");
+	$('#sections-box').fadeIn().css("display","table");
 	$('#xplane, #yplane, #zplane').css("visibility", "visible");
   }
   else{
 	$('#sections_on').css("visibility", "hidden");
 	$('#sections').css("visibility", "visible");
-	$('#sections').css("opacity","1.0");
-	$('#sections-box').css("visibility","hidden");
+	$('#sections-box').css("display","none");
 	$('#sections-box img').css("visibility", "hidden");
 	presenter.setClippingXYZ(0, 0, 0);
   }
@@ -379,7 +370,6 @@ function enterFullscreen() {
   presenter.native_height = presenter.ui.height;
   $('#full').css("visibility", "hidden");
   $('#full_on').css("visibility", "visible");
-  $('#full_on').css("opacity","0.5");
   resizeCanvas(screen.width,screen.height);
 
   if (viewer.msRequestFullscreen) viewer.msRequestFullscreen();
@@ -392,7 +382,6 @@ function enterFullscreen() {
 function exitFullscreen() {
   $('#full_on').css("visibility", "hidden");
   $('#full').css("visibility", "visible");
-  $('#full').css("opacity","0.5");
   resizeCanvas(presenter.native_width,presenter.native_height);
 
   if (document.msExitFullscreen) document.msExitFullscreen();  
@@ -409,7 +398,6 @@ function measurementSwitch() {
   if(on){
     $('#measure').css("visibility", "hidden");
     $('#measure_on').css("visibility", "visible");
-    $('#measure_on').css("opacity","1.0");
     $('#measurebox').css("visibility","visible");
     $('#draw-canvas').css("cursor","crosshair");
   }
@@ -418,7 +406,6 @@ function measurementSwitch() {
     else if (document.selection && document.selection.createRange()!='') document.selection.empty();
     $('#measure_on').css("visibility", "hidden");
     $('#measure').css("visibility", "visible");
-    $('#measure').css("opacity","1.0");
     $('#measurebox').css("visibility","hidden");
     $('#measure-output').html("0.0");
     if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");

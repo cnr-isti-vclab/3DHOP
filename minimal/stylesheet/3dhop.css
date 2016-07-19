@@ -27,19 +27,19 @@ body { width:100%; height:100%; margin:0px; }
 
 #toolbar img { margin-bottom:8px; width:50px; height:50px; opacity:0.5; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.output-box { position:absolute; visibility:hidden;  background-color:rgba(125,125,125,0.5); display:table; border-radius:5px; margin:0; height:45px; padding:5px 5px 0 5px; cursor:default; color:#f8f8f8; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+.output-box { position:absolute; display:none; border-radius:5px; margin:0; height:48px; padding:0px 5px 2px 5px; cursor:default; background-color:rgba(125,125,125,0.5); color:#f8f8f8; text-decoration:none; text-align:center; font-family:verdana; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.output-text { cursor:text; -webkit-user-select:text; -webkit-touch-callout:text; -khtml-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text; }
+.output-text { padding:0px 5px 0px 5px; cursor:text; -webkit-user-select:text; -webkit-touch-callout:text; -khtml-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text; }
 
-.output-input { position:relative; cursor:pointer; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent;  }
+.output-input { vertical-align:middle; cursor:pointer; height:16px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent;  }
 
-.output-table { margin-top:-5px; width:100%; color:#f8f8f8; text-align:center; font-style:italic; font-size:12px; line-height:20px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+.output-table { margin:0; width:100%; color:#f8f8f8; text-align:center; font-style:italic; font-size:12px; line-height:15px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-.output-table img { cursor:pointer; background-color:rgba(125,125,125,0.25); border:1px outset; border-radius:5px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+.output-table img { height:25px; cursor:pointer; background-color:rgba(125,125,125,0.25); border:1px outset; border-radius:5px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; user-drag: none; -webkit-user-drag: none; }
 
 .output-table img:hover { background-color:rgba(125,125,125,0.8); }
 
-.output-table tr:nth-child(n+2) td { background-color:rgba(125,125,125,0.25); border-radius:5px; }
+.output-box hr {  margin:0 0 3px 0; border:0; height:1px; background-image:linear-gradient(to right, rgba(0, 0, 0, 0), rgba(225, 225, 225, 0.75), rgba(0, 0, 0, 0)); }
 
 #draw-canvas { background-repeat:no-repeat; background-position:center top; -webkit-background-size:cover; -moz-background-size:cover; -o-background-size:cover; background-size:cover; outline:none; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 

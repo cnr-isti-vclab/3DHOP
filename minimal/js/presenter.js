@@ -34,6 +34,8 @@ const HOP_ALL                 = 256;
 const HOP_DEBUGMODE           = false;
 // default light direction
 const HOP_DEFAULTLIGHT        = [0, 0, -1];
+// default points size
+const HOP_DEFAULTPOINTSIZE    = 1.0;
 
 Presenter = function (canvas) {
 	this._supportsWebGL = sglHandleCanvas(canvas, this);
@@ -348,7 +350,7 @@ Presenter.prototype = {
 				"uClipPoint"                 : [0.0, 0.0, 0.0],
 				"uClipAxis"                  : [0.0, 0.0, 0.0],
 				"uClipColor"				 : [1.0, 1.0, 1.0],
-				"uClipColorSize"			 : 0.0,				
+				"uClipColorSize"			 : 0.0
             }
         });
 		if(this._isDebugging)
@@ -416,10 +418,6 @@ Presenter.prototype = {
 			    if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;  \n\
 			    else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
 				                                                                  \n\
-                vec3  normal  = normalize(vNormal);                               \n\
-                float nDotL   = dot(normal, -uViewSpaceLightDirection);           \n\
-				                                                                  \n\
-				                                                                  \n\
 				vec3  diffuse= vColor.rgb;                                        \n\
 				if(uUseSolidColor)                                                \n\
                   if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
@@ -428,6 +426,8 @@ Presenter.prototype = {
                     diffuse = uSolidColor;                                        \n\
 																				  \n\
 				if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
+  				  vec3  normal  = normalize(vNormal);                             \n\
+                  float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
 					if(gl_FrontFacing)                                            \n\
 						diffuse = diffuse * max(0.0, nDotL);                      \n\
 					else                                                          \n\
@@ -458,25 +458,24 @@ Presenter.prototype = {
                 nxsFragmentShader
             ],
             attributes : {
-                "aPosition" : 0,
-                "aNormal"   : 1,
-                "aColor"    : 2,
-				"aTextureCoord" : 3,
-				"aPointSize": 4
+                "aPosition"     : 0,
+                "aNormal"       : 1,
+                "aColor"        : 2,
+                "aTextureCoord" : 3
             },
             uniforms   : {
                 "uWorldViewProjectionMatrix" : SglMat4.identity(),
                 "uViewSpaceNormalMatrix"     : SglMat3.identity(),
-				"uModelMatrix" 				 : SglMat4.identity(),
+				"uModelMatrix"               : SglMat4.identity(),
                 "uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 				"uAlpha"                     : 1.0,
 				"uUseSolidColor"             : false,
 				"uSolidColor"                : [1.0, 1.0, 1.0],
 				"uClipPoint"                 : [0.0, 0.0, 0.0],
 				"uClipAxis"                  : [0.0, 0.0, 0.0],
-				"uClipColor"				 : [1.0, 1.0, 1.0],
-				"uClipColorSize"			 : 0.0,
-                "uSampler"                   : 0,				
+				"uClipColor"                 : [1.0, 1.0, 1.0],
+				"uClipColorSize"             : 0.0,
+                "uSampler"                   : 0
             }
         });
 		if(this._isDebugging)
@@ -798,7 +797,7 @@ Presenter.prototype = {
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 				"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
-				"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },	
+				"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 				"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 				"uAlpha"                     : { semantic : "uAlpha",                     value : 1.0 },
 				"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : true },
@@ -806,7 +805,7 @@ Presenter.prototype = {
 				"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 				"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 				"uClipColor"				 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
-				"uClipColorSize"             : { semantic : "uClipColorSize",             value : 1.0 },
+				"uClipColorSize"             : { semantic : "uClipColorSize",             value : 1.0 }
 			}
 		});
 		
@@ -872,15 +871,15 @@ Presenter.prototype = {
 			},
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
-				"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },	
+				"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 				"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
-				"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },				
+				"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] }
 			}
 		});
 		
 		return technique;
 	},
-	
+
 	// color coded ID technique for PLY rendering
 	_createColorCodedIDPLYtechnique : function () {
 		var gl = this.ui.gl;
@@ -915,7 +914,7 @@ Presenter.prototype = {
 			},
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
-				"uColorID"                   : { semantic : "uColorID",   value : [1.0, 0.5, 0.25, 1.0] }
+				"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] }
 			}
 		});
 		
@@ -973,7 +972,7 @@ Presenter.prototype = {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 				"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
 				"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
-				"uColorID"                   : { semantic : "uColorID",   value : [1.0, 0.5, 0.25, 1.0] }
+				"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] }
 			}
 		});
 		
@@ -1022,16 +1021,15 @@ Presenter.prototype = {
 			},
 			globals : {
 				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
-				"uLineColor"                 : { semantic : "uLineColor",   value : [0.0, 1.0, 0.5, 1.0] },
-				"uPointA"                    : { semantic : "uPointA",   value : [0.0, 0.0, 0.0] },
-				"uPointB"                    : { semantic : "uPointB",   value : [1.0, 1.0, 1.0] },
+				"uLineColor"                 : { semantic : "uLineColor",                 value : [0.0, 1.0, 0.5, 1.0] },
+				"uPointA"                    : { semantic : "uPointA",                    value : [0.0, 0.0, 0.0] },
+				"uPointB"                    : { semantic : "uPointB",                    value : [1.0, 1.0, 1.0] }
 			}
 		});
 		
 		return technique;
-	},	
-	
-	
+	},
+
 //----------------------------------------------------------------------------------------
 // SUPPORT FUNCTIONS
 //----------------------------------------------------------------------------------------
@@ -1222,7 +1220,7 @@ Presenter.prototype = {
 		this._pickValid = false; 
 		this._pickedPoint = [0.0, 0.0, 0.0];
 		this.ui.postDrawEvent();
-	},	
+	},
 	
 //----------------------------------------------------------------------------------------
 // DRAWING SUPPORT FUNCTIONS
@@ -1265,14 +1263,14 @@ Presenter.prototype = {
 					var instCenter = SglVec3.to4(mesh.renderable.datasetCenter,1);
 					instCenter = SglMat4.mul4(mesh.transform.matrix, instCenter);
 					instCenter = SglMat4.mul4(instances[inst].transform.matrix, instCenter);
-					instCenter = SglMat4.mul4(this._scene.space.transform.matrix, instCenter);										
+					instCenter = SglMat4.mul4(this._scene.space.transform.matrix, instCenter);
 					instCenter = SglVec4.to3(instCenter);
 					
 					var radius = mesh.renderable.datasetRadius;
 					var vector111 = SglVec3.one();
 					vector111 = SglMat3.mul3(SglMat4.to33(mesh.transform.matrix), vector111);
 					vector111 = SglMat3.mul3(SglMat4.to33(instances[inst].transform.matrix), vector111);
-					vector111 = SglMat3.mul3(SglMat4.to33(this._scene.space.transform.matrix), vector111);					
+					vector111 = SglMat3.mul3(SglMat4.to33(this._scene.space.transform.matrix), vector111);
 					var scalefactor = SglVec3.length(vector111) / SglVec3.length([1,1,1]);
 					radius = radius*scalefactor;
 					
@@ -1291,9 +1289,9 @@ Presenter.prototype = {
 					if(imax[2] > smax[2]) smax[2] = imax[2];
 				}
 			}
-		
+			
 			this.sceneCenter = [ (smax[0] + smin[0])/2.0, (smax[1] + smin[1])/2.0, (smax[2] + smin[2])/2.0 ];
-		}		
+		}
 		else //if(this._scene.space.centerMode == "first")
 		{
 			for (var inst in instances) {
@@ -1303,7 +1301,7 @@ Presenter.prototype = {
 
 					instCenter = SglMat4.mul4(mesh.transform.matrix, instCenter);
 					instCenter = SglMat4.mul4(instances[inst].transform.matrix, instCenter);
-					instCenter = SglMat4.mul4(this._scene.space.transform.matrix, instCenter);					
+					instCenter = SglMat4.mul4(this._scene.space.transform.matrix, instCenter);
 					
 					instCenter = SglVec4.to3(instCenter);
 					
@@ -1326,7 +1324,7 @@ Presenter.prototype = {
 				
 				vector111 = SglMat3.mul3(SglMat4.to33(mesh.transform.matrix), vector111);
 				vector111 = SglMat3.mul3(SglMat4.to33(instances[this._scene.space.whichInstanceRadius].transform.matrix), vector111);
-				vector111 = SglMat3.mul3(SglMat4.to33(this._scene.space.transform.matrix), vector111);					
+				vector111 = SglMat3.mul3(SglMat4.to33(this._scene.space.transform.matrix), vector111);
 				
 				var scalefactor = SglVec3.length(vector111) / SglVec3.length([1,1,1]);
 				
@@ -1345,15 +1343,15 @@ Presenter.prototype = {
 				if((mesh)&&(mesh.renderable)){
 					var instCenter = SglVec3.to4(mesh.renderable.datasetCenter,1);
 					instCenter = SglMat4.mul4(mesh.transform.matrix, instCenter);
-					instCenter = SglMat4.mul4(instances[inst].transform.matrix, instCenter);					
-					instCenter = SglMat4.mul4(this._scene.space.transform.matrix, instCenter);					
+					instCenter = SglMat4.mul4(instances[inst].transform.matrix, instCenter);
+					instCenter = SglMat4.mul4(this._scene.space.transform.matrix, instCenter);
 					instCenter = SglVec4.to3(instCenter);
 					
 					var radius = mesh.renderable.datasetRadius;
 					var vector111 = SglVec3.one();
 					vector111 = SglMat3.mul3(SglMat4.to33(mesh.transform.matrix), vector111);
 					vector111 = SglMat3.mul3(SglMat4.to33(instances[inst].transform.matrix), vector111);
-					vector111 = SglMat3.mul3(SglMat4.to33(this._scene.space.transform.matrix), vector111);					
+					vector111 = SglMat3.mul3(SglMat4.to33(this._scene.space.transform.matrix), vector111);
 
 					var scalefactor = SglVec3.length(vector111) / SglVec3.length([1,1,1]);
 					radius = radius*scalefactor;
@@ -1375,7 +1373,7 @@ Presenter.prototype = {
 			}
 			var scenter = [ (smax[0] + smin[0])/2.0, (smax[1] + smin[1])/2.0, (smax[2] + smin[2])/2.0 ]
 			this.sceneRadiusInv = 1.0 / SglVec3.length(SglVec3.sub(smax, scenter));
-		}		
+		}
 		else //if(this._scene.space.radiusMode == "first")
 		{
 			for (var inst in instances) {
@@ -1386,7 +1384,7 @@ Presenter.prototype = {
 					
 					vector111 = SglMat3.mul3(SglMat4.to33(mesh.transform.matrix), vector111);
 					vector111 = SglMat3.mul3(SglMat4.to33(instances[inst].transform.matrix), vector111);
-					vector111 = SglMat3.mul3(SglMat4.to33(this._scene.space.transform.matrix), vector111);					
+					vector111 = SglMat3.mul3(SglMat4.to33(this._scene.space.transform.matrix), vector111);
 					
 					var scalefactor = SglVec3.length(vector111) / SglVec3.length([1,1,1]);
 					
@@ -1489,7 +1487,7 @@ Presenter.prototype = {
 		return ID;
 	},
 
-	_onPlyLoaded : function (req,thatmesh,gl) {
+	_onPlyLoaded : function (req, thatmesh, gl) {
 		var plyData = req.buffer;
 		var modelDescriptor = importPly(plyData);
 		thatmesh.renderable = new SglModel(gl, modelDescriptor);
@@ -1557,14 +1555,14 @@ Presenter.prototype = {
 			xform.model.multiply(space.transform.matrix);
 			xform.model.multiply(instance.transform.matrix);
 			xform.model.multiply(mesh.transform.matrix);
-			
+
 			var modelMatrix = SglMat4.identity();
 			modelMatrix = SglMat4.mul(modelMatrix, space.transform.matrix);
 			modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
 			modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 			var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
 			var thisClipBordersize = config.showClippingBorder?config.clippingBorderSize:0.0;
-		
+
 			var uniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
@@ -1576,10 +1574,10 @@ Presenter.prototype = {
 				"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
 				"uClipPoint"                 : this._clipPoint,
 				"uClipAxis"                  : thisClipAxis,
-				"uClipColor"				 : config.clippingBorderColor,
-				"uClipColorSize"			 : thisClipBordersize
-			};				
-			
+				"uClipColor"                 : config.clippingBorderColor,
+				"uClipColorSize"             : thisClipBordersize
+			};
+
 			if(mesh.isNexus) {
 				if (!renderable.isReady) continue;
 
@@ -1651,7 +1649,7 @@ Presenter.prototype = {
 			modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 			var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
 			var thisClipBordersize = config.showClippingBorder?config.clippingBorderSize:0.0;
-		
+
 			var uniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
@@ -1664,8 +1662,8 @@ Presenter.prototype = {
 				"uClipPoint"                 : [0.0, 0.0, 0.0],
 				"uClipPoint"                 : this._clipPoint,
 				"uClipAxis"                  : thisClipAxis,
-				"uClipColor"				 : config.clippingBorderColor,
-				"uClipColorSize"			 : thisClipBordersize										
+				"uClipColor"                 : config.clippingBorderColor,
+				"uClipColorSize"             : thisClipBordersize
 			};
 
 			if(mesh.isNexus) {
@@ -1892,9 +1890,8 @@ Presenter.prototype = {
 			gl.depthMask(true);
 			gl.disable(gl.DEPTH_TEST);
 			
-			xform.model.pop();
-		}
-		
+			xform.model.pop();		}
+
 		// draw cliping plane (if any)
 		if(config.showClippingPlanes)
 		{
@@ -1910,9 +1907,7 @@ Presenter.prototype = {
 				xform.model.translate([this._clipPoint[0], this._sceneBboxCenter[1], this._sceneBboxCenter[2]]);
 				xform.model.scale([(this._sceneBboxMax[0] - this._sceneBboxMin[0]), 
 				                   (this._sceneBboxMax[1] - this._sceneBboxMin[1]), 
-				                   (this._sceneBboxMax[2] - this._sceneBboxMin[2])]);
-	
-					
+				                   (this._sceneBboxMax[2] - this._sceneBboxMin[2])])
 				var QuadUniforms = {
 					"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 					"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
@@ -1939,7 +1934,7 @@ Presenter.prototype = {
 				xform.model.scale([(this._sceneBboxMax[0] - this._sceneBboxMin[0]), 
 				                   (this._sceneBboxMax[1] - this._sceneBboxMin[1]), 
 				                   (this._sceneBboxMax[2] - this._sceneBboxMin[2])]);
-							
+
 				var QuadUniforms = {
 					"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 					"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
@@ -1966,7 +1961,7 @@ Presenter.prototype = {
 				xform.model.scale([(this._sceneBboxMax[0] - this._sceneBboxMin[0]), 
 				                   (this._sceneBboxMax[1] - this._sceneBboxMin[1]), 
 				                   (this._sceneBboxMax[2] - this._sceneBboxMin[2])]);
-							
+
 				var QuadUniforms = {
 					"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 					"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
@@ -2027,7 +2022,7 @@ Presenter.prototype = {
 			if (!instance.visible) continue;
 
 			// GLstate setup
-			gl.enable(gl.DEPTH_TEST);
+			gl.enable(gl.DEPTH_TEST);
 
 			xform.model.push();
 			xform.model.multiply(space.transform.matrix);
@@ -2411,7 +2406,7 @@ Presenter.prototype = {
 						color : {value : [ 1.0, 0.0, 0.0 ]}
 					},
 					primitives : ["triangles"]
-				});			
+				});
 		this.simpleQuadYModel = new SglModel(gl, {
 					vertices : {
 						position : [  0.5, 0.0, 0.5,
@@ -2483,7 +2478,7 @@ Presenter.prototype = {
 		// scene rendering support data
 		this.renderer   = renderer;
 		this.xform      = xform;
-		this.viewMatrix = viewMatrix;
+		this.viewMatrix = viewMatrix;
 
 		this._lightDirection = HOP_DEFAULTLIGHT;
 
@@ -2492,13 +2487,8 @@ Presenter.prototype = {
 
 		this.ui.animateRate = 0;
 
-		this.diff		= 0.0;
 		this.x 			= 0.0;
 		this.y 			= 0.0;
-		this.dstartx	= 0.0;
-		this.dstarty	= 0.0;
-		this.dendx		= 0.0;
-		this.dendy		= 0.0;
 
 		this.ax1 		= 0.0;
 		this.ay1 		= 0.0;
@@ -2555,8 +2545,8 @@ Presenter.prototype = {
 		this._sceneBboxCenter = [0.0, 0.0, 0.0];
 
 		// point size control
-		this._pointSize   = 1.0;
-		this._pointSizeMinMax   = [0.0, 2.0];
+		this._pointSize = HOP_DEFAULTPOINTSIZE;
+		this._pointSizeMinMax = [1.0, HOP_DEFAULTPOINTSIZE + 2.0];
 
 		// handlers
 		this._onPickedInstance  = 0;
@@ -2575,20 +2565,13 @@ Presenter.prototype = {
 		this.ax1 = (x / (ui.width  - 1)) * 2.0 - 1.0;
 		this.ay1 = (y / (ui.height - 1)) * 2.0 - 1.0;
 
-		if(this._movingLight && ui.isMouseButtonDown(0))  {
+		if(this._movingLight && ui.isMouseButtonDown(0)){
 			this.rotateLight(this.ax1/2, this.ay1/2);
 			return;
 		}
 
-		if(this.dstartx == ui.dragStartX(button)){
-			this.diff = ui.dragEndX(button)- this.dendx;
-			if(ui.dragDeltaX(button) != 0) this.x += (this.diff/500);
-		}
-
-		if(this.dstarty == ui.dragStartY(button)){
-			this.diff = ui.dragEndY(button)- this.dendy;
-			if(ui.dragDeltaY(button) != 0) this.y += (this.diff/500);
-		}
+		if(ui.dragDeltaX(button) != 0) this.x += (ui.cursorDeltaX/500);
+		if(ui.dragDeltaY(button) != 0) this.y += (ui.cursorDeltaY/500);
 
 		var action = SGL_TRACKBALL_NO_ACTION;
 		if ((ui.isMouseButtonDown(0) && ui.isKeyDown(17)) || ui.isMouseButtonDown(1)) {
@@ -2608,15 +2591,10 @@ Presenter.prototype = {
 			if(testMatrix[i]!=this.trackball._matrix[i]) {diff=true; break;}
 		}
 		if(diff) ui.postDrawEvent();
-
-		this.dstartx = ui.dragStartX(button);
-		this.dstarty = ui.dragStartY(button);
-		this.dendx = ui.dragEndX(button);
-		this.dendy = ui.dragEndY(button);
 	},
 
 	onMouseMove : function (x, y, e) {
-//		if(e.target.id!=this.ui.gl.canvas.id) return;
+		if(e.target.id!=this.ui.gl.canvas.id) return;
 		if(this._onHover && !this.ui.isDragging(0) && !this.isAnimate()) this._pickingRefresh(x, y);
     },
 
@@ -2629,32 +2607,31 @@ Presenter.prototype = {
 	},
 
 	onMouseButtonUp : function (button, x, y, e) {
-		if(this._clickable && !this.ui.isDragging(0) && button==0 && e.detail!=-1) {
-			this._pickingRefresh(x, y);
-			if(this._pickedSpot==null && this._pickedInstance==null) return;
+		if(this._clickable && button==0 && !(this.ui.isDragging(0) && (Math.abs(this.ui.dragDeltaX(0))>=3 || Math.abs(this.ui.dragDeltaY(0)>=3))) && e.detail!=1) {
+		this._pickingRefresh(x, y);
 			if(this._onPickedSpot && this._pickedSpot!=null) this._onPickedSpot(this._pickedSpot);
 			if(this._onPickedInstance && this._pickedInstance!=null) this._onPickedInstance(this._pickedInstance);
-			if(this._isMeasuringPickpoint) this._pickpointRefresh(button, x, y, e);
-			if(this._isMeasuringDistance) this._measureRefresh(button, x, y, e);
+			if(this._isMeasuringPickpoint) this._pickpointRefresh(0, x, y, e);
+			if(this._isMeasuringDistance) this._measureRefresh(0, x, y, e);
 		}
 		this._clickable = false;
 	},
 
 	onDoubleClick : function (button, x, y, e) {
 		//only if trackball does support recentering, we do it
-		if(this.trackball.recenter){		
+		if(this.trackball.recenter){
 			this._pickpoint[0] = x;
 			this._pickpoint[1] = y;
 			var ppoint = this._drawScenePickingXYZ();
 			if (ppoint!=null)
 			{
-				this.ui.animateRate = 30;			
+				this.ui.animateRate = 30;
 				this.trackball.recenter(ppoint);
 				this.ui.postDrawEvent();
-			}		
+			}
 		}
-	},	
-	
+	},
+
 	onKeyPress : function (key, e) {
 		if(this._isDebugging) { // DEBUGGING-AUTHORING keys
 			if((e.charCode == '80') || (e.charCode == '112')) // key "P" to print trackball
@@ -2740,9 +2717,8 @@ Presenter.prototype = {
 	toggleDebugMode : function () {
 		this._isDebugging = !this._isDebugging;
 	},
-	
-	setScene : function (options) {
 
+	setScene : function (options) {
 		if (!options) return;
 
 		var scene = this._parseScene(options);
@@ -2795,7 +2771,7 @@ Presenter.prototype = {
 				mesh.renderable = null;
 				mesh.isNexus = false;
 				sglRequestBinary(mesh.url, {
-					onSuccess : (function(m){ return function (req) { that._onPlyLoaded(req,m,gl); }; })(mesh)
+					onSuccess : (function(m){ return function (req) { that._onPlyLoaded(req, m, gl); }; })(mesh)
 				});
 			}
 		}
@@ -2826,7 +2802,7 @@ Presenter.prototype = {
 
 		// create point-to-point line model
 		this._createLineModel()
-		// create quad models		
+		// create quad models
 		this._createQuadModels();
 
 		this._testReady();
@@ -2838,7 +2814,7 @@ Presenter.prototype = {
 		this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 		
 		this._lightDirection = HOP_DEFAULTLIGHT; // also reset lighting
-//		this.pointSize = 1.5; // also reset points sizes
+//		this._pointSize = HOP_DEFAULTPOINTSIZE; // also reset points size
 		
 		this.ui.postDrawEvent();
 	},
@@ -2863,7 +2839,7 @@ Presenter.prototype = {
 		else this._animating = false;
 		return this._animating;
 	},
-	
+
 //-----------------------------------------------------------------------------
 // functions to dynamically change center/radius mode
 
@@ -2874,26 +2850,26 @@ Presenter.prototype = {
 	setCenterModeScene : function () {
 		this._scene.space.centerMode = "scene";
 		this.ui.postDrawEvent();
-	},	
+	},
 	setCenterModeSpecific : function (instancename) {
 		if(this._scene.modelInstances[instancename])
 		{
 			this._scene.space.centerMode = "specific";
-			this._scene.space.whichInstanceCenter = instancename;		
+			this._scene.space.whichInstanceCenter = instancename;
 			this.ui.postDrawEvent();
 		}
 		else
 			return "ERROR - No such instance";
-	},	
+	},
 	setCenterModeExplicit : function (newcenter) {
-		if((newcenter.constructor === Array)&&(newcenter.lenght == 3)&&(isFinite(String(newcenter[0])))&&(isFinite(String(newcenter[1])))&&(isFinite(String(newcenter[2]))))
+		if((newcenter.constructor === Array)&&(newcenter.lenght = 3)&&(isFinite(String(newcenter[0])))&&(isFinite(String(newcenter[1])))&&(isFinite(String(newcenter[2]))))
 		{
 			this._scene.space.centerMode = "explicit";
-			this._scene.space.explicitCenter = newcenter;		
+			this._scene.space.explicitCenter = newcenter;
 			this.ui.postDrawEvent();
 		}
 		else
-			return "ERROR - Not a point";		
+			return "ERROR - Not a point";
 	},
 
 	setRadiusModeFirst : function () {
@@ -2903,29 +2879,28 @@ Presenter.prototype = {
 	setRadiusModeScene : function () {
 		this._scene.space.radiusMode = "scene";
 		this.ui.postDrawEvent();
-	},	
+	},
 	setRadiusModeSpecific : function (instancename) {
 		if(this._scene.modelInstances[instancename])
 		{
 			this._scene.space.radiusMode = "specific";
-			this._scene.space.whichInstanceRadius = instancename;		
+			this._scene.space.whichInstanceRadius = instancename;
 			this.ui.postDrawEvent();
 		}
 		else
 			return "ERROR - No such instance";
-	},	
+	},
 	setRadiusModeExplicit : function (newradius) {
-		if(isFinite(String(newradius)))
+		if((isFinite(String(newradius)))&&(newradius>0.0))
 		{
 			this._scene.space.radiusMode = "explicit";
-			this._scene.space.explicitRadius = newradius;		
+			this._scene.space.explicitRadius = newradius;
 			this.ui.postDrawEvent();
 		}
 		else
-			return "ERROR - Not a radius";		
-	},	
-	
-	
+			return "ERROR - Not a radius";
+	},
+
 //-----------------------------------------------------------------------------
 // instance solid color
 	setInstanceSolidColorByName : function (name, newState, redraw, newColor) {
@@ -2934,10 +2909,11 @@ Presenter.prototype = {
 		var instances = this._scene.modelInstances;
 
 		if(name == HOP_ALL) {
-			for (var inst in instances) 
+			for (var inst in instances) {
 				instances[inst].useSolidColor = newState;
 				if(newColor)
-					instances[name].color = newColor;
+					instances[inst].color = newColor;
+			}
 		} 
 		else {
 			if(instances[name]) { // if an instance with that name exists
@@ -2980,14 +2956,12 @@ Presenter.prototype = {
 
 		var instances = this._scene.modelInstances;
 
-		if(name == HOP_ALL) {
+		if(name == HOP_ALL) 
 			for (var inst in instances) 
 				instances[inst].useSolidColor = !instances[inst].useSolidColor;
-		} 
-		else {
+		else 
 			if(instances[name]) // if an instance with that name exists
 				instances[name].useSolidColor = !instances[name].useSolidColor;
-		}
 		if(redraw)
 			ui.postDrawEvent();
 	},
@@ -2999,16 +2973,11 @@ Presenter.prototype = {
 
 		for (var inst in instances) {
 			if(tag == HOP_ALL)
-			{
 				instances[inst].useSolidColor = !instances[inst].useSolidColor;
-			}
 			else
-			{
-				for (var tg in instances[inst].tags){
+				for (var tg in instances[inst].tags)
 					if(instances[inst].tags[tg] == tag)
 						instances[inst].useSolidColor = !instances[inst].useSolidColor;
-				}
-			}
 		}
 		if(redraw)
 			ui.postDrawEvent();
@@ -3063,7 +3032,6 @@ Presenter.prototype = {
 			ui.postDrawEvent();
 	},
 
-
 	toggleInstanceTransparencyByName : function (name, redraw) {
 		var ui = this.ui;
 
@@ -3103,7 +3071,6 @@ Presenter.prototype = {
 			ui.postDrawEvent();
 	},
 
-	
 //-----------------------------------------------------------------------------
 // instance visibility
 	setInstanceVisibilityByName : function (name, newState, redraw) {
@@ -3113,7 +3080,7 @@ Presenter.prototype = {
 
 		if(name == HOP_ALL) {
 			for (var inst in instances) 
-				instances[inst].visible = newState;;
+				instances[inst].visible = newState;
 		} 
 		else {
 			if(instances[name]) // if an instance with that name exists
@@ -3231,7 +3198,7 @@ Presenter.prototype = {
 		}
 		return visibility;
 	},
-	
+
 //-----------------------------------------------------------------------------
 // spot visibility
 
@@ -3468,7 +3435,7 @@ Presenter.prototype = {
 		this._clipPoint[2] = nClipPoint;
 		this.ui.postDrawEvent();
     },
-	
+
 	_calculateBounding: function() {		var meshes    = this._scene.meshes;
 		var instances = this._scene.modelInstances;
 		this._sceneBboxMin = SglVec3.maxNumber();
@@ -3514,23 +3481,23 @@ Presenter.prototype = {
 		this._sceneBboxCenter[1] = (this._sceneBboxMin[1] + this._sceneBboxMax[1]) / 2.0;
 		this._sceneBboxCenter[2] = (this._sceneBboxMin[2] + this._sceneBboxMax[2]) / 2.0;
     },
-	
+
     setClippingRendermode: function(showPlanes, showBorder, borderSize, borderColor) {
         this._calculateBounding();
 		this._scene.config.showClippingPlanes = showPlanes;
 		this._scene.config.showClippingBorder = showBorder;
-		if(borderSize)
+		if(borderSize>0.0)
 			this._scene.config.clippingBorderSize = borderSize;
 		if(borderColor)
 			this._scene.config.clippingBorderColor = borderColor;
 		this.ui.postDrawEvent();
     },
-	
+
     getClippingRendermode: function() {
 		var rendermode = [this._scene.config.showClippingPlanes, this._scene.config.showClippingBorder, this._scene.config.clippingBorderSize, this._scene.config.clippingBorderColor];
 		return rendermode;
     },
-	
+
 //-----------------------------------------------------------------------------	
 	
     zoomIn: function() {
@@ -3543,10 +3510,10 @@ Presenter.prototype = {
 
 //-----------------------------------------------------------------------------	
 	
-    rotateLight: function(x, y) {       
+    rotateLight: function(x, y) {
       x *= 2;
       y *= 2;
-      var r = Math.sqrt(x*x + y*y);     
+      var r = Math.sqrt(x*x + y*y);
       if(r >= 1) {
         x /= r;
         y /= r;
@@ -3557,11 +3524,11 @@ Presenter.prototype = {
        this.ui.postDrawEvent();
     },
 
-	enableLightTrackball: function(on) {
+	enableLightTrackball : function(on) {
 		this._movingLight = on;
 	},
 
-	isLightTrackballEnabled: function() {
+	isLightTrackballEnabled : function() {
 		return this._movingLight;
 	},
 
@@ -3606,7 +3573,6 @@ Presenter.prototype = {
 	isAnyMeasurementEnabled: function() {
 		return this._isMeasuring;
 	},
-
 //-----------------------------------------------------------------------------
 
 };
