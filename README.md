@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-18 July 2016
+20 July 2016
 
 #### TEAM
 ---------
@@ -43,16 +43,14 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 
 - **text files** -> basic info texts
-  - *CHANGELOG.txt* -> the list of the changes in this 3DHOP release
+  - *CHANGELOG.txt/md* -> the list of the changes in this 3DHOP release
   - *LICENSE.txt*   -> the GPL license file
-  - *README.txt*    -> this file
-  - *README.md*     -> this file in Markdown markup language
+  - *README.txt/md*    -> this file
 
 #### HOW TO INSTALL
 -------------------
 
-More detailed info on the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/download/3DHOPsite_deployment.pdf).  
-There is no server installation: just copy the 3DHOP "essential" or "examples" folder into your web server space and access the HTML files with a browser to see the viewer in action.
+There isn't server installation: just copy the 3DHOP "minimal" or "examples" folder into your web server space and access the HTML files with a browser to see the viewer in action.
 3DHOP is a tool designed for the Web, so HTML pages containing a 3DHOP viewer need to be accessed through a web connection to work properly.
 However if you want to run 3DHop locally on your PC, you can choose between two ways:
 
@@ -75,29 +73,24 @@ On a Windows PC, here are the instructions:
    + browse to google CHROME (or OPERA) folder in your local file system; 
    + right click on the CHROME (or OPERA) executable file, and select "send to" Desktop as link in the contextual menu;
    + browse to your desktop;
-   + right click on the newly created CHROME (or OPERA) shortcut link, and select "properties" in the contextual menu;
+   + right click on the just created CHROME (or OPERA) executable link, and select "properties" in the contextual menu;
    + in the just opened properties window select the "shortcut" tab and edit the "target" field adding to the end of the line "--allow-file-access-from-files", then click on "apply";
-   + open your browser from the just edited shortcut on the desktop (now the browser should be enabled to open local files);
+   + open your browser from the just edited link on the desktop (now the browser should be enabled to open local files);
    + download and unpack 3DHOP on your PC;
-   + browse the 3DHOP folder and simply drag and drop the desired HTML files inside the opened browser and you are done!
-   
-Be aware that 3DHOP will work locally __ONLY on the browsers that have been opened using the modified shortcut__ (it will not work if you opened the browser by double-clicking on an html file, nor if you launched it from a different shortcut/menu/link).
-   
+   + browse the 3DHOP folder and simply drag and drop the desired HTML files inside the opened browser and you are done!  
 For Linux:
    + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter
-   
-  OR
-  
+   OR
    + it is possible to create an alias or a desktop shortcut with the parameter, similarly to the Windows PC
-   
 For MacOS:
    + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter. For example, to use Chrome, the command is: "open /Applications/Google\ Chrome.app --args --allow-file-access-from-files"
-   
-  OR
-  
+   OR
    + create an appleScript using Automator, that launch the browser using the appropriate parameter 
    
-[WARNING: on FIREFOX, EDGE and SAFARI browsers, there is no simple way to enable the local files access (so, it is recommended to install a Web Server if you need to work with these browser locally).]
+   [Tip: on FIREFOX, EDGE and SAFARI browsers, there is no simple way to enable the local files access (so, it is recommended to install a Web Server if you need to work with these browser locally). However, by default it supports the use of 3D models in Ply format, so you can use 3DHOP in a limited mode, restricted to single resolution models, but without to perform any procedure or to install nothing.]  
+
+More detailed info on the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/download/3DHOPsite_deployment.pdf).  
+
 
 #### TECHNICAL INFO
 -------------------

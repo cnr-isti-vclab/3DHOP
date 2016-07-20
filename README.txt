@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-18 July 2016
+20 July 2016
 
 #### TEAM
 ---------
@@ -43,16 +43,14 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 
 - **text files** -> basic info texts
-  - *CHANGELOG.txt* -> the list of the changes in this 3DHOP release
+  - *CHANGELOG.txt/md* -> the list of the changes in this 3DHOP release
   - *LICENSE.txt*   -> the GPL license file
-  - *README.txt*    -> this file
-  - *README.md*     -> this file in Markdown markup language
+  - *README.txt/md*    -> this file
 
 #### HOW TO INSTALL
 -------------------
 
-More detailed info on the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/download/3DHOPsite_deployment.pdf).  
-There is no server installation: just copy the 3DHOP "essential" or "examples" folder into your web server space and access the HTML files with a browser to see the viewer in action.
+There isn't server installation: just copy the 3DHOP "minimal" or "examples" folder into your web server space and access the HTML files with a browser to see the viewer in action.
 3DHOP is a tool designed for the Web, so HTML pages containing a 3DHOP viewer need to be accessed through a web connection to work properly.
 However if you want to run 3DHop locally on your PC, you can choose between two ways:
 
@@ -89,7 +87,10 @@ For MacOS:
    OR
    + create an appleScript using Automator, that launch the browser using the appropriate parameter 
    
-   [Tip: on FIREFOX, EDGE and SAFARI browsers, there is no simple way to enable the local files access (so, it is recommended to install a Web Server if you need to work with these browser locally). However, by default it supports the use of 3D models in Ply format, so you can use 3DHOP in a limited mode, restricted to single resolution models, but without to perform any procedure or to install nothing.]
+   [Tip: on FIREFOX, EDGE and SAFARI browsers, there is no simple way to enable the local files access (so, it is recommended to install a Web Server if you need to work with these browser locally). However, by default it supports the use of 3D models in Ply format, so you can use 3DHOP in a limited mode, restricted to single resolution models, but without to perform any procedure or to install nothing.]  
+
+More detailed info on the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/download/3DHOPsite_deployment.pdf).  
+
 
 #### TECHNICAL INFO
 -------------------
