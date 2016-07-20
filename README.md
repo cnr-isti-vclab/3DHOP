@@ -75,21 +75,29 @@ On a Windows PC, here are the instructions:
    + browse to google CHROME (or OPERA) folder in your local file system; 
    + right click on the CHROME (or OPERA) executable file, and select "send to" Desktop as link in the contextual menu;
    + browse to your desktop;
-   + right click on the just created CHROME (or OPERA) executable link, and select "properties" in the contextual menu;
+   + right click on the newly created CHROME (or OPERA) shortcut link, and select "properties" in the contextual menu;
    + in the just opened properties window select the "shortcut" tab and edit the "target" field adding to the end of the line "--allow-file-access-from-files", then click on "apply";
-   + open your browser from the just edited link on the desktop (now the browser should be enabled to open local files);
+   + open your browser from the just edited shortcut on the desktop (now the browser should be enabled to open local files);
    + download and unpack 3DHOP on your PC;
-   + browse the 3DHOP folder and simply drag and drop the desired HTML files inside the opened browser and you are done!  
-For Linux: 
+   + browse the 3DHOP folder and simply drag and drop the desired HTML files inside the opened browser and you are done!
+   
+Be aware that 3DHOP will work locally __ONLY on the browsers that have been opened using the modified shortcut__ (it will not work if you opened the browser by double-clicking on an html file, nor if you launched it from a different shortcut/menu/link).
+   
+For Linux:
    + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter
-   OR
+   
+  OR
+  
    + it is possible to create an alias or a desktop shortcut with the parameter, similarly to the Windows PC
-For MacOS: 
+   
+For MacOS:
    + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter. For example, to use Chrome, the command is: "open /Applications/Google\ Chrome.app --args --allow-file-access-from-files"
-   OR
+   
+  OR
+  
    + create an appleScript using Automator, that launch the browser using the appropriate parameter 
    
-   [Tip: on FIREFOX, EDGE and SAFARI browsers, there is no simple way to enable the local files access (so, it is recommended to install a Web Server if you need to work with these browser locally). However, by default it supports the use of 3D models in Ply format, so you can use 3DHOP in a limited mode, restricted to single resolution models, but without to perform any procedure or to install nothing.]
+[WARNING: on FIREFOX, EDGE and SAFARI browsers, there is no simple way to enable the local files access (so, it is recommended to install a Web Server if you need to work with these browser locally).]
 
 #### TECHNICAL INFO
 -------------------

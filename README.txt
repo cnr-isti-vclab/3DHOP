@@ -80,11 +80,11 @@ On a Windows PC, here are the instructions:
    + open your browser from the just edited link on the desktop (now the browser should be enabled to open local files);
    + download and unpack 3DHOP on your PC;
    + browse the 3DHOP folder and simply drag and drop the desired HTML files inside the opened browser and you are done!  
-For Linux: 
+For Linux:
    + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter
    OR
    + it is possible to create an alias or a desktop shortcut with the parameter, similarly to the Windows PC
-For MacOS: 
+For MacOS:
    + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter. For example, to use Chrome, the command is: "open /Applications/Google\ Chrome.app --args --allow-file-access-from-files"
    OR
    + create an appleScript using Automator, that launch the browser using the appropriate parameter 
