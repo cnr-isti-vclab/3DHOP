@@ -181,6 +181,8 @@ Presenter.prototype = {
 		r.transform = this._parseTransform(r.transform);
 		if(r.cameraFOV < 2.0) r.cameraFOV=2.0;
 		if(r.cameraFOV > 88.0) r.cameraFOV=88.0;
+		if((r.cameraType != "perspective") && (r.cameraType != "ortho"))
+			r.cameraType = "perspective";
 		return r;
 	},
 
@@ -1031,6 +1033,50 @@ Presenter.prototype = {
 		return technique;
 	},
 
+	// multiple lines/points rendering
+	_createMultiLinesPointstechnique : function () {
+		var gl = this.ui.gl;
+		var technique = new SglTechnique(gl, {
+			vertexShader : "\
+				precision highp float;                                                \n\
+																					  \n\
+				uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+																					  \n\
+				attribute vec3 aPosition;                                             \n\
+				attribute vec3 aNormal;                                               \n\
+				attribute vec4 aColor;                                                \n\
+																					  \n\
+				varying   vec3 vNormal;                                               \n\
+				varying   vec4 vColor;                                                \n\
+																					  \n\
+				void main(void)                                                       \n\
+				{                                                                     \n\
+					vColor      = aColor;                                             \n\
+					gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
+					gl_PointSize = 8.0;	                 							  \n\
+				}                                                                     \n\
+			",
+			fragmentShader : "\
+				precision highp float;                                                \n\
+																					  \n\
+				varying   vec4 vColor;                                                \n\
+																					  \n\
+				void main(void)                                                       \n\
+				{                                                                     \n\
+					gl_FragColor = vColor;                                            \n\
+				}                                                                     \n\
+			",
+			vertexStreams : {
+				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
+				"aColor"  : [ 1.0, 0.0, 1.0, 1.0 ]
+			},
+			globals : {
+				"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
+			}
+		});
+		
+		return technique;
+	},
 //----------------------------------------------------------------------------------------
 // SUPPORT FUNCTIONS
 //----------------------------------------------------------------------------------------
@@ -1165,7 +1211,7 @@ Presenter.prototype = {
 				this.measurement = SglVec3.length(SglVec3.sub(this._pointA, this._pointB));
 				this._measurementStage=3;
 				this.ui.postDrawEvent();
-				if(this._onEndMeasurement) this._onEndMeasurement(this.measurement);
+				if(this._onEndMeasurement) this._onEndMeasurement(this.measurement, this._pointA, this._pointB);
 			}
 		}
     },
@@ -1478,9 +1524,6 @@ Presenter.prototype = {
 
 		xform.model.loadIdentity();
 		xform.model.multiply(this.trackball.matrix);
-
-		// getting scale/center for scene
-		this._setSceneCenterRadius();
 
 		// scale to unit box + recenter
 		xform.model.scale([this.sceneRadiusInv, this.sceneRadiusInv, this.sceneRadiusInv]);
@@ -2494,6 +2537,7 @@ Presenter.prototype = {
 		this.colorCodedXYZPLYtechnique = this._createXYZPLYtechnique();
 
 		this.simpleLinetechnique = this._createSimpleLinetechnique();
+		this.multiLinesPointstechnique = this._createMultiLinesPointstechnique();
 
 		// scene rendering support data
 		this.renderer   = renderer;
