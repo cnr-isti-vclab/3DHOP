@@ -3608,12 +3608,12 @@ Presenter.prototype = {
 	},
 
 	setCameraPerspective() {
-		this._scene.space.cameraType = "perspective"
+		this._scene.space.cameraType = "perspective";
 		this.ui.postDrawEvent();	
 	},
 	
 	setCameraOrthographic() {
-		this._scene.space.cameraType = "ortho"
+		this._scene.space.cameraType = "ortho";
 		this.ui.postDrawEvent();	
 	},
 	
