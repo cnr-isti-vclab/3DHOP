@@ -90,7 +90,7 @@ TurnTableTrackball.prototype = {
       if(value > high) return high;
       return value;
     },
-
+	
     _computeMatrix: function() {
       var m = SglMat4.identity();
 	  	  
@@ -245,6 +245,8 @@ TurnTableTrackball.prototype = {
 
 	get matrix() { return this._matrix; },
 
+	get distance() { return this._distance; },
+	
 	reset : function () {
 		this._matrix = SglMat4.identity();
 		this._action = SGL_TRACKBALL_NO_ACTION

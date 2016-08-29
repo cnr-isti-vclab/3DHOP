@@ -31,7 +31,7 @@ const SGL_TRACKBALL_SCALE     = 4;
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
-const HOP_DEBUGMODE           = false;
+const HOP_DEBUGMODE           = true;
 // default light direction
 const HOP_DEFAULTLIGHT        = [0, 0, -1];
 // default points size
@@ -176,6 +176,7 @@ Presenter.prototype = {
             transform        : null,
 			cameraFOV        : 60.0,
 			cameraNearFar    : [0.1, 10.0],
+			cameraType       : "perspective",
 		}, options);
 		r.transform = this._parseTransform(r.transform);
 		if(r.cameraFOV < 2.0) r.cameraFOV=2.0;
@@ -1449,9 +1450,28 @@ Presenter.prototype = {
 		var nearP = space.cameraNearFar[0];
 		var farP  = space.cameraNearFar[1];
 
+		// getting scale/center for scene
+		this._setSceneCenterRadius();		
+		
 		xform.projection.loadIdentity();
-		xform.projection.perspective(sglDegToRad(FOV), width/height, nearP, farP);
+		
+		if(space.cameraType == "ortho")
+		{
+			//default camera distance in ortho view is "as large as scene size"
+			// then, if the trackball is able to provide a better value, we use it
+			var cDistance = 1.0; 
+			if(typeof this.trackball.distance != "undefined")
+				cDistance = this.trackball.distance;
+			var a = cDistance * SpiderGL.Math.tan(sglDegToRad(FOV) / 2);
+			var b = a * width/height;
 
+			xform.projection.ortho([-b, -a, nearP], [b, a, farP]);
+		}
+		else
+		{
+			xform.projection.perspective(sglDegToRad(FOV), width/height, nearP, farP);
+		}
+		
 		xform.view.loadIdentity();
 		xform.view.lookAt([0.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]);
 		this.viewMatrix = xform.viewMatrix;
@@ -2640,6 +2660,9 @@ Presenter.prototype = {
 				Nexus.Debug.nodes=!Nexus.Debug.nodes;
 				this.ui.postDrawEvent();
 			}
+			if (e.charCode == '50') { // key "2" to toggle camera perspective/ortho
+				this.toggleCameraType();
+			}
 		}
 	},
 
@@ -3575,4 +3598,24 @@ Presenter.prototype = {
 	},
 //-----------------------------------------------------------------------------
 
+	toggleCameraType: function() {
+		if(this._scene.space.cameraType == "ortho")
+			this._scene.space.cameraType = "perspective"
+		else
+			this._scene.space.cameraType = "ortho"
+		
+		this.ui.postDrawEvent();
+	},
+
+	setCameraPerspective() {
+		this._scene.space.cameraType = "perspective"
+		this.ui.postDrawEvent();	
+	},
+	
+	setCameraOrthographic() {
+		this._scene.space.cameraType = "ortho"
+		this.ui.postDrawEvent();	
+	},
+	
+	
 };
