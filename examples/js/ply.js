@@ -447,6 +447,10 @@ var parsePly = (function(){
 			data.pos = 0;
 		}
 
+		for (var i in info.comments) {
+			if (info.comments[i][0]=="TextureFile") handler._textureUrl = info.comments[i][1];
+		}
+
 		var readMeshStr  = generateReadMesh(info.elements, info.format.binary, info.format.littleEndian);
 		var readMeshFunc = eval("(" + readMeshStr + ")");
 
@@ -502,11 +506,20 @@ var importPly = (function(){
 		this._handleFace       = emptyFunction;
 
 		this._view             = null;
-		
+
+		this._hasPosition      = null;
+		this._hasNormal        = null;
+		this._hasColor         = null;
+		this._hasTexCoord      = null;
+
+		this._textureUrl       = null;
+
+		this._renderMode       = ["POINT"];
+
 		this._boundingBox      = { 
-                                     min: [ 1000000.0, 1000000.0, 1000000.0], 
-									 max: [-1000000.0,-1000000.0,-1000000.0]
-							     };
+			min: [ 1000000.0, 1000000.0, 1000000.0], 
+			max: [-1000000.0,-1000000.0,-1000000.0]
+		};
 	}
 
 	PlyHandler.prototype = {
@@ -529,6 +542,11 @@ var importPly = (function(){
 			var vertexAttributes = { };
 			var vertexStride     = 0;
 
+			var hasPosition = false;
+			var hasNormal   = false;
+			var hasColor    = false;
+			var hasTexCoord = false;
+
 			elem  = header.elementMap["vertex"];
 			if (elem && elem.count > 0) {
 				verticesCount = elem.count;
@@ -546,6 +564,7 @@ var importPly = (function(){
 
 				ptypes = propertiesTypes(props["x"], props["y"], props["z"]);
 				if (ptypes.length == 1) {
+					hasPosition = true;
 					switch (ptypes[0]) {
 						case "float32":
 							vertexLines.push(tabStr + "view.setFloat32(offset, element.x, littleEndian); offset += sf32;");
@@ -565,6 +584,7 @@ var importPly = (function(){
 
 				ptypes = propertiesTypes(props["nx"], props["ny"], props["nz"]);
 				if (ptypes.length == 1) {
+					hasNormal = true;
 					switch (ptypes[0]) {
 						case "float32":
 							vertexLines.push(tabStr + "view.setFloat32(offset, element.nx, littleEndian); offset += sf32;");
@@ -584,6 +604,7 @@ var importPly = (function(){
 
 				ptypes = propertiesTypes(props["red"], props["green"], props["blue"]);
 				if (ptypes.length == 1) {
+					hasColor = true;
 					switch (ptypes[0]) {
 						case "uint8":
 							vertexLines.push(tabStr + "view.setUint8(offset, element.red  ); offset += sui8;");
@@ -618,12 +639,13 @@ var importPly = (function(){
 
 				ptypes = propertiesTypes(props["texture_u"], props["texture_v"]);
 				if (ptypes.length == 1) {
+					hasTexCoord = true;
 					switch (ptypes[0]) {
 						case "float32":
 							vertexLines.push(tabStr + "view.setFloat32(offset, element.texture_u, littleEndian); offset += sf32;");
 							vertexLines.push(tabStr + "view.setFloat32(offset, element.texture_v, littleEndian); offset += sf32;");
 							vertexLines.push("");
-							vertexAttributes["texcoord"] = {
+							vertexAttributes["texturecoord"] = {
 								size   : 2,
 								type   : SpiderGL.Type.FLOAT32,
 								offset : vertexStride
@@ -667,6 +689,11 @@ var importPly = (function(){
 			}
 
 			this._mesh = null;
+
+			this._hasPosition      = hasPosition;
+			this._hasNormal        = hasNormal;
+			this._hasColor         = hasColor;
+			this._hasTexCoord      = hasTexCoord;
 
 			this._verticesCount    = verticesCount;
 			this._vertexAttributes = vertexAttributes;
@@ -714,7 +741,6 @@ var importPly = (function(){
 		onElement : function (header, elementInfo, index, element) {
 			// bounding box calculation
 			if (elementInfo.name=="vertex"){
-		
 				if(element.x < this._boundingBox.min[0])
 					this._boundingBox.min[0] = element.x;
 				if(element.y < this._boundingBox.min[1])
@@ -729,7 +755,7 @@ var importPly = (function(){
 				if(element.z > this._boundingBox.max[2])
 					this._boundingBox.max[2] = element.z;
 			}
-		
+
 			this._handleElement(header, elementInfo, index, element);
 		},
 
@@ -744,7 +770,7 @@ var importPly = (function(){
 		onEnd : function () {
 			if ((this._verticesCount <= 0) && (this._facesCount <= 0)) return;
 
-			var gl   = this._gl;
+//			var gl = this._gl;
 			var modelDescriptor = {
 				version : "0.0.1.0 EXP",
 				meta : {
@@ -786,7 +812,16 @@ var importPly = (function(){
 			var modelParts            = modelDescriptor.logic.parts;
 
 			modelDescriptor.extra.boundingBox = this._boundingBox;
-			
+
+			modelDescriptor.extra.renderMode = this._renderMode;
+
+			modelDescriptor.extra.hasPosition = this._hasPosition;
+			modelDescriptor.extra.hasNormal   = this._hasNormal;
+			modelDescriptor.extra.hasColor    = this._hasColor;
+			modelDescriptor.extra.hasTexCoord = this._hasTexCoord;
+
+			modelDescriptor.extra.textureUrl = this._textureUrl;
+
 			var maxVerticesCount = (1 << 16) - 1;
 
 			var baseVertexBufferName = "mainVertexBuffer";
@@ -934,6 +969,8 @@ var importPly = (function(){
 				modelParts[basePartName] = {
 					chunks : partChunks
 				};
+
+				this._renderMode.unshift("FILL");
 			}
 			else {
 				var binding = {
@@ -989,8 +1026,8 @@ var importPly = (function(){
 		}
 	};
 
-	function mainImportPly(buffer, gl) {
-		var handler = new PlyHandler(buffer, gl);
+	function mainImportPly(buffer) {
+		var handler = new PlyHandler(buffer);
 		parsePly(buffer, handler);
 		var modelDescriptor = handler.modelDescriptor;
 		return modelDescriptor;
