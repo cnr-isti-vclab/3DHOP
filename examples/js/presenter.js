@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -948,7 +948,7 @@ Presenter.prototype = {
 	},
 
 	_testReady : function () {
-		if (this._objectsToLoad != 0) return;
+		if ((!this._sceneParsed) || (this._objectsToLoad != 0)) return;
 		this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 
 		this._sceneReady = this._scenePrepare();
