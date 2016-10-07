@@ -3478,7 +3478,6 @@ Presenter.prototype = {
     },
 
 //-----------------------------------------------------------------------------
-	
     zoomIn: function() {
        this.onMouseWheel(1);
     },
@@ -3488,7 +3487,6 @@ Presenter.prototype = {
     },
 
 //-----------------------------------------------------------------------------
-	
     rotateLight: function(x, y) {
       x *= 2;
       y *= 2;
@@ -3512,7 +3510,6 @@ Presenter.prototype = {
 	},
 
 //-----------------------------------------------------------------------------
-	
 	enableOnHover: function(on) {
 		this._onHover = on;
 	},
@@ -3522,7 +3519,6 @@ Presenter.prototype = {
 	},
 
 //-----------------------------------------------------------------------------
-	
 	enableMeasurementTool: function(on) {
 		if(on) 
 			this._startMeasurement();
@@ -3535,7 +3531,6 @@ Presenter.prototype = {
 	},
 
 //-----------------------------------------------------------------------------
-	
 	enablePickpointMode: function(on) {
 		if(on) 
 			this._startPickPoint();
@@ -3548,12 +3543,11 @@ Presenter.prototype = {
 	},
 
 //-----------------------------------------------------------------------------
-	
 	isAnyMeasurementEnabled: function() {
 		return this._isMeasuring;
 	},
+	
 //-----------------------------------------------------------------------------
-
 	toggleCameraType: function() {
 		if(this._scene.space.cameraType == "ortho")
 			this._scene.space.cameraType = "perspective"
@@ -3573,5 +3567,8 @@ Presenter.prototype = {
 		this.ui.postDrawEvent();
 	},
 	
-	
+//-----------------------------------------------------------------------------	
+	repaint() {
+		this.ui.postDrawEvent();	
+	},
 };
