@@ -2417,16 +2417,17 @@ Presenter.prototype = {
 	onInitialize : function () {
 		var gl = this.ui.gl;
 		
-		//debug mode
+		// debug mode
 		this._isDebugging = HOP_DEBUGMODE;
 		
 		gl.getExtension('EXT_frag_depth');
 		gl.clearColor(0.5, 0.5, 0.5, 1.0);
 
-		var xform = new SglTransformationStack();
-		var renderer = new SglModelRenderer(gl);
-		var viewMatrix = SglMat4.identity();
-
+		// scene rendering support data
+		this.renderer   = new SglModelRenderer(gl);
+		this.xform      = new SglTransformationStack();
+		this.viewMatrix = SglMat4.identity();		
+		
 		// shaders
 		this.faceNXSProgram = this._createStandardFaceNXSProgram();
 		this.pointNXSProgram = this._createStandardPointNXSProgram();
@@ -2443,35 +2444,41 @@ Presenter.prototype = {
 		this.simpleLineTechnique = this._createSimpleLinetechnique();
 		this.multiLinesPointsTechnique = this._createMultiLinesPointstechnique();
 
-		// scene rendering support data
-		this.renderer   = renderer;
-		this.xform      = xform;
-		this.viewMatrix = viewMatrix;
+		// handlers
+		this._onPickedInstance  = 0;
+		this._onPickedSpot      = 0;
+		this._onEnterInstance   = 0;
+		this._onEnterSpot       = 0;
+		this._onLeaveInstance   = 0;
+		this._onLeaveSpot       = 0;
+		this._onEndPickingPoint = 0;
+		this._onEndMeasurement  = 0;		
+		
+		// animation
+		this.ui.animateRate = 0;		
+		
+		// current cursor XY position
+		this.x 			= 0.0;
+		this.y 			= 0.0;		
+		
+		this._keycombo = false;		
+		
+		// SCENE DATA
+		this._scene         = null;
+		this._sceneParsed   = false;
+		this._sceneReady    = false;
+		this._objectsToLoad = 0;		
 
+		this._instancesProgressiveID = 1;
+		this._spotsProgressiveID     = 1;		
+		
 		this._lightDirection = HOP_DEFAULTLIGHT;
 
 		this.sceneCenter = [0.0, 0.0, 0.0];
 		this.sceneRadiusInv = 1.0;
 
-		this.ui.animateRate = 0;
-
-		this.x 			= 0.0;
-		this.y 			= 0.0;
-
-		this.ax1 		= 0.0;
-		this.ay1 		= 0.0;
-
-		// scene others support data
-		this._scene         = null;
-		this._sceneParsed   = false;
-		this._sceneReady    = false;
-		this._objectsToLoad = 0;
-
 		this._targetInstanceName = null;
 		this._targetHotSpotName  = null;
-		
-		this._instancesProgressiveID = 1;
-		this._spotsProgressiveID     = 1;
 
 		this._animating      = false;
 		this._movingLight    = false;
@@ -2488,8 +2495,6 @@ Presenter.prototype = {
 		this._lastSpotID     = 0;
 		this._pickpoint      = [1, 1];
 
-		this._keycombo = false;
-
 		// global measurement data
 		this._isMeasuring = false;
 
@@ -2504,7 +2509,6 @@ Presenter.prototype = {
 		this._isMeasuringPickpoint = false;
 		this._pickValid = false;
 		this._pickedPoint = [0.0, 0.0, 0.0];
-		this._pickedPointsList = {}; // for future use
 
 		// plane section
 		this._clipPoint = [0.0, 0.0, 0.0];
@@ -2516,26 +2520,15 @@ Presenter.prototype = {
 		// point size control
 		this._pointSize = HOP_DEFAULTPOINTSIZE;
 		this._pointSizeMinMax = [1.0, HOP_DEFAULTPOINTSIZE + 4.0];
-
-		// handlers
-		this._onPickedInstance  = 0;
-		this._onPickedSpot      = 0;
-		this._onEnterInstance   = 0;
-		this._onEnterSpot       = 0;
-		this._onLeaveInstance   = 0;
-		this._onLeaveSpot       = 0;
-		this._onEndPickingPoint = 0;
-		this._onEndMeasurement  = 0;
 	},
-
+	
 	onDrag : function (button, x, y, e) {
 		var ui = this.ui;
 
-		this.ax1 = (x / (ui.width  - 1)) * 2.0 - 1.0;
-		this.ay1 = (y / (ui.height - 1)) * 2.0 - 1.0;
-
 		if(this._movingLight && ui.isMouseButtonDown(0)){
-			this.rotateLight(this.ax1/2, this.ay1/2);
+			var dxl = (x / (ui.width  - 1)) * 2.0 - 1.0;
+			var dyl = (y / (ui.height - 1)) * 2.0 - 1.0;		
+			this.rotateLight(dxl/2, dyl/2);
 			return;
 		}
 
@@ -2693,6 +2686,22 @@ Presenter.prototype = {
 	setScene : function (options) {
 		if (!options) return;
 
+		// scene reset, if already present
+		if(this._scene != null)
+		{
+			this._scene         = null;
+			this._sceneParsed   = false;
+			this._sceneReady    = false;
+			this._instancesProgressiveID = 1;
+			this._spotsProgressiveID     = 1;		
+			this._objectsToLoad = 0;
+			this._stopMeasurement();
+			this._stopPickPoint();		
+			this._clipAxis = [0.0, 0.0, 0.0];
+			this._clipPoint = [0.0, 0.0, 0.0];
+			this.enableLightTrackball(false);
+		}
+		
 		var scene = this._parseScene(options);
 		if (!scene) return;
 
@@ -3173,7 +3182,6 @@ Presenter.prototype = {
 
 //-----------------------------------------------------------------------------
 // spot visibility
-
 	setSpotVisibilityByName : function (name, newState, redraw) {
 		var ui = this.ui;
 
@@ -3304,7 +3312,6 @@ Presenter.prototype = {
 
 //-----------------------------------------------------------------------------
 // sections
-	
     resetClippingXYZ: function() {
         this._calculateBounding();
    		this._clipAxis = [0.0, 0.0, 0.0];
