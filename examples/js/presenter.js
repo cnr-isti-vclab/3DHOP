@@ -1401,19 +1401,18 @@ Presenter.prototype = {
 
 	_ID2Color : function (ID) {
 		var intID = ID | 0;
+		var IDr = intID % 10;
+		var IDg = ((intID-IDr) / 10) % 10;
+		var IDb = ((((intID-IDr) / 10) - IDg) / 10) % 10;
 
-		var IDr = intID % 5;
-		var IDg = ((intID-IDr) / 5) % 5;
-		var IDb = ((((intID-IDr) / 5) - IDg) / 5) % 5;
-
-		var colorID = [IDr * 0.2, IDg * 0.2, IDb * 0.2, 1.0];
-		return colorID;
+		var colorID = [IDr * 0.1, IDg * 0.1, IDb * 0.1, 1.0];
+		return colorID;		
 	},
 
 	_Color2ID : function (color) {
-		var IDr =  (((color[0]+2)/255.0) / 0.2)       | 0;
-		var IDg = ((((color[1]+2)/255.0) / 0.2) * 5)  | 0;
-		var IDb = ((((color[2]+2)/255.0) / 0.2) * 25) | 0;
+		var IDr =  Math.round(((color[0])/255.0) / 0.1)       | 0;
+		var IDg = (Math.round(((color[1])/255.0) / 0.1) * 10)  | 0;
+		var IDb = (Math.round(((color[2])/255.0) / 0.1) * 100) | 0;
 
 		var ID = (IDr + IDg + IDb) | 0;
 		return ID;
