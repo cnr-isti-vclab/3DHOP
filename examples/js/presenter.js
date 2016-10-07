@@ -2724,9 +2724,8 @@ Presenter.prototype = {
 		}
 
 		// creating the desired trackball
-		var trackball  = new this._scene.trackball.type();
-		trackball.setup(this._scene.trackball.trackOptions);
-        this.trackball  = trackball;
+		this.trackball  = new this._scene.trackball.type();
+		this.trackball.setup(this._scene.trackball.trackOptions);
 
 		var that = this;
 		var gl = this.ui.gl;
