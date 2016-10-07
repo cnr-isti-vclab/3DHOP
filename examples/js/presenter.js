@@ -2616,8 +2616,6 @@ Presenter.prototype = {
 	},
 
     onMouseWheel: function (wheelDelta, x, y, e) {
-        var ui = this.ui;
-
 		var diff = false;
 
 		if(e && e.altKey) { // key "ALT" + MOUSE WHEEL to change pointclouds point set size
@@ -2649,7 +2647,7 @@ Presenter.prototype = {
 			}
 		}
 
-		if(diff) ui.postDrawEvent();
+		if(diff) this.ui.postDrawEvent();
     },
 
     onAnimate : function (dt) {
@@ -2885,8 +2883,6 @@ Presenter.prototype = {
 //-----------------------------------------------------------------------------
 // instance solid color
 	setInstanceSolidColorByName : function (name, newState, redraw, newColor) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		if(name == HOP_ALL) {
@@ -2904,12 +2900,10 @@ Presenter.prototype = {
 			}
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	setInstanceSolidColor : function (tag, newState, redraw, newColor) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		for (var inst in instances) {
@@ -2929,12 +2923,10 @@ Presenter.prototype = {
 			}
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	toggleInstanceSolidColorByName : function (name, redraw) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		if(name == HOP_ALL) 
@@ -2944,12 +2936,10 @@ Presenter.prototype = {
 			if(instances[name]) // if an instance with that name exists
 				instances[name].useSolidColor = !instances[name].useSolidColor;
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	toggleInstanceSolidColor : function (tag, redraw) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		for (var inst in instances) {
@@ -2961,14 +2951,12 @@ Presenter.prototype = {
 						instances[inst].useSolidColor = !instances[inst].useSolidColor;
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 //-----------------------------------------------------------------------------
 // instance transparency
 	setInstanceTransparencyByName : function (name, newState, redraw, newAlpha) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		if(name == HOP_ALL) {
@@ -2985,12 +2973,10 @@ Presenter.prototype = {
 			}
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	setInstanceTransparency : function (tag, newState, redraw, newAlpha) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		for (var inst in instances) {
@@ -3010,12 +2996,10 @@ Presenter.prototype = {
 			}
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	toggleInstanceTransparencyByName : function (name, redraw) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		if(name == HOP_ALL) {
@@ -3027,12 +3011,10 @@ Presenter.prototype = {
 				instances[name].useTransparency = !instances[name].useTransparency;
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	toggleInstanceTransparency : function (tag, redraw) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		for (var inst in instances) {
@@ -3049,14 +3031,12 @@ Presenter.prototype = {
 			}
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 //-----------------------------------------------------------------------------
 // instance visibility
 	setInstanceVisibilityByName : function (name, newState, redraw) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		if(name == HOP_ALL) {
@@ -3068,12 +3048,10 @@ Presenter.prototype = {
 				instances[name].visible = newState;
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	setInstanceVisibility : function (tag, newState, redraw) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		for (var inst in instances) {
@@ -3088,12 +3066,10 @@ Presenter.prototype = {
 			}
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	toggleInstanceVisibilityByName : function (name, redraw) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		if(name == HOP_ALL) {
@@ -3105,12 +3081,10 @@ Presenter.prototype = {
 				instances[name].visible = !instances[name].visible;
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	toggleInstanceVisibility : function (tag, redraw) {
-		var ui = this.ui;
-
 		var instances = this._scene.modelInstances;
 
 		for (var inst in instances) {
@@ -3127,7 +3101,7 @@ Presenter.prototype = {
 			}
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	isInstanceVisibilityEnabledByName : function (name) {
@@ -3183,8 +3157,6 @@ Presenter.prototype = {
 //-----------------------------------------------------------------------------
 // spot visibility
 	setSpotVisibilityByName : function (name, newState, redraw) {
-		var ui = this.ui;
-
 		var spots = this._scene.spots;
 
 		if(name == HOP_ALL) {
@@ -3196,12 +3168,10 @@ Presenter.prototype = {
 				spots[name].visible = newState;
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	setSpotVisibility : function (tag, newState, redraw) {
-		var ui = this.ui;
-
 		var spots = this._scene.spots;
 
 		for (var spt in spots) {
@@ -3218,12 +3188,10 @@ Presenter.prototype = {
 			}
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	toggleSpotVisibilityByName : function (name, redraw) {
-		var ui = this.ui;
-
 		var spots = this._scene.spots;
 
 		if(name == HOP_ALL) {
@@ -3235,12 +3203,10 @@ Presenter.prototype = {
 				spots[name].visible = !spots[name].visible;
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	toggleSpotVisibility : function (tag, redraw) {
-		var ui = this.ui;
-
 		var spots = this._scene.spots;
 
 		for (var spt in spots) {
@@ -3257,7 +3223,7 @@ Presenter.prototype = {
 			}
 		}
 		if(redraw)
-			ui.postDrawEvent();
+			this.ui.postDrawEvent();
 	},
 
 	isSpotVisibilityEnabledByName : function (name) {
