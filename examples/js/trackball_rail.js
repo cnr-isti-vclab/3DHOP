@@ -35,6 +35,7 @@ RailTrackball.prototype = {
 			minMaxTheta   : [-80.0, 80.0],
 			pathPoints    : [ [0.0, 0.0, 0.0] ],
 			pathCircular  : false,
+			pathLocked    : false,
 			stepLength    : 0.01,
 			lapTime       : 60.0,
 		}, options);
@@ -42,12 +43,12 @@ RailTrackball.prototype = {
 		
 		this._action = SGL_TRACKBALL_NO_ACTION;
 		this._new_action = true;
-
-		this._matrix = SglMat4.identity();		
+		this._matrix = SglMat4.identity();
 		
 		// path
 		this._pathPoints = opt.pathPoints;
 		this._pathCircular = opt.pathCircular;
+		this._pathLocked = opt.pathLocked;
 		this._createPath();
 		this._stepLength = opt.stepLength;
 		
@@ -56,8 +57,8 @@ RailTrackball.prototype = {
 		this._startTheta = sglDegToRad(opt.startTheta);	//theta (vertical rotation)
 		this._startDistance = 0.0;
 		this._startOffset = opt.startOffset;
-		this._startOffset = this._startOffset % 1.0;
-		if(this._startOffset < 0.0) this._startOffset = 1.0 - this._startOffset;
+		if(this._startOffset < 0.0) this._startOffset = 0.0;
+		if(this._startOffset > 1.0) this._startOffset = 1.0;
 		
 		// current parameters
 		this._phi = this._startPhi;
@@ -73,14 +74,14 @@ RailTrackball.prototype = {
 		//animation data
 		this._isAnimating = false;
 		this._speedPhi = 0.0;
-		this._speedTheta = 0.0;		
+		this._speedTheta = 0.0;
 		this._speedOffset = 0.0;
 		this._isAutoWalking = false;
 		this._hasToGoLap = false;
 		this._lapTime = opt.lapTime;
 		
 		// limits
-		this._minMaxTheta = opt.minMaxTheta;		
+		this._minMaxTheta = opt.minMaxTheta;
 		this._minMaxTheta[0] = sglDegToRad(this._minMaxTheta[0]);
 		this._minMaxTheta[1] = sglDegToRad(this._minMaxTheta[1]);
 		
@@ -94,7 +95,7 @@ RailTrackball.prototype = {
 
     _createPath: function() {
 		this._pathPosNum = this._pathPoints.length;
-		this._pathLen = 0.0;    	
+		this._pathLen = 0.0;
     	
     	var pp = 1;
     	
@@ -118,7 +119,7 @@ RailTrackball.prototype = {
     		this._pathBaseOffs[pp] = this._pathBaseOffs[pp]/this._pathLen;
     		pp +=1;
 		}
-		this._pathBaseOffs[this._pathPosNum-1] = 1.0;		    	
+		this._pathBaseOffs[this._pathPosNum-1] = 1.0;
     	
 		this._currPosition = this._computeCurrPoint();
     },
@@ -126,51 +127,51 @@ RailTrackball.prototype = {
     _computeCurrPoint: function() {
 		var mypoint = [0.0, 0.0, 0.0];
 		
-		// update scene radius		
+		// update scene radius
 		this._sceneRadiusInv = presenter.sceneRadiusInv;
 		this._sceneCenter = presenter.sceneCenter;
 		
 		// interpolating
 		var pp = 0;
 		
-    	while(this._pathBaseOffs[pp+1] <= this._pathOffset) {	
+    	while(this._pathBaseOffs[pp+1] <= this._pathOffset) {
     		pp +=1;
-    	}	
+    	}
 		
 		if(pp==this._pathPosNum-1)
-			mypoint = this._pathPoints[this._pathPosNum-1];		
+			mypoint = this._pathPoints[this._pathPosNum-1];
 		else
 		{
 			var myoff = (this._pathOffset - this._pathBaseOffs[pp]) / (this._pathBaseOffs[pp+1] - this._pathBaseOffs[pp]);
 		
-			mypoint = SglVec3.add(this._pathPoints[pp], SglVec3.muls(SglVec3.sub(this._pathPoints[pp+1],this._pathPoints[pp]), myoff)); 			
+			mypoint = SglVec3.add(this._pathPoints[pp], SglVec3.muls(SglVec3.sub(this._pathPoints[pp+1],this._pathPoints[pp]), myoff));
 		}
-
+		
 		return [(mypoint[0]-this._sceneCenter[0])*this._sceneRadiusInv, (mypoint[1]-this._sceneCenter[1])*this._sceneRadiusInv, (mypoint[2]-this._sceneCenter[2])*this._sceneRadiusInv];
-	},	
-	
+	},
+
 	stepFW: function() {
 		this._pathOffset += this._stepLength;
 		if(this._pathOffset > 1.0)
 			if(this._pathCircular) 
 				this._pathOffset -= 1.0;
 			else
-				this._pathOffset = 1.0;		
-
+				this._pathOffset = 1.0;
+		
 		this._computeMatrix();
 	},
-	
+
 	stepBW: function() {
 		this._pathOffset -= this._stepLength;
 		if(this._pathOffset < 0.0)
-			if(this._pathCircular) 		
+			if(this._pathCircular)
 				this._pathOffset += 1.0;
 			else
 				this._pathOffset = 0.0;
-
-		this._computeMatrix();				
+		
+		this._computeMatrix();
 	},
-	
+
     clamp: function(value, low, high) {
 		if(value < low) return low;
 		if(value > high) return high;
@@ -179,23 +180,23 @@ RailTrackball.prototype = {
 
     _computeMatrix: function() {
 		// update currposition
-		this._currPosition = this._computeCurrPoint();			
-			
-		var m = SglMat4.identity();	  
-		  
+		this._currPosition = this._computeCurrPoint();
+		
+		var m = SglMat4.identity();
+		
 		// zoom
 		m = SglMat4.mul(m, SglMat4.translation([0.0, 0.0, -this._distance]));  
 		  
 		// rotation
-		m = SglMat4.mul(m, SglMat4.rotationAngleAxis(this._theta, [1.0, 0.0, 0.0]));	  
+		m = SglMat4.mul(m, SglMat4.rotationAngleAxis(this._theta, [1.0, 0.0, 0.0]));
 	  
 		// tilt
-		m = SglMat4.mul(m, SglMat4.rotationAngleAxis(this._phi, [0.0, -1.0, 0.0]));	
+		m = SglMat4.mul(m, SglMat4.rotationAngleAxis(this._phi, [0.0, -1.0, 0.0]));
 
 		// centering
-		m = SglMat4.mul(m, SglMat4.translation([-this._currPosition[0], -this._currPosition[1], -this._currPosition[2]]));		  	  	  	  
+		m = SglMat4.mul(m, SglMat4.translation([-this._currPosition[0], -this._currPosition[1], -this._currPosition[2]]));
 		  
-		this._matrix = m;	
+		this._matrix = m;
     },
 
 	getState : function () {
@@ -204,56 +205,56 @@ RailTrackball.prototype = {
 
 	setState : function (newstate) {
 		// stop animation
-		this._isAnimating = false;		
+		this._isAnimating = false;
 		
 		this._phi        = sglDegToRad(newstate[0]);
-		this._theta      = sglDegToRad(newstate[1]);		
+		this._theta      = sglDegToRad(newstate[1]);
 		this._pathOffset = newstate[2];
 		
 		// avoid eternal accumulation of rotation, just for the sake of cleanliness
 		if (this._phi > 20.0) this._phi = this._phi - 20.0;
-		if (this._phi < -20.0) this._phi = this._phi + 20.0;		
-		//check limits		
-		this._theta = this.clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);		
+		if (this._phi < -20.0) this._phi = this._phi + 20.0;
+		//check limits
+		this._theta = this.clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
 		this._pathOffset = this._pathOffset % 1.0;
-		if(this._pathOffset < 0.0) this._pathOffset = 1.0 - this._pathOffset;	
+		if(this._pathOffset < 0.0) this._pathOffset = 1.0 - this._pathOffset;
 		
-		this._computeMatrix();		
-	},	
+		this._computeMatrix();
+	},
 
 	animateToState : function (newstate) {
 		// stop animation
-		this._isAnimating = false;		
+		this._isAnimating = false;
 		
 		if(newstate)
 		{
 			this._isAutoWalking = false;
 			this._targetPhi    = sglDegToRad(newstate[0]);
-			this._targetTheta  = sglDegToRad(newstate[1]);		
+			this._targetTheta  = sglDegToRad(newstate[1]);
 			this._targetOffset = newstate[2];
-	
+			
 			//check limits
-			this._targetTheta = this.clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);		
-			this._targetOffset = this._targetOffset % 1.0;
-			if(this._targetOffset < 0.0) this._targetOffset = 1.0 - this._targetOffset;
-
+			this._targetTheta = this.clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);
+			if(this._targetOffset < 0.0) this._targetOffset = 0.0;
+			if(this._targetOffset > 1.0) this._targetOffset = 1.0;
+			
 			// setting base velocities 
-			this._speedPhi    = Math.PI;		
-			this._speedTheta  = Math.PI;	
-			this._speedOffset = 1.0/60.0;		
-
+			this._speedPhi    = Math.PI;
+			this._speedTheta  = Math.PI;
+			this._speedOffset = 1.0/60.0;
+			
 			// clamp target phi angle
 			while(this._targetPhi > 2*Math.PI)
 				this._targetPhi -= 2*Math.PI;
 			while(this._targetPhi < 0) 
-				this._targetPhi += 2*Math.PI;				
+				this._targetPhi += 2*Math.PI;
 			
 			// clamp current phi angle, to prevent endless unwinding
 			while(this._phi > 2*Math.PI)
 				this._phi -= 2*Math.PI;
 			while(this._phi < 0) 
-				this._phi += 2*Math.PI;	
-				
+				this._phi += 2*Math.PI;
+			
 			// determine minimal, clamped target phi angle
 			var clampedangle = this._targetPhi;
 			while(clampedangle > 2*Math.PI)
@@ -263,32 +264,32 @@ RailTrackball.prototype = {
 			
 			if(Math.abs(clampedangle - this._phi) < Math.PI) { // standard rotation
 				if(clampedangle > this._phi){
-					this.speedphi = Math.PI;		
+					this.speedphi = Math.PI;
 				}
 				else{
-					this.speedphi = -Math.PI;		
+					this.speedphi = -Math.PI;
 				}
 			}
 			else{
 				if(clampedangle > this._phi){
 					clampedangle = (clampedangle - 2*Math.PI)
-					this.speedphi = -Math.PI;		
+					this.speedphi = -Math.PI;
 				}
 				else{
-					clampedangle = (clampedangle + 2*Math.PI)			
-					this.speedphi = Math.PI;		
-				}		
-			}		
-
-			this._targetPhi = clampedangle;	
-
+					clampedangle = (clampedangle + 2*Math.PI)
+					this.speedphi = Math.PI;
+				}
+			}
+			
+			this._targetPhi = clampedangle;
+			
 			// determine sign of offset motion
 			var offdist = 0.0;
 			if(this._pathCircular)
 			{
 				this._pathOffset = this._pathOffset % 1.0;
 				if(this._pathOffset < 0.0) this._pathOffset = 1.0 - this._pathOffset;
-
+				
 				if(this._targetOffset >= this._pathOffset)
 				{
 					// if more than half path, reverse direction
@@ -318,42 +319,42 @@ RailTrackball.prototype = {
 					{
 						this._speedOffset = 1.0/30.0;
 						this._hasToGoLap = true;
-						offdist = this._targetOffset + (1.0 - this._pathOffset);						
-					}					
+						offdist = this._targetOffset + (1.0 - this._pathOffset);
+					}
 				}
 			}
 			else
 			{
 				offdist = this._targetOffset - this._pathOffset;
-				this._hasToGoLap = false;				
+				this._hasToGoLap = false;
 				if(this._targetOffset >= this._pathOffset)
 					this._speedOffset = 1.0/30.0;
 				else
 					this._speedOffset = -1.0/30.0;
 			}
-
+			
 			// theta direction
 			if(this._targetTheta > this._theta)
 				this.speedTheta = Math.PI;
 			else
 				this.speedTheta = -Math.PI;
-
-			// find max animation time to set a time limit and then synchronize all movements		
+			
+			// find max animation time to set a time limit and then synchronize all movements
 			var timePhi      = Math.abs((this._targetPhi - this._phi) / this._speedPhi);
 			var timeTheta    = Math.abs((this._targetTheta - this._theta) / this._speedTheta);
 			var timeOffset   = Math.abs(offdist / this._speedOffset);
-				
+			
 			var maxtime = Math.max( timePhi, Math.max( timeTheta, timeOffset ));
-
+			
 			maxtime = this.clamp(maxtime, 1.0, 3.0);
 			
 			this._speedPhi *= timePhi / maxtime;
 			this._speedTheta *= timeTheta / maxtime;
-			this._speedOffset *= timeOffset / maxtime;			
+			this._speedOffset *= timeOffset / maxtime;
 		}
 		else
 		{
-			this._isAutoWalking = true;		
+			this._isAutoWalking = true;
 		}
 		
 		// start animation
@@ -365,29 +366,31 @@ RailTrackball.prototype = {
 		
 		if(this._isAutoWalking)
 		{
-			this._pathOffset += (dt / this._lapTime) ;
-			if(this._pathOffset > 1.0)
+			this._pathOffset += (dt / this._lapTime);
+			if(this._pathOffset > 1.0) {
 				if(this._pathCircular) 
 					this._pathOffset -= 1.0;
 				else
 					this._pathOffset = 1.0;
+			 if(!this._pathCircular) this._isAutoWalking = this._isAnimating = false;
+			}
 		}
 		else
 		{
-			var deltaPhi    = this._speedPhi * dt;
-			var deltaTheta  = this._speedTheta * dt;
-			var deltaOffset = this._speedOffset * dt;
-
+			var deltaPhi    = this._speedPhi * dt / this._lapTime;
+			var deltaTheta  = this._speedTheta * dt / this._lapTime;
+			var deltaOffset = this._speedOffset * dt / this._lapTime;
+			
 			var diffPhi    = this._targetPhi - this._phi;
 			var diffTheta  = this._targetTheta - this._theta;
-
+			
 			if (diffPhi > deltaPhi) 
 				this._phi += deltaPhi;
 			else if (diffPhi < -deltaPhi) 
 				this._phi -= deltaPhi;
 			else 
 				this._phi = this._targetPhi;
-
+			
 			if (diffTheta > deltaTheta) 
 				this._theta += deltaTheta;
 			else if (diffTheta < -deltaTheta) 
@@ -403,13 +406,13 @@ RailTrackball.prototype = {
 					this._hasToGoLap = false;
 					this._pathOffset = this._pathOffset % 1.0;
 					if(this._pathOffset > this._targetOffset)
-						this._pathOffset = this._targetOffset;					
+						this._pathOffset = this._targetOffset;
 				}
 				if(this._pathOffset<0.0)
 				{
 					this._hasToGoLap = false;
 					this._pathOffset = this._pathOffset % 1.0;
-					this._pathOffset = 1.0 - this._pathOffset;					
+					this._pathOffset = 1.0 - this._pathOffset;
 					if(this._pathOffset < this._targetOffset)
 						this._pathOffset = this._targetOffset;
 				}
@@ -431,15 +434,15 @@ RailTrackball.prototype = {
 						this._pathOffset = this._pathOffset + deltaOffset;
 				}
 			}
-
+			
 			if(this._phi == this._targetPhi) 
 				if(this._theta == this._targetTheta)
 					if(this._pathOffset == this._targetOffset)
-						this._isAnimating = false;		
+						this._isAnimating = false;
 		}
-
+		
 		this._computeMatrix();
-
+		
 		return true;
 	},
 
@@ -448,14 +451,14 @@ RailTrackball.prototype = {
 	set action(a) { if(this._action != a) this._new_action = true; this._action = a; },
 
 	get matrix() {
-		this._computeMatrix();		
+		this._computeMatrix();
 		return this._matrix; 
 	},
 
 	reset : function () {
 		this._matrix = SglMat4.identity();
 		this._action = SGL_TRACKBALL_NO_ACTION
-
+		
 		this._phi = this._startPhi;
 		this._theta = this._startTheta;
 		this._pathOffset = this._startOffset;
@@ -472,33 +475,32 @@ RailTrackball.prototype = {
 			this._start[0] = x;
 			this._start[1] = y;
 			this._new_action = false;
-        } 
-
+		}
+		
 		var dx = this._start[0] - x; 
 		var dy = this._start[1] - y;
 		this._start[0] = x;
 		this._start[1] = y;
-
+		
 		switch (this._action) {
 			case SGL_TRACKBALL_ROTATE:
+				this._isAnimating = false; //stopping animation
 				this.rotate(m, dx, dy);
-			break;
-
+				break;
 			case SGL_TRACKBALL_PAN:
-			break;
-
+				break;
 			case SGL_TRACKBALL_SCALE:
+				if(this._pathLocked) break;
 				this._isAnimating = false; //stopping animation
 				this.scale(m, z);
-			break;
-
+				break;
 			default:
-			break;
+				break;
 		}
-        return this._computeMatrix();
+		return this._computeMatrix();
 	},
-	
-    rotate: function(m, dx, dy) {
+
+	rotate: function(m, dx, dy) {
 		this._phi += dx;  
 		// avoid eternal accumulation of rotation, just for the sake of cleanliness
 		if (this._phi > 10.0) this._phi = this._phi - 10.0;
@@ -506,10 +508,10 @@ RailTrackball.prototype = {
 		
 		this._theta += dy; 
 		this._theta = this.clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
-    },
+	},
 
 	scale : function(m, s) {
-		if(s > 1.0)
+		if(s < 1.0)
 			this.stepFW();
 		else
 			this.stepBW();

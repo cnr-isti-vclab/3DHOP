@@ -327,7 +327,7 @@ Presenter.prototype = {
 			    if((uClipAxis[2] == 1.0)&&((uClipPoint[2]-vModelPos[2])<uClipColorSize)) diffuse = uClipColor;       \n\
 			    else if((uClipAxis[2] == -1.0)&&((vModelPos[2]-uClipPoint[2])<uClipColorSize)) diffuse = uClipColor; \n\
 				                                                                  \n\                gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
-	       		gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));	  \n\
+	       		gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));      \n\
             }                                                                     \n\
         ");
 		if(this._isDebugging)
@@ -408,12 +408,12 @@ Presenter.prototype = {
             uniform   vec3 uClipAxis;                                             \n\
             uniform   vec3 uClipColor;                                            \n\
             uniform   float uClipColorSize;                                       \n\
-			uniform   sampler2D uSampler;                                         \n\
-                                                                        		  \n\
+            uniform   sampler2D uSampler;                                         \n\
+                                                                                  \n\
             varying   vec3 vNormal;                                               \n\
             varying   vec4 vColor;                                                \n\
             varying   vec4 vModelPos;                                             \n\
-			varying   vec2 vTextureCoord;                         				  \n\
+            varying   vec2 vTextureCoord;                                         \n\
                                                                                   \n\
             void main(void)                                                       \n\
             {                                                                     \n\
@@ -927,6 +927,7 @@ Presenter.prototype = {
 		
 		return technique;
 	},
+
 //----------------------------------------------------------------------------------------
 // SUPPORT FUNCTIONS
 //----------------------------------------------------------------------------------------
@@ -948,7 +949,7 @@ Presenter.prototype = {
 	},
 
 	_testReady : function () {
-		if ((!this._sceneParsed) || (this._objectsToLoad != 0)) return;
+		if (this._objectsToLoad != 0) return;
 		this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 
 		this._sceneReady = this._scenePrepare();
@@ -1001,9 +1002,9 @@ Presenter.prototype = {
 									this._lastCursor = document.getElementById(this.ui.canvas.id).style.cursor;
 									document.getElementById(this.ui.canvas.id).style.cursor = cursor;
 								}
-								this.ui.postDrawEvent();
 								if(this._onLeaveSpot && this._lastPickedSpot!=null)  this._onLeaveSpot(this._lastPickedSpot);
 								if(this._onEnterSpot && this._pickedSpot!=null) this._onEnterSpot(this._pickedSpot);
+								this.ui.postDrawEvent();
 							}
 							this._lastPickedSpot = spt;
 							break;
@@ -1016,10 +1017,10 @@ Presenter.prototype = {
 					if(this._onHover){
 						if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha  -= 0.2;
 						if(/*!this._movingLight ||*/ !this._isMeasuring) document.getElementById(this.ui.canvas.id).style.cursor = "default";
-						this.ui.postDrawEvent();
 						if(this._onLeaveSpot && this._lastPickedSpot!=null)  this._onLeaveSpot(this._lastPickedSpot);
 						//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
 						this._lastPickedSpot = null;
+						this.ui.postDrawEvent();
 					}
 					this._lastSpotID = ID;
 				}
@@ -1040,6 +1041,7 @@ Presenter.prototype = {
 							if(/*!this._movingLight ||*/ !this._isMeasuring){
 								this._lastCursor = cursor;
 								if(this._pickedSpot==null)document.getElementById(this.ui.canvas.id).style.cursor = cursor;
+								this.ui.postDrawEvent();
 							}
 							if(this._onLeaveInstance && this._lastPickedInstance!=null)  this._onLeaveInstance(this._lastPickedInstance);
 							if(this._onEnterInstance && this._pickedInstance!=null) this._onEnterInstance(this._pickedInstance);
@@ -1056,6 +1058,7 @@ Presenter.prototype = {
 					if((/*!this._movingLight ||*/ !this._isMeasuring) && this._pickedSpot==null) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 					if(this._onLeaveInstance && this._lastPickedInstance!=null)  this._onLeaveInstance(this._lastPickedInstance);
 					//if(this._onEnterInstance) this._onEnterInstance(this._pickedInstance);
+					this.ui.postDrawEvent();
 				}
 				this._lastPickedInstance = null;
 			}
@@ -1070,12 +1073,12 @@ Presenter.prototype = {
 			this._pickpoint[0] = x;
 			this._pickpoint[1] = y;
 			var ppoint = this._drawScenePickingXYZ();
-			if ((ppoint!=null)&&(this._measurementStage != 2)){
+			if ((ppoint!=null)&&(this._measurementStage != 2)) {
 				this._pointA = ppoint;
 				this._measurementStage=2;
 				this.ui.postDrawEvent();
 			}
-			else if ((ppoint!=null)&&(this._measurementStage == 2)){
+			else if ((ppoint!=null)&&(this._measurementStage == 2)) {
 				this._pointB = ppoint;
 				this.measurement = SglVec3.length(SglVec3.sub(this._pointA, this._pointB));
 				this._measurementStage=3;
@@ -1367,9 +1370,9 @@ Presenter.prototype = {
 
 		// getting scale/center for scene
 		this._setSceneCenterRadius();
-		
+
 		xform.projection.loadIdentity();
-		
+
 		if(space.cameraType == "ortho")
 		{
 			//default camera distance in ortho view is "as large as scene size"
@@ -1406,11 +1409,11 @@ Presenter.prototype = {
 		var IDb = ((((intID-IDr) / 10) - IDg) / 10) % 10;
 
 		var colorID = [IDr * 0.1, IDg * 0.1, IDb * 0.1, 1.0];
-		return colorID;		
+		return colorID;
 	},
 
 	_Color2ID : function (color) {
-		var IDr =  Math.round(((color[0])/255.0) / 0.1)       | 0;
+		var IDr =  Math.round(((color[0])/255.0) / 0.1)        | 0;
 		var IDg = (Math.round(((color[1])/255.0) / 0.1) * 10)  | 0;
 		var IDb = (Math.round(((color[2])/255.0) / 0.1) * 100) | 0;
 
@@ -1853,7 +1856,7 @@ Presenter.prototype = {
 			
 			xform.model.pop();		}
 
-		// draw cliping plane (if any)
+		// draw clipping plane (if any)
 		if(config.showClippingPlanes)
 		{
 			// GLstate setup
@@ -1869,6 +1872,7 @@ Presenter.prototype = {
 				xform.model.scale([(this._sceneBboxMax[0] - this._sceneBboxMin[0]), 
 				                   (this._sceneBboxMax[1] - this._sceneBboxMin[1]), 
 				                   (this._sceneBboxMax[2] - this._sceneBboxMin[2])]);
+
 				var QuadUniforms = {
 					"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 					"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
@@ -2425,8 +2429,8 @@ Presenter.prototype = {
 		// scene rendering support data
 		this.renderer   = new SglModelRenderer(gl);
 		this.xform      = new SglTransformationStack();
-		this.viewMatrix = SglMat4.identity();		
-		
+		this.viewMatrix = SglMat4.identity();
+
 		// shaders
 		this.faceNXSProgram = this._createStandardFaceNXSProgram();
 		this.pointNXSProgram = this._createStandardPointNXSProgram();
@@ -2451,25 +2455,25 @@ Presenter.prototype = {
 		this._onLeaveInstance   = 0;
 		this._onLeaveSpot       = 0;
 		this._onEndPickingPoint = 0;
-		this._onEndMeasurement  = 0;		
-		
+		this._onEndMeasurement  = 0;
+
 		// animation
-		this.ui.animateRate = 0;		
-		
+		this.ui.animateRate = 0;
+
 		// current cursor XY position
 		this.x 			= 0.0;
-		this.y 			= 0.0;		
-		
-		this._keycombo = false;		
-		
+		this.y 			= 0.0;
+
+		this._keycombo = false;
+
 		// SCENE DATA
 		this._scene         = null;
 		this._sceneParsed   = false;
 		this._sceneReady    = false;
-		this._objectsToLoad = 0;		
+		this._objectsToLoad = 0;
 
 		this._instancesProgressiveID = 1;
-		this._spotsProgressiveID     = 1;		
+		this._spotsProgressiveID     = 1;
 		
 		this._lightDirection = HOP_DEFAULTLIGHT;
 
@@ -2520,13 +2524,13 @@ Presenter.prototype = {
 		this._pointSize = HOP_DEFAULTPOINTSIZE;
 		this._pointSizeMinMax = [1.0, HOP_DEFAULTPOINTSIZE + 4.0];
 	},
-	
+
 	onDrag : function (button, x, y, e) {
 		var ui = this.ui;
 
 		if(this._movingLight && ui.isMouseButtonDown(0)){
 			var dxl = (x / (ui.width  - 1)) * 2.0 - 1.0;
-			var dyl = (y / (ui.height - 1)) * 2.0 - 1.0;		
+			var dyl = (y / (ui.height - 1)) * 2.0 - 1.0;
 			this.rotateLight(dxl/2, dyl/2);
 			return;
 		}
@@ -2690,15 +2694,15 @@ Presenter.prototype = {
 			this._sceneParsed   = false;
 			this._sceneReady    = false;
 			this._instancesProgressiveID = 1;
-			this._spotsProgressiveID     = 1;		
+			this._spotsProgressiveID     = 1;
 			this._objectsToLoad = 0;
 			this._stopMeasurement();
-			this._stopPickPoint();		
+			this._stopPickPoint();
 			this._clipAxis = [0.0, 0.0, 0.0];
 			this._clipPoint = [0.0, 0.0, 0.0];
 			this.enableLightTrackball(false);
 		}
-		
+
 		var scene = this._parseScene(options);
 		if (!scene) return;
 
@@ -2782,7 +2786,7 @@ Presenter.prototype = {
 		// create quad models
 		this._createQuadModels();
 
-		this._testReady();
+//		this._testReady();
 		this._sceneParsed = true;
 	},
 
@@ -3510,7 +3514,7 @@ Presenter.prototype = {
 	isAnyMeasurementEnabled: function() {
 		return this._isMeasuring;
 	},
-	
+
 //-----------------------------------------------------------------------------
 	toggleCameraType: function() {
 		if(this._scene.space.cameraType == "ortho")
@@ -3523,16 +3527,16 @@ Presenter.prototype = {
 
 	setCameraPerspective() {
 		this._scene.space.cameraType = "perspective";
-		this.ui.postDrawEvent();	
+		this.ui.postDrawEvent();
 	},
-	
+
 	setCameraOrthographic() {
 		this._scene.space.cameraType = "ortho";
 		this.ui.postDrawEvent();
 	},
-	
+
 //-----------------------------------------------------------------------------	
 	repaint() {
-		this.ui.postDrawEvent();	
+		this.ui.postDrawEvent();
 	},
 };

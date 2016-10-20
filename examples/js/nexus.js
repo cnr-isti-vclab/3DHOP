@@ -679,6 +679,10 @@ Nexus.Renderer.prototype = {
 		path = path.replace('nexus.js', 'meshcoder_worker.js');
 		this._worker = new Worker(path);
 		this._worker.onmessage = function(e) { t._workerFinished(e); };
+
+		/**Safari PATCH**/
+		/**/(sayswho()[0]==='Safari' && sayswho()[1]<9) ? (this._cachePatch = true) : (this._cachePatch = false);
+		/**Safari PATCH**/
 	},
 
 	_requestHeader : function () {
@@ -792,8 +796,7 @@ Nexus.Renderer.prototype = {
 	url: function() {
 		var url = this._url;
 		/**Safari PATCH**/
-		/**/if (sayswho()[0]==='Safari' && sayswho()[1]!=='9') 
-		/**/  url = this._url + '?' + Math.random();
+		/**/if (this._cachePatch) url = this._url + '?' + Math.random();
 		/**Safari PATCH**/
 		return url;
 	},
