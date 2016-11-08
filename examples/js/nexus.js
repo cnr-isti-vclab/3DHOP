@@ -1272,6 +1272,8 @@ Nexus.Renderer.prototype = {
 					} 
 					if(isReady) {
 						node.status = Nexus.Renderer._NODE_READY;
+						//WAKEUP CALL DRAFT
+						that._signalUpdate();
 					}
 				}
 			};
@@ -1361,6 +1363,7 @@ Nexus.Renderer.prototype = {
 				var patch = patches[i];
 				if(patch.texture == 0xffffffff) continue;
 				var tex = this._textures.items[patch.texture];
+				tex.nodes.push(node);
 				var that = this;
 				if(tex.status == Nexus.Renderer._NODE_NONE) {
 					tex.img = new Image;
@@ -1372,8 +1375,6 @@ Nexus.Renderer.prototype = {
 					tex.request.onload = this._createTextureHandler(tex);
 					tex.request.send();
 				}
-				//add a 'wakeup call'
-				tex.nodes.push(node);
 			}
 		}
 		this._candidateNodes = [];

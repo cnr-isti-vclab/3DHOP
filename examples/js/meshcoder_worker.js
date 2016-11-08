@@ -726,7 +726,7 @@ decodeConnectivity: function(length, start) {
 
 	var current_face = 0;          //keep track of connected component start
 	//t.vertex_count = 0;
-	var front = new Uint32Array(this.node.nface*12);
+	var front = new Uint32Array(this.node.nface*18);
 	var front_count = 0; //count each integer so it's front_back*5
 	function addFront(_v0, _v1, _v2, _prev, _next) {
 		front[front_count++] = _v0;
