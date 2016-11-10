@@ -2538,7 +2538,7 @@ onDrag : function (button, x, y, e) {
 	if(ui.dragDeltaY(button) != 0) this.y += (ui.cursorDeltaY/500);
 
 	var action = SGL_TRACKBALL_NO_ACTION;
-	if ((ui.isMouseButtonDown(0) && ui.isKeyDown(17)) || ui.isMouseButtonDown(1)) {
+	if ((ui.isMouseButtonDown(0) && ui.isKeyDown(17)) || ui.isMouseButtonDown(1) || ui.isMouseButtonDown(2)) {
 		action = SGL_TRACKBALL_PAN;
 	}
 	else if (ui.isMouseButtonDown(0)) {
