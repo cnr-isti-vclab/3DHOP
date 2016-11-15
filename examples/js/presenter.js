@@ -196,7 +196,9 @@ _parseConfig : function (options) {
 		showClippingPlanes  : true,
 		showClippingBorder  : false,
 		clippingBorderSize  : 0.5,
-		clippingBorderColor : [0.0, 1.0, 1.0]
+		clippingBorderColor : [0.0, 1.0, 1.0],
+		pointSize           : 1.0,
+		pointSizeMinMax     : [1.0, 5.0],
 	}, options);
 	return r;
 },
@@ -1516,7 +1518,7 @@ _drawScene : function () {
 			"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 			"uModelMatrix"               : modelMatrix,
 			"uViewSpaceLightDirection"   : this._lightDirection,
-			"uPointSize"                 : this._pointSize,
+			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : instance.useSolidColor,
 			"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
@@ -1610,7 +1612,7 @@ _drawScene : function () {
 			"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 			"uModelMatrix"               : modelMatrix,
 			"uViewSpaceLightDirection"   : this._lightDirection,
-			"uPointSize"                 : this._pointSize,
+			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : instance.alpha,
 			"uUseSolidColor"             : instance.useSolidColor,
 			"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
@@ -1816,7 +1818,7 @@ _drawScene : function () {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 			"uViewSpaceLightDirection"   : this._lightDirection,
-			"uPointSize"                 : this._pointSize,
+			"uPointSize"                 : config.pointSize,
 			"uColorID"                   : [spot.color[0], spot.color[1], spot.color[2], spot.alpha]
 		}
 
@@ -2004,7 +2006,7 @@ _drawScenePickingXYZ : function () {
 			"uModelMatrix"               : modelMatrix,
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
-			"uPointSize"                 : this._pointSize
+			"uPointSize"                 : this._scene.config.pointSize
 		};
 
 		if(mesh.isNexus) {
@@ -2115,7 +2117,7 @@ _drawScenePickingInstances : function () {
 		var colorID = this._ID2Color(instance.ID);
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uPointSize"                 : this._pointSize,
+			"uPointSize"                 : this._scene.config.pointSize,
 			"uColorID"                   : colorID
 		};
 
@@ -2215,7 +2217,7 @@ _drawScenePickingSpots : function () {
 
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uPointSize"                 : this._pointSize,
+			"uPointSize"                 : this._scene.config.pointSize,
 			"uColorID"                   : [0.0, 0.0, 0.0, 0.0]
 		};
 
@@ -2278,7 +2280,7 @@ _drawScenePickingSpots : function () {
 		var colorID = this._ID2Color(spot.ID);
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uPointSize"                 : this._pointSize,
+			"uPointSize"                 : this._scene.config.pointSize,
 			"uColorID"                   : colorID
 		};
 
@@ -2518,10 +2520,6 @@ onInitialize : function () {
 	this._sceneBboxMin = [0.0, 0.0, 0.0];
 	this._sceneBboxMax = [0.0, 0.0, 0.0];
 	this._sceneBboxCenter = [0.0, 0.0, 0.0];
-
-	// point size control
-	this._pointSize = HOP_DEFAULTPOINTSIZE;
-	this._pointSizeMinMax = [1.0, HOP_DEFAULTPOINTSIZE + 4.0];
 },
 
 onDrag : function (button, x, y, e) {
@@ -2623,14 +2621,14 @@ onMouseWheel: function (wheelDelta, x, y, e) {
 	if(e && e.altKey) { // key "ALT" + MOUSE WHEEL to change pointclouds point set size
 		this._keycombo = true;
 
-		var testValue = this._pointSize;
+		var testValue = this._scene.config.pointSize;
 
-		this._pointSize += wheelDelta/10;
+		this._scene.config.pointSize += wheelDelta/10;
 
-		if (this._pointSize < this._pointSizeMinMax[0]) this._pointSize = this._pointSizeMinMax[0];
-		else if (this._pointSize > this._pointSizeMinMax[1]) this._pointSize = this._pointSizeMinMax[1];
+		if (this._scene.config.pointSize < this._scene.config.pointSizeMinMax[0]) this._scene.config.pointSize = this._scene.config.pointSizeMinMax[0];
+		else if (this._scene.config.pointSize > this._scene.config.pointSizeMinMax[1]) this._scene.config.pointSize = this._scene.config.pointSizeMinMax[1];
 
-		if(testValue!=this._pointSize) {
+		if(testValue!=this._scene.config.pointSize) {
 			diff=true;
 		}
 	}
@@ -2791,7 +2789,7 @@ resetTrackball : function () {
 	this.trackball.reset();
 	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 	this._lightDirection = HOP_DEFAULTLIGHT; // also reset lighting
-//		this._pointSize = HOP_DEFAULTPOINTSIZE; // also reset points size
+//		this._scene.config.pointSize = HOP_DEFAULTPOINTSIZE; // also reset points size
 
 	this.ui.postDrawEvent();
 },
