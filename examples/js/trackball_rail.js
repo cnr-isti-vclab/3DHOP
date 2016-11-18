@@ -36,6 +36,7 @@ RailTrackball.prototype = {
 			pathPoints    : [ [0.0, 0.0, 0.0] ],
 			pathCircular  : false,
 			pathLocked    : false,
+			useSpaceTransform : true,			
 			stepLength    : 0.01,
 			lapTime       : 60.0,
 		}, options);
@@ -48,6 +49,7 @@ RailTrackball.prototype = {
 		this._pathPoints = opt.pathPoints;
 		this._pathCircular = opt.pathCircular;
 		this._pathLocked = opt.pathLocked;
+		this._useSpaceTransform = opt.useSpaceTransform;
 		this._createPath();
 		this._stepLength = opt.stepLength;
 
@@ -93,6 +95,12 @@ RailTrackball.prototype = {
 	},
 
     _createPath: function() {
+		// if circular, add at the end of points a copy of the first one
+		if(this._pathCircular)
+		{
+			this._pathPoints[this._pathPoints.length] = this._pathPoints[0];
+		}
+		
 		this._pathPosNum = this._pathPoints.length;
 		this._pathLen = 0.0;
 
@@ -146,6 +154,14 @@ RailTrackball.prototype = {
 			mypoint = SglVec3.add(this._pathPoints[pp], SglVec3.muls(SglVec3.sub(this._pathPoints[pp+1],this._pathPoints[pp]), myoff));
 		}
 
+		if(this._useSpaceTransform)
+		{
+			var spaceTr = presenter._scene.space.transform.matrix;
+			var pp = SglVec3.to4(mypoint,1);
+			pp = SglMat4.mul4(spaceTr, pp);
+			mypoint = SglVec4.to3(pp);
+		}
+		
 		return [(mypoint[0]-this._sceneCenter[0])*this._sceneRadiusInv, (mypoint[1]-this._sceneCenter[1])*this._sceneRadiusInv, (mypoint[2]-this._sceneCenter[2])*this._sceneRadiusInv];
 	},
 
@@ -482,7 +498,7 @@ RailTrackball.prototype = {
 
 		switch (this._action) {
 			case SGL_TRACKBALL_ROTATE:
-				this._isAnimating = false; //stopping animation
+				//this._isAnimating = false; //stopping animation
 				this.rotate(m, dx, dy);
 				break;
 			case SGL_TRACKBALL_PAN:
