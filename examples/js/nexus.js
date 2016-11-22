@@ -1119,7 +1119,8 @@ Nexus.Renderer.prototype = {
 
 		var sphere = node.sphere
 		if(this._hierarchyVisit_isVisible(sphere.center, node.tightRadius))
-			this._drawSize += node.verticesCount/2; //faces
+			this._drawSize += node.verticesCount*0.8; 
+			//we are adding half of the new faces. (but we are using the vertices so *2)
 
 		if(node.status != Nexus.Renderer._NODE_READY) {
 //			console.log("Stop because node not ready:" + node.status);

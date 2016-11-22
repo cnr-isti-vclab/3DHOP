@@ -39,6 +39,9 @@ const HOP_DEFAULTPOINTSIZE    = 1.0;
 
 Presenter = function (canvas) {
 	this._supportsWebGL = sglHandleCanvas(canvas, this);
+	this._nexusTargetFps = 15.0;
+	this._nexusTargetError = 1.0;
+	this._nexusCacheSize = 12000000;
 };
 
 Presenter.prototype = {
@@ -1536,11 +1539,14 @@ _drawScene : function () {
 			nexus.viewMatrix       = xform.viewMatrix;
 			nexus.projectionMatrix = xform.projectionMatrix;
 			nexus.viewport         = [0, 0, width, height];
-			if(nexus._targetFps && this.ui.framesPerSecond) {
-				var newBudget = (nexus._drawBudget * this.ui.framesPerSecond) / nexus._targetFps;
-				// logic: increase budget only if we stop rendering because of it
-				if(newBudget > nexus._minDrawBudget && (newBudget < nexus._drawBudget || nexus._drawSize > nexus._drawBudget))
-					nexus._drawBudget = 0.9 * nexus._drawBudget + 0.1*newBudget;
+			var fps = this.ui.framesPerSecond;			
+			if(nexus._targetFps && fps) {
+				var newBudget = (nexus.drawBudget * fps) / nexus._targetFps;
+				if(newBudget < nexus._minDrawBudget)
+					newBudget = nexus._minDrawBudget;
+				// logic: increase budget only if we stop rendering because of it (instead of just waiting for download.
+				if(newBudget < nexus.drawBudget || nexus._drawSize > nexus.drawBudget)
+					nexus.drawBudget = 0.9 * nexus.drawBudget + 0.1*newBudget;
 			}
 
 			var program;
@@ -1631,11 +1637,14 @@ _drawScene : function () {
 			nexus.viewMatrix       = xform.viewMatrix;
 			nexus.projectionMatrix = xform.projectionMatrix;
 			nexus.viewport         = [0, 0, width, height];
-			if(nexus._targetFps && this.ui.framesPerSecond) {
-				var newBudget = (nexus._drawBudget * this.ui.framesPerSecond) / nexus._targetFps;
-				// logic: increase budget only if we stop rendering because of it
-				if(newBudget > nexus._minDrawBudget && (newBudget < nexus._drawBudget || nexus._drawSize > nexus._drawBudget))
-					nexus._drawBudget = 0.9 * nexus._drawBudget + 0.1*newBudget;
+			var fps = this.ui.framesPerSecond;			
+			if(nexus._targetFps && fps) {
+				var newBudget = (nexus.drawBudget * fps) / nexus._targetFps;
+				if(newBudget < nexus._minDrawBudget)
+					newBudget = nexus._minDrawBudget;
+				// logic: increase budget only if we stop rendering because of it (instead of just waiting for download.
+				if(newBudget < nexus.drawBudget || nexus._drawSize > nexus.drawBudget)
+					nexus.drawBudget = 0.9 * nexus.drawBudget + 0.1*newBudget;
 			}
 
 			var program;
@@ -1866,8 +1875,7 @@ _drawScene : function () {
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
-		if(this._clipAxis[0] != 0.0)
-		{
+		if(this._clipAxis[0] != 0.0) {	
 			xform.model.push();
 			xform.model.translate([this._clipPoint[0], this._sceneBboxCenter[1], this._sceneBboxCenter[2]]);
 			xform.model.scale([(this._sceneBboxMax[0] - this._sceneBboxMin[0]),
@@ -1893,8 +1901,7 @@ _drawScene : function () {
 			xform.model.pop();
 		}
 
-		if(this._clipAxis[1] != 0.0)
-		{
+		if(this._clipAxis[1] != 0.0) {
 			xform.model.push();
 			xform.model.translate([this._sceneBboxCenter[0], this._clipPoint[1], this._sceneBboxCenter[2]]);
 			xform.model.scale([(this._sceneBboxMax[0] - this._sceneBboxMin[0]),
@@ -1920,8 +1927,7 @@ _drawScene : function () {
 			xform.model.pop();
 		}
 
-		if(this._clipAxis[2] != 0.0)
-		{
+		if(this._clipAxis[2] != 0.0) {
 			xform.model.push();
 			xform.model.translate([this._sceneBboxCenter[0], this._sceneBboxCenter[1], this._clipPoint[2]]);
 			xform.model.scale([(this._sceneBboxMax[0] - this._sceneBboxMin[0]),
@@ -1933,7 +1939,7 @@ _drawScene : function () {
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 				"uViewSpaceLightDirection"   : this._lightDirection,
 				"uColorID"                   : [0.0, 0.0, 1.0, 0.25]
-			};
+			};
 
 			renderer.begin();
 				renderer.setTechnique(CCTechnique);
@@ -2517,7 +2523,7 @@ onInitialize : function () {
 	// plane section
 	this._clipPoint = [0.0, 0.0, 0.0];
 	this._clipAxis  = [0.0, 0.0, 0.0];
-	this._sceneBboxMin = [0.0, 0.0, 0.0];
+	this._sceneBboxMin = [0.0, 0.0, 0.0]
 	this._sceneBboxMax = [0.0, 0.0, 0.0];
 	this._sceneBboxCenter = [0.0, 0.0, 0.0];
 },
@@ -2681,6 +2687,50 @@ toggleDebugMode : function () {
 	this._isDebugging = !this._isDebugging;
 },
 
+setNexusTargetFps: function(fps) {
+	this._nexusTargetFps = fps;
+	var scene = this._scene;
+	if(!scene) return;
+	for (var m in scene.meshes) {
+		var mesh = scene.meshes[m];
+		if(!mesh.isNexus) continue;
+		mesh.renderable._targetFps = fps;
+	}
+},
+
+getNexusTargetFps: function() {
+	return this._nexusTargetFps;
+},
+setNexusTargetError: function(error) {
+	this._nexusTargetError = error;
+	var scene = this._scene;
+	if(!scene) return;
+	for (var m in scene.meshes) {
+		var mesh = scene.meshes[m];
+		if(!mesh.isNexus) continue;
+		mesh.renderable._targetError = error;
+	}
+},
+
+getNexusCacheSize: function() {
+	return this._nexusCacheSize;
+},
+
+setNexusCacheSize: function(size) {
+	this._nexusCacheSize = size;
+	var scene = this._scene;
+	if(!scene) return;
+	for (var m in scene.meshes) {
+		var mesh = scene.meshes[m];
+		if(!mesh.isNexus) continue;
+		mesh.renderable._maxCacheSize = size;
+	}
+},
+
+getNexusCacheSize: function() {
+	return this._nexusCacheSize;
+},
+
 setScene : function (options) {
 	if (!options) return;
 
@@ -2737,9 +2787,10 @@ setScene : function (options) {
 			var nexus = new Nexus.Renderer(gl);
 			mesh.renderable = nexus;
 			mesh.isNexus = true;
-			nexus.targetError = 1.0;
+			nexus.targetError = this._nexusTargetError;
 			//nexus.drawBudget = 0.5*1024*1024;
-			nexus._targetFps = 25;
+			nexus._targetFps = this._nexusTargetFps;
+			nexus._maxCacheSize = this._nexusCacheSize;
 			nexus.onSceneReady = function () { that._onMeshReady(); };
 			nexus.onUpdate = this.ui.postDrawEvent;
 			nexus.open(mesh.url);
@@ -3334,7 +3385,7 @@ setClippingPointXYZ: function(clx, cly, clz) {
 	this._calculateBounding();
 
 	if(clx<0.0) clx=0.0; else if(clx>1.0) clx=1.0;
-	if(cly<0.0) cly=0.0; else if(cly>1.0) cly=1.0;
+	if(cly<0.0) cly=0.0; else if(cly>1.0) cly=1.0
 	if(clz<0.0) clz=0.0; else if(clz>1.0) clz=1.0;
 
 	nClipPoint[0] = this._sceneBboxMin[0] + clx * (this._sceneBboxMax[0] - this._sceneBboxMin[0]);
