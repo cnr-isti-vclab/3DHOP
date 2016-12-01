@@ -39,9 +39,6 @@ const HOP_DEFAULTPOINTSIZE    = 1.0;
 
 Presenter = function (canvas) {
 	this._supportsWebGL = sglHandleCanvas(canvas, this);
-	this._nexusTargetFps = 15.0;
-	this._nexusTargetError = 1.0;
-	this._nexusCacheSize = 12000000;
 };
 
 Presenter.prototype = {
@@ -2438,6 +2435,11 @@ onInitialize : function () {
 	this.xform      = new SglTransformationStack();
 	this.viewMatrix = SglMat4.identity();
 
+	// nexus parameters
+	this._nexusTargetFps = 15.0;
+	this._nexusTargetError = 1.0;
+	this._nexusCacheSize = 100000000;	
+	
 	// shaders
 	this.faceNXSProgram = this._createStandardFaceNXSProgram();
 	this.pointNXSProgram = this._createStandardPointNXSProgram();
