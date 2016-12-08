@@ -130,6 +130,17 @@ function anchorPanels() {
 
 // +++ INTERFACE SWITCHING FUNCTIONS +++ //
 
+function solidColorSwitch(on) {
+  if(on){
+    $('#solid_color').css("visibility", "hidden");
+    $('#solid_color_on').css("visibility", "visible");
+  }
+  else{
+    $('#solid_color_on').css("visibility", "hidden");
+    $('#solid_color').css("visibility", "visible");
+  }
+}
+
 function lightSwitch(on) {
   if(on === undefined) on = presenter.isLightTrackballEnabled();
 

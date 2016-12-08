@@ -28,6 +28,8 @@
   <img id="home"     title="Home"                  src="skins/dark/home.png"   /><br/>
   <img id="zoomin"   title="Zoom In"               src="skins/dark/zoomin.png" /><br/>
   <img id="zoomout"  title="Zoom Out"              src="skins/dark/zoomout.png"/><br/>
+  <img id="solid_color" title="Disable Solid Color" src="skins/dark/color_on.png" style="position:absolute; visibility:hidden;"/>
+  <img id="solid_color_on" title="Enable Solid Color" src="skins/dark/color.png"/><br/>
   <img id="light_on" title="Disable Light Control" src="skins/dark/light_on.png" style="position:absolute; visibility:hidden;"/>
   <img id="light"    title="Enable Light Control"  src="skins/dark/light.png"/><br/>
   <img id="full_on"  title="Exit Full Screen"      src="skins/dark/full_on.png" style="position:absolute; visibility:hidden;"/>
@@ -45,7 +47,7 @@ function setup3dhop() {
 
 	presenter.setScene({
 		meshes: {
-			"mesh_1" : { url: "models/multires/gargo.nxs" }
+			"mesh_1" : { url: "models/multires/scene_dense_mesh_refine_texture_c.nxs" }
 		},
 		modelInstances : {
 			"model_1" : { mesh : "mesh_1" }
@@ -68,6 +70,7 @@ function actionsToolbar(action) {
 	if(action=='home') presenter.resetTrackball(); 
 	else if(action=='zoomin') presenter.zoomIn();
 	else if(action=='zoomout') presenter.zoomOut(); 
+	else if(action=='solid_color' || action=='solid_color_on') solidColorSwitch(!presenter.solidColor());
 	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
 	else if(action=='full'  || action=='full_on') fullscreenSwitch(); 
 }

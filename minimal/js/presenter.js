@@ -275,6 +275,7 @@ Presenter.prototype = {
                                                                                   \n\
             uniform   vec3 uViewSpaceLightDirection;                              \n\
             uniform   float uAlpha;                                               \n\
+            uniform   bool uUseLight;                                             \n\
             uniform   bool uUseSolidColor;                                        \n\
             uniform   vec3 uSolidColor;                                           \n\
             uniform   vec3 uClipPoint;                                            \n\
@@ -320,7 +321,8 @@ Presenter.prototype = {
 			    else if((uClipAxis[1] == -1.0)&&((vModelPos[1]-uClipPoint[1])<uClipColorSize)) diffuse = uClipColor; \n\
 			    if((uClipAxis[2] == 1.0)&&((uClipPoint[2]-vModelPos[2])<uClipColorSize)) diffuse = uClipColor;  \n\
 			    else if((uClipAxis[2] == -1.0)&&((vModelPos[2]-uClipPoint[2])<uClipColorSize)) diffuse = uClipColor; \n\
-				                                                                  \n\                gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
+				                                                                  \n\
+                gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
 	       		gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));	  \n\
             }                                                                     \n\
         ");
@@ -345,6 +347,7 @@ Presenter.prototype = {
                 "uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 				"uPointSize"                 : 1.0,
 				"uAlpha"                     : 1.0,
+				"uUseLight"                  : true,
 				"uUseSolidColor"             : false,
 				"uSolidColor"                : [1.0, 1.0, 1.0],
 				"uClipPoint"                 : [0.0, 0.0, 0.0],
@@ -396,6 +399,7 @@ Presenter.prototype = {
                                                                                   \n\
             uniform   vec3 uViewSpaceLightDirection;                              \n\
             uniform   float uAlpha;                                               \n\
+            uniform   bool uUseLight;                                             \n\
             uniform   bool uUseSolidColor;                                        \n\
             uniform   vec3 uSolidColor;                                           \n\
             uniform   vec3 uClipPoint;                                            \n\
@@ -418,26 +422,31 @@ Presenter.prototype = {
 			    if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;  \n\
 			    else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
 				                                                                  \n\
-				vec3  diffuse= vColor.rgb;                                        \n\
-				if(uUseSolidColor)                                                \n\
+				vec3  diffuse = vec3(1.0, 1.0, 1.0);                              \n\
+				if(uUseSolidColor) {                                              \n\
                   if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
                     diffuse = vColor.aaa;                                         \n\
                   else                                                            \n\
                     diffuse = uSolidColor;                                        \n\
-																				  \n\
-				if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
-  				  vec3  normal  = normalize(vNormal);                             \n\
-                  float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
-					if(gl_FrontFacing)                                            \n\
-						diffuse = diffuse * max(0.0, nDotL);                      \n\
-					else                                                          \n\
-						diffuse = diffuse * vec3(0.4, 0.3, 0.3) * abs(nDotL);     \n\
                 }                                                                 \n\
-				else if(!gl_FrontFacing)                                          \n\
-					diffuse = diffuse * vec3(0.4, 0.3, 0.3);                      \n\
+				else if(uUseLight)                                                \n\
+                	diffuse = vColor.rgb;                                         \n\
+																				  \n\
+				if(uUseLight) {                                                   \n\
+				  if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
+					vec3  normal  = normalize(vNormal);                             \n\
+                    float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
+	  				if(gl_FrontFacing)                                            \n\
+	  					diffuse = diffuse * max(0.0, nDotL);                      \n\
+	  				else                                                          \n\
+	  					diffuse = diffuse * vec3(0.4, 0.3, 0.3) * abs(nDotL);     \n\
+                  }                                                                 \n\
+	  			  else if(!gl_FrontFacing)                                          \n\
+	  				diffuse = diffuse * vec3(0.4, 0.3, 0.3);                      \n\
+                }                                                                 \n\
 																				  \n\
 				if((vTextureCoord.x != 0.0) && (!uUseSolidColor))                 \n\
-                	diffuse = diffuse * texture2D(uSampler, vTextureCoord).xyz;   \n\
+                  diffuse = diffuse * texture2D(uSampler, vTextureCoord).xyz;     \n\
 				                                                                  \n\
 			    if((uClipAxis[0] == 1.0)&&((uClipPoint[0]-vModelPos[0])<uClipColorSize)) diffuse = uClipColor;  \n\
 			    else if((uClipAxis[0] == -1.0)&&((vModelPos[0]-uClipPoint[0])<uClipColorSize)) diffuse = uClipColor; \n\
@@ -469,6 +478,7 @@ Presenter.prototype = {
 				"uModelMatrix"               : SglMat4.identity(),
                 "uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 				"uAlpha"                     : 1.0,
+				"uUseLight"                  : true,
 				"uUseSolidColor"             : false,
 				"uSolidColor"                : [1.0, 1.0, 1.0],
 				"uClipPoint"                 : [0.0, 0.0, 0.0],
@@ -739,8 +749,9 @@ Presenter.prototype = {
 			fragmentShader : "\
 				precision highp float;                                                \n\
 																					  \n\
-				uniform   vec3      uViewSpaceLightDirection;                         \n\
-				uniform   float     uAlpha;                                           \n\
+				uniform   vec3 uViewSpaceLightDirection;                              \n\
+				uniform   float uAlpha;                                               \n\
+                uniform   bool uUseLight;                                             \n\
                 uniform   bool uUseSolidColor;                                        \n\
                 uniform   vec3 uSolidColor;                                           \n\
 				uniform   vec3 uClipAxis;                                             \n\
@@ -800,6 +811,7 @@ Presenter.prototype = {
 				"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 				"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 				"uAlpha"                     : { semantic : "uAlpha",                     value : 1.0 },
+				"uUseLight"                  : { semantic : "uUseLight",                  value : false },
 				"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : true },
 				"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
 				"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
@@ -1570,7 +1582,8 @@ Presenter.prototype = {
 				"uViewSpaceLightDirection"   : this._lightDirection,
 				"uPointSize"                 : this._pointSize,
 				"uAlpha"                     : 1.0,
-				"uUseSolidColor"             : instance.useSolidColor,
+				"uUseLight"                  : this._useLight,
+				"uUseSolidColor"             : this._solidColor,
 				"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
 				"uClipPoint"                 : this._clipPoint,
 				"uClipAxis"                  : thisClipAxis,
@@ -1657,7 +1670,8 @@ Presenter.prototype = {
 				"uViewSpaceLightDirection"   : this._lightDirection,
 				"uPointSize"                 : this._pointSize,
 				"uAlpha"                     : instance.alpha,
-				"uUseSolidColor"             : instance.useSolidColor,
+				"uUseLight"                  : this._useLight,
+				"uUseSolidColor"             : this._solidColor,
 				"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
 				"uClipPoint"                 : [0.0, 0.0, 0.0],
 				"uClipPoint"                 : this._clipPoint,
@@ -1890,7 +1904,8 @@ Presenter.prototype = {
 			gl.depthMask(true);
 			gl.disable(gl.DEPTH_TEST);
 			
-			xform.model.pop();		}
+			xform.model.pop();
+		}
 
 		// draw cliping plane (if any)
 		if(config.showClippingPlanes)
@@ -2022,7 +2037,8 @@ Presenter.prototype = {
 			if (!instance.visible) continue;
 
 			// GLstate setup
-			gl.enable(gl.DEPTH_TEST);
+			gl.enable(gl.DEPTH_TEST);
+
 
 			xform.model.push();
 			xform.model.multiply(space.transform.matrix);
@@ -2480,6 +2496,9 @@ Presenter.prototype = {
 		this.xform      = xform;
 		this.viewMatrix = viewMatrix;
 
+		this._useLight = false;
+		this._solidColor = false;
+		
 		this._lightDirection = HOP_DEFAULTLIGHT;
 
 		this.sceneCenter = [0.0, 0.0, 0.0];
@@ -2812,6 +2831,9 @@ Presenter.prototype = {
 	resetTrackball : function () {
 		this.trackball.reset();
 		this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
+		
+		this._useLight = false;
+		this._solidColor = false;
 		
 		this._lightDirection = HOP_DEFAULTLIGHT; // also reset lighting
 //		this._pointSize = HOP_DEFAULTPOINTSIZE; // also reset points size
@@ -3436,7 +3458,8 @@ Presenter.prototype = {
 		this.ui.postDrawEvent();
     },
 
-	_calculateBounding: function() {		var meshes    = this._scene.meshes;
+	_calculateBounding: function() {
+		var meshes    = this._scene.meshes;
 		var instances = this._scene.modelInstances;
 		this._sceneBboxMin = SglVec3.maxNumber();
 		this._sceneBboxMax = SglVec3.minNumber();
@@ -3507,6 +3530,15 @@ Presenter.prototype = {
     zoomOut: function() {
        this.onMouseWheel(-1);
     },
+
+//-----------------------------------------------------------------------------	
+
+	solidColor : function() {
+		this._useLight = !this._useLight;
+		this._solidColor = !this._solidColor;
+		this.ui.postDrawEvent();
+		return this._solidColor;
+	},
 
 //-----------------------------------------------------------------------------	
 	
