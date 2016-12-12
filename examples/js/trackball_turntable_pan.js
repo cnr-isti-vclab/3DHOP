@@ -377,9 +377,10 @@ TurntablePanTrackball.prototype = {
 		Yvec = SglMat4.mul4(SglMat4.rotationAngleAxis(this._theta, [1.0, 0.0, 0.0]), Yvec);
 		Zvec = SglMat4.mul4(SglMat4.rotationAngleAxis(this._theta, [1.0, 0.0, 0.0]), Zvec);
 
-		this._panX += (dx * Xvec[0]) + (dy * Xvec[1]);
-		this._panY += (dx * Yvec[0]) + (dy * Yvec[1]);
-		this._panZ += (dx * Zvec[0]) + (dy * Zvec[1]);
+		var panSpeed = Math.max(Math.min(1.5, this._distance),0.05);		
+		this._panX += ((dx * Xvec[0]) + (dy * Xvec[1])) * panSpeed;
+		this._panY += ((dx * Yvec[0]) + (dy * Yvec[1])) * panSpeed;
+		this._panZ += ((dx * Zvec[0]) + (dy * Zvec[1])) * panSpeed;
 
 		//clamping
 		this._panX = this.clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
