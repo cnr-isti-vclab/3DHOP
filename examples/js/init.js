@@ -196,6 +196,19 @@ function measureSwitch(on) {
   }
 }
 
+function colorSwitch(on) {
+  if(on === undefined) on = $('#color').css("visibility")=="visible";
+
+  if(on) {
+	$('#color').css("visibility", "hidden");
+	$('#color_on').css("visibility", "visible");
+  }
+  else {
+	$('#color_on').css("visibility", "hidden");
+	$('#color').css("visibility", "visible");			
+  }
+}
+
 function sectiontoolSwitch(on) {
   if(on === undefined) on = $('#sections').css("visibility")=="visible";
 
