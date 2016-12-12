@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -611,6 +611,8 @@ Nexus.Renderer = function (gl) {
 	this._pmat = SglMat4.identity();
 	this._vp   = [ 0.0, 0.0, 1.0, 1.0 ];
 
+	this._mode = 0;
+
 	this._reset();
 
 	this._updateView();
@@ -677,6 +679,10 @@ Nexus.Renderer.prototype = {
 		path = path.replace('nexus.js', 'meshcoder_worker.js');
 		this._worker = new Worker(path);
 		this._worker.onmessage = function(e) { t._workerFinished(e); };
+
+		/**Safari PATCH**/
+		/**/(sayswho()[0]==='Safari' && sayswho()[1]<9) ? (this._cachePatch = true) : (this._cachePatch = false);
+		/**Safari PATCH**/
 	},
 
 	_requestHeader : function () {
@@ -738,6 +744,16 @@ Nexus.Renderer.prototype = {
 
 		this._textures = new Nexus.TextureIndex();
 		offset += this._textures.import(header.texturesCount, view, offset, littleEndian);
+
+		this.renderMode = ["POINT"];
+		if (header.signature.face.hasIndex) this.renderMode.unshift("FILL");
+
+		this.setPrimitiveMode(this.renderMode[0]);
+
+		this.hasPosition = header.signature.vertex.hasPosition; 
+		this.hasNormal   = header.signature.vertex.hasNormal; 
+		this.hasColor    = header.signature.vertex.hasColor; 
+		this.hasTexture  = header.signature.vertex.hasTexCoord; 
 	},
 
 	_openReady : function() {
@@ -780,8 +796,7 @@ Nexus.Renderer.prototype = {
 	url: function() {
 		var url = this._url;
 		/**Safari PATCH**/
-		/**/if (sayswho()[0]==='Safari' && sayswho()[1]!=='9') 
-		/**/  url = this._url + '?' + Math.random();
+		/**/if (this._cachePatch) url = this._url + '?' + Math.random();
 		/**Safari PATCH**/
 		return url;
 	},
@@ -1104,7 +1119,8 @@ Nexus.Renderer.prototype = {
 
 		var sphere = node.sphere
 		if(this._hierarchyVisit_isVisible(sphere.center, node.tightRadius))
-			this._drawSize += node.verticesCount/2; //faces
+			this._drawSize += node.verticesCount*0.8; 
+			//we are adding half of the new faces. (but we are using the vertices so *2)
 
 		if(node.status != Nexus.Renderer._NODE_READY) {
 //			console.log("Stop because node not ready:" + node.status);
@@ -1215,11 +1231,12 @@ Nexus.Renderer.prototype = {
 			this._signalUpdate();
 		}
 	},
+
 	_createTextureHandler : function (tex) {
 		var that = this;
 
 		return function () {
-			//TODO USE REF COUNTER INSTeAD OF LIST BOTH FOR NODES AND FOR TEXTURES
+			//TODO USE REF COUNTER INSTEAD OF LIST BOTH FOR NODES AND FOR TEXTURES
 			var blob = tex.request.response; 
 			var urlCreator = window.URL || window.webkitURL;
 			tex.img = document.createElement('img');
@@ -1256,6 +1273,8 @@ Nexus.Renderer.prototype = {
 					} 
 					if(isReady) {
 						node.status = Nexus.Renderer._NODE_READY;
+						//WAKEUP CALL DRAFT
+						that._signalUpdate();
 					}
 				}
 			};
@@ -1345,6 +1364,7 @@ Nexus.Renderer.prototype = {
 				var patch = patches[i];
 				if(patch.texture == 0xffffffff) continue;
 				var tex = this._textures.items[patch.texture];
+				tex.nodes.push(node);
 				var that = this;
 				if(tex.status == Nexus.Renderer._NODE_NONE) {
 					tex.img = new Image;
@@ -1356,8 +1376,6 @@ Nexus.Renderer.prototype = {
 					tex.request.onload = this._createTextureHandler(tex);
 					tex.request.send();
 				}
-				//add a 'wakeup call'
-				tex.nodes.push(node);
 			}
 		}
 		this._candidateNodes = [];
@@ -1426,7 +1444,6 @@ Nexus.Renderer.prototype = {
 	_render : function () {
 		var order = [0, 3, 1, 2, 4];
 
-
 		var gl = this._gl;
 		gl.glDrawElements = gl._spidergl.wn._ext.glFunctions.drawElements;
 
@@ -1442,9 +1459,10 @@ Nexus.Renderer.prototype = {
 		gl.vertexAttrib4fv(Nexus.VertexElement.COLOR, [0.8, 0.8, 0.8, 1.0]);
 
 		if (Nexus.Debug.nodes) {
-			if (!vertexAttributes[Nexus.VertexElement.COLOR].isNull) {
+			if (!vertexAttributes[Nexus.VertexElement.COLOR].isNull) 
 				gl.disableVertexAttribArray(Nexus.VertexElement.COLOR);
-			}
+			if (!vertexAttributes[Nexus.VertexElement.TEXCOORD].isNull) 
+				gl.disableVertexAttribArray(Nexus.VertexElement.TEXCOORD);
 		}
 
 		var nodes = this._nodes.items;
@@ -1458,7 +1476,7 @@ Nexus.Renderer.prototype = {
 			if (!selectedNodes[i]) continue;
 
 			var node    = nodes[i];
-			if(this._header.signature.face.hasIndex) {
+			if(this._mode != 0) {
 				var skipped = true;
 				for (var p = node.firstPatch; p < node.lastPatch; ++p) {
 					var patch = patches[p];
@@ -1490,21 +1508,23 @@ Nexus.Renderer.prototype = {
 			if (Nexus.Debug.nodes) {
 				gl.vertexAttrib4fv(Nexus.VertexElement.COLOR, node.color);
 			}
-			if(!this._header.signature.face.hasIndex) {
+			if(this._mode == 0) {
                 var pointsize = Math.floor(0.30*node.renderError);
-                if(pointsize > 3) pointsize = 3;
+                if(pointsize > 1) pointsize = 1;
 				gl.vertexAttrib1fv(Nexus.VertexElement.DATA0, [pointsize]);
 			}
 			if (Nexus.Debug.draw) continue;
 
 			//point cloud do not need patches
-			if(!this._header.signature.face.hasIndex) {
+			if(this._mode == 0) {
 				var fraction = (node.renderError/this.currentError - 1);
 				if(fraction > 1) fraction = 1;
 
 				var count = fraction * (node.verticesCount);
-				gl.drawArrays(gl.POINTS, 0, count);
-				this._rendered += count;
+				if(count!=0) {
+					gl.drawArrays(gl.POINTS, 0, count);
+					this._rendered += count;
+				}
 				continue;
 			}
 
@@ -1563,6 +1583,19 @@ Nexus.Renderer.prototype = {
 		this._beginRender();
 		this._render();
 		this._endRender();
+	},
+
+	setPrimitiveMode : function (mode) {
+		switch(mode) {
+			case "POINT":
+				this._mode = 0;
+				break;
+			case "FILL":
+				this._mode = 4;
+				break;
+			default:
+				this._mode = 0;
+		}
 	}
 };
 
