@@ -2438,7 +2438,7 @@ onInitialize : function () {
 	// nexus parameters
 	this._nexusTargetFps = 15.0;
 	this._nexusTargetError = 1.0;
-	this._nexusCacheSize = 100000000;	
+	this._nexusCacheSize = 50000000;	
 	
 	// shaders
 	this.faceNXSProgram = this._createStandardFaceNXSProgram();
