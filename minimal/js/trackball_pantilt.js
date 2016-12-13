@@ -318,8 +318,9 @@ PanTiltTrackball.prototype = {
     },
 
     pan: function(m, dx, dy) {
-      this._panX -= dx/2.0;
-      this._panY -= dy/2.0;
+      var panSpeed = Math.max(Math.min(1.5, this._distance),0.05);		
+      this._panX -= dx/2.0 * panSpeed; 
+      this._panY -= dy/2.0 * panSpeed;
       this._panX = this.clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
       this._panY = this.clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
     },
