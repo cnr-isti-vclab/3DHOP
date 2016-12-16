@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-20 July 2016
+19 December 2016
 
 #### TEAM
 ---------
@@ -22,29 +22,29 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 -------------
 
 - **documentation folder** -> the 3DHOP basic documentation
-  - *img*           -> folder with the 3DHOP basic documentation graphic elements files  
-  - *docs.html*     -> 3DHOP basic documentation HTML file  
+  - *img*                  -> folder with the 3DHOP basic documentation graphic elements files  
+  - *docs.html*            -> 3DHOP basic documentation HTML file  
 
 
-- **minimal folder** -> the 3DHOP minimal version, a ready-to-use viewer in a self-contained folder
-  - *js*            -> folder with the 3DHOP source JavaScript files
-  - *models*        -> folder with the 3D model
-  - *skins*         ->  folder with the toolbar and background graphic elements files
-  - *stylesheet*    ->  folder with the 3DHOP CSS file
-  - *index.html*    ->  3DHOP viewer HTML file  
+- **minimal folder**   -> the 3DHOP minimal version, a ready-to-use viewer in a self-contained folder
+  - *js*               -> folder with the 3DHOP source JavaScript files
+  - *models*           -> folder with the 3D model
+  - *skins*            -> folder with the toolbar and background graphic elements files
+  - *stylesheet*       -> folder with the 3DHOP CSS file
+  - *index_ ... .html* -> 3DHOP templates HTML files  
 
 
-- **examples folder** -> all the 3DHOP examples/howto shown in the 3DHOP website
-  - *js*            -> folder with the 3DHOP source JavaScript files
-  - *models*        -> folder with the single- and multi-resolution 3D models
-  - *skins*         -> folder with the toolbar and background graphic elements files
-  - *stylesheet*    -> folder with the 3DHOP CSS file
+- **examples folder**  -> all the 3DHOP examples/howto shown in the 3DHOP website
+  - *js*               -> folder with the 3DHOP source JavaScript files
+  - *models*           -> folder with the single- and multi-resolution 3D models
+  - *skins*            -> folder with the toolbar and background graphic elements files
+  - *stylesheet*       -> folder with the 3DHOP CSS file
   - *HOWTO_ ... .html* -> 3DHOP HOW-TOs HTML files
 
 
-- **text files** -> basic info texts
+- **text files**       -> basic info texts
   - *CHANGELOG.txt/md* -> the list of the changes in this 3DHOP release
-  - *LICENSE.txt*   -> the GPL license file
+  - *LICENSE.txt*      -> the GPL license file
   - *README.txt/md*    -> this file
 
 #### HOW TO INSTALL
@@ -68,8 +68,9 @@ Once installed the Web server there are just a few step to run 3DHOP:
 
 2. **Browser Tweaking**   
 The simplest way to test the 3DHOP features on your PC _without_ installing any other software, is to allow your browser to access local files on your file system (this practice is disabled by default due to security risk).
-The trick to solve this issue is simple, but is restricted only to the Google CHROME or OPERA browsers.
-On a Windows PC, here are the instructions:
+The trick to solve this issue is simple, but is restricted only to the Google CHROME or OPERA browsers. Here are the instructions (more detailed info about the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/download/3DHOPsite_deployment.pdf)).
+   
+   For Windows: 
    + browse to google CHROME (or OPERA) folder in your local file system; 
    + right click on the CHROME (or OPERA) executable file, and select "send to" Desktop as link in the contextual menu;
    + browse to your desktop;
@@ -77,20 +78,19 @@ On a Windows PC, here are the instructions:
    + in the just opened properties window select the "shortcut" tab and edit the "target" field adding to the end of the line "--allow-file-access-from-files", then click on "apply";
    + open your browser from the just edited link on the desktop (now the browser should be enabled to open local files);
    + download and unpack 3DHOP on your PC;
-   + browse the 3DHOP folder and simply drag and drop the desired HTML files inside the opened browser and you are done!  
-For Linux:
-   + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter
+   + browse the 3DHOP folder and simply drag and drop the desired HTML files inside the opened browser and you are done!
+    
+   For Linux:
+   + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter;
    OR
-   + it is possible to create an alias or a desktop shortcut with the parameter, similarly to the Windows PC
-For MacOS:
-   + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter. For example, to use Chrome, the command is: "open /Applications/Google\ Chrome.app --args --allow-file-access-from-files"
+   + it is possible to create an alias or a desktop shortcut with the parameter, similarly to the Windows PC.
+    
+   For Mac:
+   + from a shell, it is possible to launch the browsers with the "--allow-file-access-from-files" parameter. For example, to use Chrome, the command is: "open /Applications/Google\ Chrome.app --args --allow-file-access-from-files";
    OR
-   + create an appleScript using Automator, that launch the browser using the appropriate parameter 
+   + create an appleScript using Automator, that launch the browser using the appropriate parameter.
    
    [Tip: on FIREFOX, EDGE and SAFARI browsers, there is no simple way to enable the local files access (so, it is recommended to install a Web Server if you need to work with these browser locally). However, by default it supports the use of 3D models in Ply format, so you can use 3DHOP in a limited mode, restricted to single resolution models, but without to perform any procedure or to install nothing.]  
-
-More detailed info on the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/download/3DHOPsite_deployment.pdf).  
-
 
 #### TECHNICAL INFO
 -------------------

@@ -205,7 +205,7 @@ function colorSwitch(on) {
   }
   else {
 	$('#color_on').css("visibility", "hidden");
-	$('#color').css("visibility", "visible");			
+	$('#color').css("visibility", "visible");
   }
 }
 

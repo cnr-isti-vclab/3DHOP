@@ -2714,8 +2714,8 @@ setNexusTargetError: function(error) {
 	}
 },
 
-getNexusCacheSize: function() {
-	return this._nexusCacheSize;
+getNexusTargetError: function() {
+	return this._nexusTargetError;
 },
 
 setNexusCacheSize: function(size) {
@@ -2856,9 +2856,9 @@ setTrackballPosition : function (newposition) {
 	this.ui.postDrawEvent();
 },
 
-animateToTrackballPosition : function (newposition) {
+animateToTrackballPosition : function (newposition, newtime) {
 	this.ui.animateRate = 30;
-	this.trackball.animateToState(newposition);
+	this.trackball.animateToState(newposition, newtime);
 	this.ui.postDrawEvent();
 },
 

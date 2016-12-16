@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-19 November 2016
+19 December 2016
 
 #### TEAM
 ---------
@@ -21,46 +21,38 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 #### CHANGELOG FILE
 -------------------
 
-*Developer*
+*Version 4.1*  
 
 **Main Changes**
 
-* Updated HANDLER "_onEndMeasurement". 
-Now the function has two more parameters, containing the first and second point picked: this._onEndMeasurement(this.measurement, this._pointA, this._pointB);
-This is helpful to also display the picked points, or if the user wants to write its own distance calculation, for example, to return only the distance along the X axis.
-The change is retro-compatible, and is perfectly safe to ignore the two new parameters, using a single parameter function as a handler (thus getting only the measured distance);
-
-* Added CAMERA MODE: ORTHOGRAPHIC.
-The camera may be set at startup (in the "space" object) or runtime (there is a toggle and two set functions).
-Trackball should implement a "get distance" function, that returns the camera distance from the scene (needed to have zoom in the orthographic mode). In the basic distribution trackballs, this is enough: get distance() { return this._distance; };
-
-*Version 4.0*  
-
-**Main Changes**
-
-* Added PLANES SECTIONING TOOL;
-* Added POINT PICKING TOOL;
-* Updated MEASUREMENT TOOL;
-* Added SCENE CENTERING features;
-* Added easier SPECIFICATION OF TRANSFORMATION functions;
-* Added POINT SIZE render control shortcut (MeshLab like);
-* Added DOUBLE CLICK TO GO camera control to pan-trackball(MeshLab like);
-* Added multiresolution SINGLE TEXTURE MESHES support;
-* Updated RENDERING and DATA STREAMING system;
-* Updated RENDERING and DATA STREAMING parallelization;
-* Updated MOUSE WHEEL ZOOM control;
-* Updated SAFARI browser patch;
-* Added new TOOLBAR button icons set;  
+* Fixed "MISSING PATCH" BUG in NEXUS models rendering;
+* Fixed "TEXTURE WAKE UP" BUG in NEXUS models rendering;
+* Fixed SAFARI browser PATCH for NEXUS models rendering;
+* Fixed MINOR issues in TRACKBALL SET;
+* Updated NEXUS RENDERING and MEMORY ALLOCATION system;
+* Updated and optimized SHADERS SET;
+* Updated TRACKBALL PAN SPEED;
+* Updated COLOR CODED ID feature;
+* Updated MEASUREMENT HANDLER;
+* Added STYLESHEET for viewer informative PANELS;
+* Added ALL TOOL viewer TEMPLATE;
+* Added NEW SHADER for clusters of points/lines;
+* Added TOOLBAR COLOR SWITCH function;
+* Added POINTSIZE setup in SCENE CONFIG;
+* Added mouse RIGHT BUTTON PAN feature;
+* Added REPAINT function;
+* Added support for TEXTURES and POINT CLOUDS for PLY models;
+* Added ORTHOGRAPHIC CAMERA mode and functions;
+* Minified spidergl.js file;
+* Cleanup code and indentation in various .js files;
 
 **Files Added/Modified**
 
-* Added "HOWTO_9.0_planes_sections.html" file;
-* Added "HOWTO_8.1_point_picking.html" file;
-* Updated"HOWTO_8.0_measurement_tool.html" file;
-* Added "HOWTO_4.1_complex_scene" file;
-* Added "trackball_rail.js" file;
+* Added "3DHpanels.css" file;
+* Added "index_all_tools.html" file;
+* Updated "index.html" file and renamed "index_no_tools.html";
+* Updated "HOWTO_8.1_point_picking.html" file;
+* Updated "HOWTO_8.0_measurement_tool.html" file;
 * Updated all "*.js" files;
 * Updated "3dhop.css" file;
 * Updated "docs.html" file;
-* Updated "skins" directory;
-  

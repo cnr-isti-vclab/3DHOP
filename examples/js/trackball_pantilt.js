@@ -40,6 +40,7 @@ PanTiltTrackball.prototype = {
 			minMaxPanY    : [-0.7, 0.7],
 			minMaxAngleX  : [-70.0, 70.0],
 			minMaxAngleY  : [-70.0, 70.0],
+			animationTime : 1.0
 		}, options);
 
 		this._action = SGL_TRACKBALL_NO_ACTION;
@@ -73,6 +74,7 @@ PanTiltTrackball.prototype = {
 
 		//animation data
 		this._isAnimating = false;
+		this._animationTime = this._defaultAnimationTime = opt.animationTime;
 		this._speedPanX = 0.0;
 		this._speedPanY = 0.0;
 		this._speedAngleX = 0.0;
@@ -94,7 +96,7 @@ PanTiltTrackball.prototype = {
 		this.reset();
 	},
 
-    clamp: function(value, low, high) {
+    _clamp: function(value, low, high) {
       if(value < low) return low;
       if(value > high) return high;
       return value;
@@ -131,16 +133,16 @@ PanTiltTrackball.prototype = {
 		this._distance = newstate[4];
 
 		//check limits
-		this._panX = this.clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
-		this._panY = this.clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
-		this._angleX = this.clamp(this._angleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
-		this._angleY = this.clamp(this._angleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
-		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
+		this._panX = this._clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
+		this._panY = this._clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
+		this._angleX = this._clamp(this._angleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
+		this._angleY = this._clamp(this._angleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
+		this._distance = this._clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
 
 		this._computeMatrix();
 	},
 
-	animateToState : function (newstate) {
+	animateToState : function (newstate, newtime) {
 		// stop animation
 		this._isAnimating = false;
 
@@ -150,12 +152,15 @@ PanTiltTrackball.prototype = {
 		this._targetAngleY = sglDegToRad(newstate[3]);
 		this._targetDistance = newstate[4];
 
+		if(newtime) this._animationTime = newtime;
+		else this._animationTime = this._defaultAnimationTime;
+
 		//check limits
-		this._targetPanX = this.clamp(this._targetPanX, this._minMaxPanX[0], this._minMaxPanX[1]);
-		this._targetPanY = this.clamp(this._targetPanY, this._minMaxPanY[0], this._minMaxPanY[1]);
-		this._targetAngleX = this.clamp(this._targetAngleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
-		this._targetAngleY = this.clamp(this._targetAngleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
-		this._targetDistance = this.clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
+		this._targetPanX = this._clamp(this._targetPanX, this._minMaxPanX[0], this._minMaxPanX[1]);
+		this._targetPanY = this._clamp(this._targetPanY, this._minMaxPanY[0], this._minMaxPanY[1]);
+		this._targetAngleX = this._clamp(this._targetAngleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
+		this._targetAngleY = this._clamp(this._targetAngleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
+		this._targetDistance = this._clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
 
 		// setting base velocities
 		this._speedPanX = 2.0;
@@ -172,7 +177,7 @@ PanTiltTrackball.prototype = {
 		var timeDistance = Math.abs((this._targetDistance - this._distance) / this._speedDistance);
 
 		var maxtime = Math.max( timePanX, Math.max( timePanY, Math.max( timeAngleX, Math.max( timeAngleY, timeDistance ) ) ));
-		maxtime = this.clamp(maxtime, 0.5, 2.0);
+		maxtime = this._clamp(maxtime, 0.5, 2.0);
 
 		this._speedPanX *= timePanX / maxtime;
 		this._speedPanY *= timePanY / maxtime;
@@ -197,11 +202,11 @@ PanTiltTrackball.prototype = {
 	tick : function (dt) {
 		if(!this._isAnimating) return false;
 
-		var deltaPanX = this._speedPanX * dt;
-		var deltaPanY = this._speedPanY * dt;
-		var deltaAngleX = this._speedAngleX * dt;
-		var deltaAngleY = this._speedAngleY * dt;
-		var deltaDistance = this._speedDistance * dt;
+		var deltaPanX = this._speedPanX * dt / this._animationTime;
+		var deltaPanY = this._speedPanY * dt / this._animationTime;
+		var deltaAngleX = this._speedAngleX * dt / this._animationTime;
+		var deltaAngleY = this._speedAngleY * dt / this._animationTime;
+		var deltaDistance = this._speedDistance * dt / this._animationTime;
 
 		var diffPanX = this._targetPanX - this._panX;
 		var diffPanY = this._targetPanY - this._panY;
@@ -249,7 +254,7 @@ PanTiltTrackball.prototype = {
 				if(this._angleX == this._targetAngleX)
 					if(this._angleY == this._targetAngleY)
 						if(this._distance == this._targetDistance)
-							this._isAnimating = false;
+								{ this._animationTime = this._defaultAnimationTime; this._isAnimating = false; }
 
 		this._computeMatrix();
 		return true;
@@ -257,7 +262,7 @@ PanTiltTrackball.prototype = {
 
 	get action()  { return this._action; },
 
-	set action(a) { if(this._action != a) this._new_action = true; this._action = a; },
+	set action(a) { if(this._action != a) { this._new_action = true; this._action = a; } },
 
 	get matrix() { return this._matrix; },
 
@@ -313,21 +318,21 @@ PanTiltTrackball.prototype = {
     rotate: function(m, dx, dy) {
       this._angleX += dx;
       this._angleY += dy;
-      this._angleX = this.clamp(this._angleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
-      this._angleY = this.clamp(this._angleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
+      this._angleX = this._clamp(this._angleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
+      this._angleY = this._clamp(this._angleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
     },
 
     pan: function(m, dx, dy) {
       var panSpeed = Math.max(Math.min(1.5, this._distance),0.05);		
       this._panX -= dx/2.0 * panSpeed; 
       this._panY -= dy/2.0 * panSpeed;
-      this._panX = this.clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
-      this._panY = this.clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
+      this._panX = this._clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
+      this._panY = this._clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
     },
 
 	scale : function(m, s) {
         this._distance *= s;
-		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
+		this._distance = this._clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
 	}
 };
 /***********************************************************************/

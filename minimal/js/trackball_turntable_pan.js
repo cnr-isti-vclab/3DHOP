@@ -42,6 +42,7 @@ TurntablePanTrackball.prototype = {
 			minMaxPanX    : [-1.0, 1.0],
 			minMaxPanY    : [-1.0, 1.0],
 			minMaxPanZ    : [-1.0, 1.0],
+			animationTime : 1.0
 		}, options);
 
 
@@ -71,6 +72,7 @@ TurntablePanTrackball.prototype = {
 
 		//animation data
 		this._isAnimating = false;
+		this._animationTime = this._defaultAnimationTime = opt.animationTime;
 
 		// limits
 		if((opt.minMaxPhi[0] == -180)&&(opt.minMaxPhi[1] == 180))
@@ -92,7 +94,7 @@ TurntablePanTrackball.prototype = {
 		this.reset();
 	},
 
-    clamp: function(value, low, high) {
+    _clamp: function(value, low, high) {
       if(value < low) return low;
       if(value > high) return high;
       return value;
@@ -135,17 +137,17 @@ TurntablePanTrackball.prototype = {
 
 		//check limits
 		if(this._limitPhi)
-			this._phi = this.clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
-		this._theta = this.clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
-		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
-		this._panX = this.clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
-		this._panY = this.clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
-		this._panZ = this.clamp(this._panZ, this._minMaxPanZ[0], this._minMaxPanZ[1]);
+			this._phi = this._clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
+		this._theta = this._clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
+		this._distance = this._clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
+		this._panX = this._clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
+		this._panY = this._clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
+		this._panZ = this._clamp(this._panZ, this._minMaxPanZ[0], this._minMaxPanZ[1]);
 
 		this._computeMatrix();
 	},
 
-	animateToState : function (newstate) {
+	animateToState : function (newstate, newtime) {
 		// stop animation
 		this._isAnimating = false;
 
@@ -156,15 +158,18 @@ TurntablePanTrackball.prototype = {
 		this._targetPanZ     = newstate[4];
 		this._targetDistance = newstate[5];
 
+		if(newtime) this._animationTime = newtime;
+		else this._animationTime = this._defaultAnimationTime;
+
 		//check limits
 		if(this._limitPhi)
-			this._targetPhi = this.clamp(this._targetPhi, this._minMaxPhi[0], this._minMaxPhi[1]);
+			this._targetPhi = this._clamp(this._targetPhi, this._minMaxPhi[0], this._minMaxPhi[1]);
 		this._targetPhi = this._targetPhi %	(2*Math.PI);
-		this._targetTheta = this.clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);
-		this._targetPanX = this.clamp(this._targetPanX, this._minMaxPanX[0], this._minMaxPanX[1]);
-		this._targetPanY = this.clamp(this._targetPanY, this._minMaxPanY[0], this._minMaxPanY[1]);
-		this._targetPanZ = this.clamp(this._targetPanZ, this._minMaxPanZ[0], this._minMaxPanZ[1]);
-		this._targetDistance = this.clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
+		this._targetTheta = this._clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);
+		this._targetPanX = this._clamp(this._targetPanX, this._minMaxPanX[0], this._minMaxPanX[1]);
+		this._targetPanY = this._clamp(this._targetPanY, this._minMaxPanY[0], this._minMaxPanY[1]);
+		this._targetPanZ = this._clamp(this._targetPanZ, this._minMaxPanZ[0], this._minMaxPanZ[1]);
+		this._targetDistance = this._clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
 
 		// setting base velocities
 		this._speedPhi = Math.PI;
@@ -214,7 +219,7 @@ TurntablePanTrackball.prototype = {
 		var timePanZ     = Math.abs((this._targetPanZ - this._panZ) / this._speedPanZ);
 
 		var maxtime = Math.max( timePhi, Math.max( timeTheta, Math.max( timeDistance, Math.max( timePanX, Math.max( timePanY, timePanZ )))));
-		maxtime = this.clamp(maxtime, 0.5, 2.0);
+		maxtime = this._clamp(maxtime, 0.5, 2.0);
 
 		this._speedPhi      *= timePhi / maxtime;
 		this._speedTheta    *= timeTheta / maxtime;
@@ -241,12 +246,12 @@ TurntablePanTrackball.prototype = {
 	tick : function (dt) {
 		if(!this._isAnimating) return false;
 
-		var deltaPhi      = this._speedPhi * dt;
-		var deltaTheta    = this._speedTheta * dt;
-		var deltaDistance = this._speedDistance * dt;
-		var deltaPanX     = this._speedPanX * dt;
-		var deltaPanY     = this._speedPanY * dt;
-		var deltaPanZ     = this._speedPanZ * dt;
+		var deltaPhi      = this._speedPhi * dt / this._animationTime;
+		var deltaTheta    = this._speedTheta * dt / this._animationTime;
+		var deltaDistance = this._speedDistance * dt / this._animationTime;
+		var deltaPanX     = this._speedPanX * dt / this._animationTime;
+		var deltaPanY     = this._speedPanY * dt / this._animationTime;
+		var deltaPanZ     = this._speedPanZ * dt / this._animationTime;
 
 		var diffPhi      = this._targetPhi - this._phi;
 		var diffTheta    = this._targetTheta - this._theta;
@@ -303,7 +308,7 @@ TurntablePanTrackball.prototype = {
 					if(this._panX == this._targetPanX)
 						if(this._panY == this._targetPanY)
 							if(this._panZ == this._targetPanZ)
-								this._isAnimating = false;
+								{ this._animationTime = this._defaultAnimationTime; this._isAnimating = false; }
 
 		this._computeMatrix();
 		return true;
@@ -311,7 +316,7 @@ TurntablePanTrackball.prototype = {
 
 	get action()  { return this._action; },
 
-	set action(a) { if(this._action != a) this._new_action = true; this._action = a; },
+	set action(a) { if(this._action != a) { this._new_action = true; this._action = a; } },
 
 	get matrix() { return this._matrix; },
 
@@ -383,27 +388,27 @@ TurntablePanTrackball.prototype = {
 		this._panZ += ((dx * Zvec[0]) + (dy * Zvec[1])) * panSpeed;
 
 		//clamping
-		this._panX = this.clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
-		this._panY = this.clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
-		this._panZ = this.clamp(this._panZ, this._minMaxPanZ[0], this._minMaxPanZ[1]);
+		this._panX = this._clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
+		this._panY = this._clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
+		this._panZ = this._clamp(this._panZ, this._minMaxPanZ[0], this._minMaxPanZ[1]);
     },
 
     rotate: function(m, dx, dy) {
 		this._phi += dx;
 		if(this._limitPhi)
-			this._phi = this.clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
+			this._phi = this._clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
 
 		// avoid eternal accumulation of rotation, just for the sake of cleanliness
 		if (this._phi > 10.0) this._phi = this._phi - 10.0;
 		if (this._phi < -10.0) this._phi = this._phi + 10.0;
 
 		this._theta += dy;
-		this._theta = this.clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
+		this._theta = this._clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
     },
 
 	scale : function(m, s) {
 		this._distance *= s;
-		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
+		this._distance = this._clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
 	}
 };
 /***********************************************************************/

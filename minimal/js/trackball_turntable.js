@@ -36,6 +36,7 @@ TurnTableTrackball.prototype = {
 			minMaxDist    : [0.2, 4.0],
 			minMaxPhi     : [-180, 180],
 			minMaxTheta   : [-80.0, 80.0],
+			animationTime : 1.0
 		}, options);
 
 		this._action = SGL_TRACKBALL_NO_ACTION;
@@ -63,6 +64,7 @@ TurnTableTrackball.prototype = {
 
 		//animation data
 		this._isAnimating = false;
+		this._animationTime = this._defaultAnimationTime = opt.animationTime;
 		this._speedPhi = 0.0;
 		this._speedTheta = 0.0;
 		this._speedDistance = 0.0;
@@ -84,7 +86,7 @@ TurnTableTrackball.prototype = {
 		this.reset();
 	},
 
-    clamp: function(value, low, high) {
+    _clamp: function(value, low, high) {
       if(value < low) return low;
       if(value > high) return high;
       return value;
@@ -122,14 +124,14 @@ TurnTableTrackball.prototype = {
 
 		//check limits
 		if(this._limitPhi)
-			this._phi = this.clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
-		this._theta = this.clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
-		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
+			this._phi = this._clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
+		this._theta = this._clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
+		this._distance = this._clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
 
 		this._computeMatrix();
 	},
 
-	animateToState : function (newstate) {
+	animateToState : function (newstate, newtime) {
 		// stop animation
 		this._isAnimating = false;
 
@@ -137,12 +139,15 @@ TurnTableTrackball.prototype = {
 		this._targetTheta = sglDegToRad(newstate[1]);
 		this._targetDistance = newstate[2];
 
+		if(newtime) this._animationTime = newtime;
+		else this._animationTime = this._defaultAnimationTime;
+
 		//check limits
 		if(this._limitPhi)
-			this._targetPhi = this.clamp(this._targetPhi, this._minMaxPhi[0], this._minMaxPhi[1]);
+			this._targetPhi = this._clamp(this._targetPhi, this._minMaxPhi[0], this._minMaxPhi[1]);
 		this._targetPhi = this._targetPhi %	(2*Math.PI);
-		this._targetTheta = this.clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);
-		this._targetDistance = this.clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
+		this._targetTheta = this._clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);
+		this._targetDistance = this._clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
 
 		// setting base velocities
 		this._speedPhi = Math.PI;
@@ -186,7 +191,7 @@ TurnTableTrackball.prototype = {
 		var timeDistance = Math.abs((this._targetDistance - this._distance) / this._speedDistance);
 
 		var maxtime = Math.max( timePhi, Math.max( timeTheta, timeDistance ));
-		maxtime = this.clamp(maxtime, 0.5, 2.0);
+		maxtime = this._clamp(maxtime, 0.5, 2.0);
 
 		this._speedPhi *= timePhi / maxtime;
 		this._speedTheta *= timeTheta / maxtime;
@@ -199,9 +204,9 @@ TurnTableTrackball.prototype = {
 	tick : function (dt) {
 		if(!this._isAnimating) return false;
 
-		var deltaPhi      = this._speedPhi * dt;
-		var deltaTheta    = this._speedTheta * dt;
-		var deltaDistance = this._speedDistance * dt;
+		var deltaPhi      = this._speedPhi * dt / this._animationTime;
+		var deltaTheta    = this._speedTheta * dt / this._animationTime;
+		var deltaDistance = this._speedDistance * dt / this._animationTime;
 
 		var diffPhi      = this._targetPhi - this._phi;
 		var diffTheta    = this._targetTheta - this._theta;
@@ -231,7 +236,7 @@ TurnTableTrackball.prototype = {
 		if(this._phi == this._targetPhi)
 			if(this._theta == this._targetTheta)
 				if(this._distance == this._targetDistance)
-					this._isAnimating = false;
+					{ this._animationTime = this._defaultAnimationTime; this._isAnimating = false; }
 
 		this._computeMatrix();
 		return true;
@@ -239,7 +244,7 @@ TurnTableTrackball.prototype = {
 
 	get action()  { return this._action; },
 
-	set action(a) { if(this._action != a) this._new_action = true; this._action = a; },
+	set action(a) { if(this._action != a) { this._new_action = true; this._action = a; } },
 
 	get matrix() { return this._matrix; },
 
@@ -291,19 +296,19 @@ TurnTableTrackball.prototype = {
     rotate: function(m, dx, dy) {
 		this._phi += dx;
 		if(this._limitPhi)
-			this._phi = this.clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
+			this._phi = this._clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
 
 		// avoid eternal accumulation of rotation, just for the sake of cleanliness
 		if (this._phi > 10.0) this._phi = this._phi - 10.0;
 		if (this._phi < -10.0) this._phi = this._phi + 10.0;
 
 		this._theta += dy;
-		this._theta = this.clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
+		this._theta = this._clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
     },
 
 	scale : function(m, s) {
 		this._distance *= s;
-		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
+		this._distance = this._clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
 	}
 };
 /***********************************************************************/
