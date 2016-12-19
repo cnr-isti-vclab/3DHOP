@@ -93,10 +93,10 @@ function actionsToolbar(action) {
 }
 
 function onEndPick(point) {
-	var decimalClipper = 100; // 10 = 1 decimal, 100 = 2 decimals, 1000 = 3 decimals
-	var x = Math.round(point[0]*decimalClipper)/decimalClipper;
-	var y = Math.round(point[1]*decimalClipper)/decimalClipper;
-	var z = Math.round(point[2]*decimalClipper)/decimalClipper;
+	// .toFixed(2) sets the number of decimals when displaying the picked point	
+	var x = point[0].toFixed(2);
+	var y = point[1].toFixed(2);
+	var z = point[2].toFixed(2);
     $('#pickpoint-output').html("[ "+x+" , "+y+" , "+z+" ]");
 }
 

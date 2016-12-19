@@ -93,8 +93,9 @@ function actionsToolbar(action) {
 }
 
 function onEndMeasure(measure) {
-	var decimalClipper = 100; // 10 = 1 decimal, 100 = 2 decimals, 1000 = 3 decimals
-	$('#measure-output').html(Math.round(measure*decimalClipper)/decimalClipper);
+	// measure.toFixed(2) sets the number of decimals when displaying the measure
+	// depending on the model measure units, use "mm","m","km" or whatever you have	
+	$('#measure-output').html(measure.toFixed(2) + "mm"); 
 }
 
 $(document).ready(function(){

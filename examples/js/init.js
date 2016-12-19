@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
 All rights reserved.    
 
 This program is free software: you can redistribute it and/or modify
@@ -193,6 +193,19 @@ function measureSwitch(on) {
     $('#measure-box').css("display","none");
     $('#measure-output').html("0.0");
     if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
+  }
+}
+
+function colorSwitch(on) {
+  if(on === undefined) on = $('#color').css("visibility")=="visible";
+
+  if(on) {
+	$('#color').css("visibility", "hidden");
+	$('#color_on').css("visibility", "visible");
+  }
+  else {
+	$('#color_on').css("visibility", "hidden");
+	$('#color').css("visibility", "visible");
   }
 }
 

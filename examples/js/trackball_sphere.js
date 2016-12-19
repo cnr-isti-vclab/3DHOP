@@ -1,7 +1,7 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Marco Callieri - Visual Computing Lab, ISTI - CNR
-All rights reserved.    
+Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
+All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ SphereTrackball.prototype = {
 
 		//limits
 		this._minMaxDist  = opt.minMaxDist;
-		
+
 		this._matrix = SglMat4.identity();
 		this._sphereMatrix = SglMat4.identity();
 
@@ -62,15 +62,17 @@ SphereTrackball.prototype = {
     },
 
     _computeMatrix: function() {
-      var m = SglMat4.identity();  
-	  
-	  // zoom
-	  m = SglMat4.mul(m, SglMat4.translation([0.0, 0.0, -this._distance]));
-	  
-	  // spheretrack
-      m = SglMat4.mul(m, this._sphereMatrix); 
+		var m = SglMat4.identity();
 
-      this._matrix = m;
+		// zoom
+		m = SglMat4.mul(m, SglMat4.translation([0.0, 0.0, -this._distance]));
+		// spheretrack
+		m = SglMat4.mul(m, this._sphereMatrix);
+
+		this._matrix = m;
+	  
+		if(typeof onTrackballUpdate != "undefined")
+			onTrackballUpdate(this.getState());
     },
 
 	_projectOnSphere : function(x, y) {
@@ -116,41 +118,43 @@ SphereTrackball.prototype = {
 		this._sphereMatrix = newstate;
 		this._computeMatrix();
 	},
-	
+
 	animateToState : function (newstate) {
 		this._sphereMatrix = newstate;
 		this._computeMatrix();
 	},
 
-	recenter : function (newpoint) {	
+	recenter : function (newpoint) {
 		var newpanX = (newpoint[0]-presenter.sceneCenter[0]) * presenter.sceneRadiusInv;
 		var newpanY = (newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
 		var newpanZ = (newpoint[2]-presenter.sceneCenter[2]) * presenter.sceneRadiusInv;
-		
+
 		this._sphereMatrix[12] = -newpanX;
 		this._sphereMatrix[13] = -newpanY;
 		this._sphereMatrix[14] = -newpanZ;
 		this._distance *= 0.8;
-		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);		
+		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
 		this._computeMatrix();
-	},		
-	
+	},
+
 	tick : function (dt) {
 		return false;
 	},
-	
+
 	get action()  { return this._action; },
 
 	set action(a) { if(this._action != a) this._new_action = true; this._action = a; },
 
 	get matrix() { return this._matrix; },
 
+	get distance() { return this._distance; },
+
 	reset : function () {
 		this._matrix = SglMat4.identity();
 		this._sphereMatrix = SglMat4.identity();
-		
+
 		this._distance = this._startDistance;
-		
+
 		this._pts    = [ [0.0, 0.0], [0.0, 0.0] ];
 		this._action = SGL_TRACKBALL_NO_ACTION;
 		this._new_action = true;
@@ -166,7 +170,7 @@ SphereTrackball.prototype = {
             this._new_action = false;
         }
 
-        var dx = this._start[0] - x; 
+        var dx = this._start[0] - x;
         var dy = this._start[1] - y;
         this._start[0] = x;
         this._start[1] = y;
