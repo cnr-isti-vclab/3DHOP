@@ -21,6 +21,16 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 #### CHANGELOG FILE
 -------------------
 
+*Version DEVELOPMENT*  
+
+**Main Changes**
+
+* Updated TRACKBALL components;
+
+**Files Added/Modified**
+
+* Updated all trackballs ".js" files;
+
 *Version 4.1*  
 
 **Main Changes**
