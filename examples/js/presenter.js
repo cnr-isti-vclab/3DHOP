@@ -295,12 +295,12 @@ _createStandardPointNXSProgram : function () {
 																			  \n\
 		void main(void)                                                       \n\
 		{                                                                     \n\
-			if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;        \n\
-			else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
-			if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;        \n\
-			else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
-			if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;        \n\
-			else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
+			if(uClipAxis[0] != 0.0)\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard; \n\
+			if(uClipAxis[1] != 0.0)\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard; \n\
+			if(uClipAxis[2] != 0.0)\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard; \n\
 																			  \n\
 			float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);				  \n\
 			float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);				  \n\
@@ -322,12 +322,12 @@ _createStandardPointNXSProgram : function () {
 			  diffuse = diffuse * max(0.0, nDotL);                            \n\
 			}                                                                 \n\
 																			  \n\
-			if((uClipAxis[0] == 1.0)&&((uClipPoint[0]-vModelPos[0])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[0] == -1.0)&&((vModelPos[0]-uClipPoint[0])<uClipColorSize)) diffuse = uClipColor; \n\
-			if((uClipAxis[1] == 1.0)&&((uClipPoint[1]-vModelPos[1])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[1] == -1.0)&&((vModelPos[1]-uClipPoint[1])<uClipColorSize)) diffuse = uClipColor; \n\
-			if((uClipAxis[2] == 1.0)&&((uClipPoint[2]-vModelPos[2])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[2] == -1.0)&&((vModelPos[2]-uClipPoint[2])<uClipColorSize)) diffuse = uClipColor; \n\
+			if(uClipAxis[0] != 0.0)\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) diffuse = uClipColor; \n\
+			if(uClipAxis[1] != 0.0)\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) diffuse = uClipColor; \n\
+			if(uClipAxis[2] != 0.0)\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) diffuse = uClipColor; \n\
 																			  \n\			gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
 			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));      \n\
 		}                                                                     \n\
@@ -419,12 +419,12 @@ _createStandardFaceNXSProgram : function () {
 																			  \n\
 		void main(void)                                                       \n\
 		{                                                                     \n\
-			if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;       \n\
-			else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard; \n\
-			if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;       \n\
-			else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard; \n\
-			if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;       \n\
-			else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard; \n\
+			if(uClipAxis[0] != 0.0)\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard; \n\
+			if(uClipAxis[1] != 0.0)\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard; \n\
+			if(uClipAxis[2] != 0.0)\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard; \n\
 																			  \n\
 			vec3  diffuse = vColor.rgb;                                       \n\
 																			  \n\
@@ -449,12 +449,12 @@ _createStandardFaceNXSProgram : function () {
 			else if(!gl_FrontFacing)                                          \n\
 				diffuse = diffuse * vec3(0.4, 0.3, 0.3);                      \n\
 																			  \n\
-			if((uClipAxis[0] == 1.0)&&((uClipPoint[0]-vModelPos[0])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[0] == -1.0)&&((vModelPos[0]-uClipPoint[0])<uClipColorSize)) diffuse = uClipColor; \n\
-			if((uClipAxis[1] == 1.0)&&((uClipPoint[1]-vModelPos[1])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[1] == -1.0)&&((vModelPos[1]-uClipPoint[1])<uClipColorSize)) diffuse = uClipColor; \n\
-			if((uClipAxis[2] == 1.0)&&((uClipPoint[2]-vModelPos[2])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[2] == -1.0)&&((vModelPos[2]-uClipPoint[2])<uClipColorSize)) diffuse = uClipColor; \n\
+			if(uClipAxis[0] != 0.0)\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) diffuse = uClipColor; \n\
+			if(uClipAxis[1] != 0.0)\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) diffuse = uClipColor; \n\
+			if(uClipAxis[2] != 0.0)\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) diffuse = uClipColor; \n\
 																			  \n\
 			gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
 		}                                                                     \n\
@@ -540,12 +540,12 @@ _createXYZNXSProgram : function () {
 																			  \n\
 		void main(void)                                                       \n\
 		{                                                                     \n\
-			if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;        \n\
-			else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
-			if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;        \n\
-			else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
-			if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;        \n\
-			else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
+			if(uClipAxis[0] != 0.0)\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard; \n\
+			if(uClipAxis[1] != 0.0)\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard; \n\
+			if(uClipAxis[2] != 0.0)\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard; \n\
 																			  \n\
 			vec4 myColor;                                                     \n\
 			myColor = pack_depth(gl_FragCoord.z);                             \n\
