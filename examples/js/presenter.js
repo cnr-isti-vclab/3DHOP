@@ -115,6 +115,7 @@ _parseModelInstance : function (options) {
 		useSolidColor   : false,
 		alpha           : 0.5,
 		useTransparency : false,
+		useLighting     : true,
 		cursor          : "default",
 		ID              : 0,
 		transform       : null,
@@ -179,6 +180,7 @@ _parseSpace : function (options) {
 		cameraFOV        : 60.0,
 		cameraNearFar    : [0.1, 10.0],
 		cameraType       : "perspective",
+		useLighting      : true,
 	}, options);
 	r.transform = this._parseTransform(r.transform);
 	if(r.cameraFOV < 2.0) r.cameraFOV=2.0;
@@ -283,6 +285,7 @@ _createStandardPointNXSProgram : function () {
 		uniform   vec3 uViewSpaceLightDirection;                              \n\
 		uniform   float uAlpha;                                               \n\
 		uniform   bool uUseSolidColor;                                        \n\
+		uniform   bool uUseLighting;                                          \n\
 		uniform   vec3 uSolidColor;                                           \n\
 		uniform   vec3 uClipPoint;                                            \n\
 		uniform   vec3 uClipAxis;                                             \n\
@@ -307,7 +310,9 @@ _createStandardPointNXSProgram : function () {
 			float c = 1.0 - (a + b);										  \n\
 			if(c < 0.0) { discard; }										  \n\
 																			  \n\
+			vec3  renderColor = vec3(1.0, 1.0, 1.0);                          \n\
 			vec3  diffuse = vColor.rgb;                                       \n\
+			float lambert = 1.0;                                              \n\
 																			  \n\
 			if(uUseSolidColor) {                                              \n\
 			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
@@ -316,11 +321,14 @@ _createStandardPointNXSProgram : function () {
 				diffuse = uSolidColor;                                        \n\
 			}                                                                 \n\
 																			  \n\
-			if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
+			if((uUseLighting)&&(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0)) \n\
+			{																  \n\
 			  vec3  normal  = normalize(vNormal);                             \n\
 			  float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
-			  diffuse = diffuse * max(0.0, nDotL);                            \n\
+			  lambert = max(0.0, nDotL);                        		      \n\
 			}                                                                 \n\
+																			  \n\
+			renderColor = diffuse * lambert;								  \n\
 																			  \n\
 			if(uClipAxis[0] != 0.0)\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) diffuse = uClipColor; \n\
@@ -328,7 +336,7 @@ _createStandardPointNXSProgram : function () {
 				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) diffuse = uClipColor; \n\
 			if(uClipAxis[2] != 0.0)\n\
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) diffuse = uClipColor; \n\
-																			  \n\			gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
+																			  \n\			gl_FragColor  = vec4(renderColor, uAlpha);                            \n\
 			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));      \n\
 		}                                                                     \n\
 	");
@@ -354,6 +362,7 @@ _createStandardPointNXSProgram : function () {
 			"uPointSize"                 : 1.0,
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : false,
+			"uUseLighting"               : true,
 			"uSolidColor"                : [1.0, 1.0, 1.0],
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
@@ -405,6 +414,7 @@ _createStandardFaceNXSProgram : function () {
 		uniform   vec3 uViewSpaceLightDirection;                              \n\
 		uniform   float uAlpha;                                               \n\
 		uniform   bool uUseSolidColor;                                        \n\
+		uniform   bool uUseLighting;                                          \n\
 		uniform   vec3 uSolidColor;                                           \n\
 		uniform   vec3 uClipPoint;                                            \n\
 		uniform   vec3 uClipAxis;                                             \n\
@@ -426,7 +436,9 @@ _createStandardFaceNXSProgram : function () {
 			if(uClipAxis[2] != 0.0)\n\
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard; \n\
 																			  \n\
+			vec3  renderColor = vec3(1.0, 1.0, 1.0);                          \n\
 			vec3  diffuse = vColor.rgb;                                       \n\
+			float lambert = 1.0;                                              \n\
 																			  \n\
 			if(vTextureCoord.x != 0.0)                                        \n\
 			  diffuse = texture2D(uSampler, vTextureCoord).xyz;               \n\
@@ -438,16 +450,17 @@ _createStandardFaceNXSProgram : function () {
 				diffuse = uSolidColor;                                        \n\
 			}                                                                 \n\
 																			  \n\
-			if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
+			if((uUseLighting)&&(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0)) \n\
+			{																  \n\
 			  vec3  normal  = normalize(vNormal);                             \n\
 			  float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
-				if(gl_FrontFacing)                                            \n\
-					diffuse = diffuse * max(0.0, nDotL);                      \n\
-				else                                                          \n\
-					diffuse = diffuse * vec3(0.4, 0.3, 0.3) * abs(nDotL);     \n\
+			  lambert = max(0.0, nDotL);                            \n\
 			}                                                                 \n\
-			else if(!gl_FrontFacing)                                          \n\
-				diffuse = diffuse * vec3(0.4, 0.3, 0.3);                      \n\
+																			  \n\
+			renderColor = diffuse * lambert;								  \n\
+																			  \n\
+			if(!gl_FrontFacing)                                               \n\
+				renderColor = renderColor * vec3(0.4, 0.3, 0.3);              \n\
 																			  \n\
 			if(uClipAxis[0] != 0.0)\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) diffuse = uClipColor; \n\
@@ -456,7 +469,7 @@ _createStandardFaceNXSProgram : function () {
 			if(uClipAxis[2] != 0.0)\n\
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) diffuse = uClipColor; \n\
 																			  \n\
-			gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
+			gl_FragColor  = vec4(renderColor, uAlpha);                        \n\
 		}                                                                     \n\
 	");
 	if(this._isDebugging)
@@ -480,6 +493,7 @@ _createStandardFaceNXSProgram : function () {
 			"uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : false,
+			"uUseLighting"               : true,			
 			"uSolidColor"                : [1.0, 1.0, 1.0],
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
@@ -733,6 +747,7 @@ _createStandardPointPLYtechnique : function () {
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
 			"uAlpha"                     : { semantic : "uAlpha",                     value : 1.0 },
 			"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : false },
+			"uUseLighting"               : { semantic : "uUseLighting",               value : true },
 			"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
@@ -759,6 +774,7 @@ _createStandardFacePLYtechnique : function () {
 			"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 			"uAlpha"                     : { semantic : "uAlpha",                     value : 1.0 },
 			"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : false },
+			"uUseLighting"               : { semantic : "uUseLighting",               value : true },
 			"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
@@ -1521,6 +1537,7 @@ _drawScene : function () {
 			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : instance.useSolidColor,
+			"uUseLighting"               : space.useLighting && instance.useLighting,
 			"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
@@ -1618,6 +1635,7 @@ _drawScene : function () {
 			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : instance.alpha,
 			"uUseSolidColor"             : instance.useSolidColor,
+			"uUseLighting"               : space.useLighting && instance.useLighting,			
 			"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipPoint"                 : this._clipPoint,
@@ -3572,6 +3590,20 @@ setCameraPerspective() {
 setCameraOrthographic() {
 	this._scene.space.cameraType = "ortho";
 	this.ui.postDrawEvent();
+},
+
+//-----------------------------------------------------------------------------
+toggleLighting: function () {
+	this._scene.space.useLighting = !this._scene.space.useLighting;
+	this.ui.postDrawEvent();	
+},
+
+setLighting: function (on) {
+	this._scene.space.useLighting = on;
+	this.ui.postDrawEvent();	
+},
+getLighting: function () {
+	return this._scene.space.useLighting;
 },
 
 //-----------------------------------------------------------------------------
