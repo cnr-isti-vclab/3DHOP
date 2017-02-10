@@ -75,15 +75,15 @@ function setup3dhop() {
 	presenter.setScene({
 		meshes: {
 			"Gargoyle" : { url: "models/multires/gargo.nxs" },
-			"Sphere" : { url: "models/singleres/sphere.ply" },			
+			"Sphere" : { url: "models/singleres/sphere.ply" },
 			"Cube" : { url: "models/singleres/cube.ply" }
 		},
 		modelInstances : {
 			"Gargo" : {
 				mesh : "Gargoyle",
 				transform : { 
-					translation : [-60.0, 0.0, 0.0],
-				},		
+					translation : [-60.0, 0.0, 0.0]
+				},
 			},
 			"S1" : {
 				mesh : "Sphere",
@@ -93,7 +93,7 @@ function setup3dhop() {
 				},
 				color           : [ 1.0, 0.2, 0.2 ],
 				useSolidColor   : true,
-				useLighting : false,				
+				useLighting     : false
 			},
 			"S2" : {
 				mesh : "Sphere",
@@ -102,8 +102,8 @@ function setup3dhop() {
 					scale       : [20.0, 20.0, 20.0]
 				},
 				color           : [ 0.2, 1.0, 0.2 ],
-				useSolidColor   : true,					
-				useLighting : false,
+				useSolidColor   : true,
+				useLighting     : false
 			},
 			"S3" : {
 				mesh : "Sphere",
@@ -113,17 +113,17 @@ function setup3dhop() {
 				},
 				color           : [ 0.2, 0.2, 1.0 ],
 				useSolidColor   : true,
-				useLighting : false,				
+				useLighting     : false
 			},
 			"Box" : {
 				mesh : "Cube",
 				transform : { 
 					translation : [60.0, 20.0, 0.0],
-					rotation : [0.0, 20.0, 0.0],					
+					rotation    : [0.0, 20.0, 0.0],
 					scale       : [0.8, 0.8, 0.8]
 				},
 				color           : [ 0.3, 0.4, 0.6 ],
-				useSolidColor   : true,				
+				useSolidColor   : true
 			},
 			"Base" : {
 				mesh : "Cube",
@@ -138,7 +138,7 @@ function setup3dhop() {
 			trackOptions : {
 				startDistance : 1.0,
 				minMaxDist    : [0.1, 3.0],
-				startPanY     : 0.2,				
+				startPanY     : 0.2
 			}
 		},
 		space: {
@@ -147,23 +147,18 @@ function setup3dhop() {
 			cameraFOV        : 60.0,
 			cameraNearFar    : [0.1, 10.0],
 			cameraType       : "perspective",
-			useLighting      : true,		
+			useLighting      : true
 		},
 	});
-	
-	presenter._onEndMeasurement = onEndMeasure;
-	presenter._onEndPickingPoint = onEndPick;	
 }
 
 function actionsToolbar(action) {
 	if(action=='home') presenter.resetTrackball(); 
 	else if(action=='zoomin') presenter.zoomIn();
 	else if(action=='zoomout') presenter.zoomOut(); 
-	else if(action=='ortho') {presenter.toggleCameraType();}	
+	else if(action=='ortho') {presenter.toggleCameraType();}
 	else if(action=='lighting') {presenter.toggleLighting();}
 	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
-	else if(action=='measure' || action=='measure_on') { presenter.enableMeasurementTool(!presenter.isMeasurementToolEnabled()); measureSwitch(); } 	
-	else if(action=='pick' || action=='pick_on') { presenter.enablePickpointMode(!presenter.isPickpointModeEnabled()); pickpointSwitch(); }	
 	else if(action=='sections' || action=='sections_on') { sectiontoolReset(); sectiontoolSwitch(); } 
 	else if(action=='full' || action=='full_on') fullscreenSwitch(); 
 }

@@ -22,12 +22,10 @@ SpiderGL.openNamespace();
 //----------------------------------------------------------------------------------------
 // CONSTANTS
 //----------------------------------------------------------------------------------------
-// sgltrackball
-const SGL_TRACKBALL_NO_ACTION = 0;
-const SGL_TRACKBALL_ROTATE    = 1;
-const SGL_TRACKBALL_PAN       = 2;
-const SGL_TRACKBALL_DOLLY     = 3;
-const SGL_TRACKBALL_SCALE     = 4;
+// version
+const HOP_VERSION_MAJOR       = 4;
+const HOP_VERSION_MINOR       = 1;
+const HOP_VERSION_DEVELOPMENT = 5;
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -36,9 +34,16 @@ const HOP_DEBUGMODE           = false;
 const HOP_DEFAULTLIGHT        = [0, 0, -1];
 // default points size
 const HOP_DEFAULTPOINTSIZE    = 1.0;
+// sgltrackball
+const SGL_TRACKBALL_NO_ACTION = 0;
+const SGL_TRACKBALL_ROTATE    = 1;
+const SGL_TRACKBALL_PAN       = 2;
+const SGL_TRACKBALL_DOLLY     = 3;
+const SGL_TRACKBALL_SCALE     = 4;
 
 Presenter = function (canvas) {
 	this._supportsWebGL = sglHandleCanvas(canvas, this);
+	console.log("3DHOP version: " + this.version);
 };
 
 Presenter.prototype = {
@@ -2699,7 +2704,7 @@ onDraw : function () {
 //----------------------------------------------------------------------------------------
 // EXPOSED FUNCTIONS
 //----------------------------------------------------------------------------------------
-supportsWebGL : function() {
+supportsWebGL : function () {
 	return this._supportsWebGL;
 },
 
@@ -2707,7 +2712,7 @@ toggleDebugMode : function () {
 	this._isDebugging = !this._isDebugging;
 },
 
-setNexusTargetFps: function(fps) {
+setNexusTargetFps : function (fps) {
 	this._nexusTargetFps = fps;
 	var scene = this._scene;
 	if(!scene) return;
@@ -2718,10 +2723,10 @@ setNexusTargetFps: function(fps) {
 	}
 },
 
-getNexusTargetFps: function() {
+getNexusTargetFps : function () {
 	return this._nexusTargetFps;
 },
-setNexusTargetError: function(error) {
+setNexusTargetError : function (error) {
 	this._nexusTargetError = error;
 	var scene = this._scene;
 	if(!scene) return;
@@ -2732,11 +2737,11 @@ setNexusTargetError: function(error) {
 	}
 },
 
-getNexusTargetError: function() {
+getNexusTargetError : function () {
 	return this._nexusTargetError;
 },
 
-setNexusCacheSize: function(size) {
+setNexusCacheSize : function(size) {
 	this._nexusCacheSize = size;
 	var scene = this._scene;
 	if(!scene) return;
@@ -2747,7 +2752,7 @@ setNexusCacheSize: function(size) {
 	}
 },
 
-getNexusCacheSize: function() {
+getNexusCacheSize : function () {
 	return this._nexusCacheSize;
 },
 
@@ -3338,30 +3343,30 @@ isSpotVisibilityEnabled : function (tag) {
 
 //-----------------------------------------------------------------------------
 // sections
-resetClippingXYZ: function() {
+resetClippingXYZ : function () {
 	this._calculateBounding();
 	this._clipAxis = [0.0, 0.0, 0.0];
 	this._clipPoint = [0.0, 0.0, 0.0];
 	this.ui.postDrawEvent();
 },
 
-setClippingXYZ: function(cx, cy, cz) {
+setClippingXYZ : function (cx, cy, cz) {
 	this._calculateBounding();
 	this._clipAxis = [cx,cy,cz];
 	this.ui.postDrawEvent();
 },
 
-setClippingX: function(cx) {
+setClippingX : function (cx) {
 	this._calculateBounding();
 	this._clipAxis[0] = cx;
 	this.ui.postDrawEvent();
 },
-setClippingY: function(cy) {
+setClippingY : function (cy) {
 	this._calculateBounding();
 	this._clipAxis[1] = cy;
 	this.ui.postDrawEvent();
 },
-setClippingZ: function(cz) {
+setClippingZ : function (cz) {
 	this._calculateBounding();
 	this._clipAxis[2] = cz;
 	this.ui.postDrawEvent();
@@ -3377,29 +3382,29 @@ getClippingZ : function () {
 	return this._clipAxis[2];
 },
 
-setClippingPointXYZabs: function(clx, cly, clz) {
+setClippingPointXYZabs: function (clx, cly, clz) {
 	this._calculateBounding();
 	this._clipPoint = [clx, cly, clz];
 	this.ui.postDrawEvent();
 },
 
-setClippingPointXabs: function(clx) {
+setClippingPointXabs : function (clx) {
 	this._calculateBounding();
 	this._clipPoint[0] = clx;
 	this.ui.postDrawEvent();
 },
-setClippingPointYabs: function(cly) {
+setClippingPointYabs : function (cly) {
 	this._calculateBounding();
 	this._clipPoint[1] = cly;
 	this.ui.postDrawEvent();
 },
-setClippingPointZabs: function(clz) {
+setClippingPointZabs : function (clz) {
 	this._calculateBounding();
 	this._clipPoint[2] = clz;
 	this.ui.postDrawEvent();
 },
 
-setClippingPointXYZ: function(clx, cly, clz) {
+setClippingPointXYZ : function (clx, cly, clz) {
 	var nClipPoint = [0.0, 0.0, 0.0];
 
 	this._calculateBounding();
@@ -3416,7 +3421,7 @@ setClippingPointXYZ: function(clx, cly, clz) {
 	this.ui.postDrawEvent();
 },
 
-setClippingPointX: function(clx) {
+setClippingPointX : function (clx) {
 	var nClipPoint = 0.0;
 	this._calculateBounding();
 	if(clx<0.0) clx=0.0; else if(clx>1.0) clx=1.0;
@@ -3424,7 +3429,7 @@ setClippingPointX: function(clx) {
 	this._clipPoint[0] = nClipPoint;
 	this.ui.postDrawEvent();
 },
-setClippingPointY: function(cly) {
+setClippingPointY : function (cly) {
 	var nClipPoint = 0.0;
 	this._calculateBounding();
 	if(cly<0.0) cly=0.0; else if(cly>1.0) cly=1.0;
@@ -3432,7 +3437,7 @@ setClippingPointY: function(cly) {
 	this._clipPoint[1] = nClipPoint;
 	this.ui.postDrawEvent();
 },
-setClippingPointZ: function(clz) {
+setClippingPointZ : function (clz) {
 	var nClipPoint = 0.0;
 	this._calculateBounding();
 	if(clz<0.0) clz=0.0; else if(clz>1.0) clz=1.0;
@@ -3441,7 +3446,7 @@ setClippingPointZ: function(clz) {
 	this.ui.postDrawEvent();
 },
 
-_calculateBounding: function() {	var meshes    = this._scene.meshes;
+_calculateBounding : function () {	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
 	this._sceneBboxMin = SglVec3.maxNumber();
 	this._sceneBboxMax = SglVec3.minNumber();
@@ -3487,7 +3492,7 @@ _calculateBounding: function() {	var meshes    = this._scene.meshes;
 	this._sceneBboxCenter[2] = (this._sceneBboxMin[2] + this._sceneBboxMax[2]) / 2.0;
 },
 
-setClippingRendermode: function(showPlanes, showBorder, borderSize, borderColor) {
+setClippingRendermode : function (showPlanes, showBorder, borderSize, borderColor) {
 	this._calculateBounding();
 	this._scene.config.showClippingPlanes = showPlanes;
 	this._scene.config.showClippingBorder = showBorder;
@@ -3498,22 +3503,22 @@ setClippingRendermode: function(showPlanes, showBorder, borderSize, borderColor)
 	this.ui.postDrawEvent();
 },
 
-getClippingRendermode: function() {
+getClippingRendermode : function () {
 	var rendermode = [this._scene.config.showClippingPlanes, this._scene.config.showClippingBorder, this._scene.config.clippingBorderSize, this._scene.config.clippingBorderColor];
 	return rendermode;
 },
 
 //-----------------------------------------------------------------------------
-zoomIn: function() {
+zoomIn : function () {
 	this.onMouseWheel(1);
 },
 
-zoomOut: function() {
+zoomOut : function () {
 	this.onMouseWheel(-1);
 },
 
 //-----------------------------------------------------------------------------
-rotateLight: function(x, y) {
+rotateLight : function (x, y) {
 	x *= 2;
 	y *= 2;
 	var r = Math.sqrt(x*x + y*y);
@@ -3527,54 +3532,54 @@ rotateLight: function(x, y) {
 	this.ui.postDrawEvent();
 },
 
-enableLightTrackball: function(on) {
+enableLightTrackball : function (on) {
 	this._movingLight = on;
 },
 
-isLightTrackballEnabled: function() {
+isLightTrackballEnabled : function () {
 	return this._movingLight;
 },
 
 //-----------------------------------------------------------------------------
-enableOnHover: function(on) {
+enableOnHover : function (on) {
 	this._onHover = on;
 },
 
-isOnHoverEnabled: function() {
+isOnHoverEnabled : function () {
 	return this._onHover;
 },
 
 //-----------------------------------------------------------------------------
-enableMeasurementTool: function(on) {
+enableMeasurementTool : function(on) {
 	if(on)
 		this._startMeasurement();
 	else
 		this._stopMeasurement();
 },
 
-isMeasurementToolEnabled: function() {
+isMeasurementToolEnabled : function() {
 	return this._isMeasuringDistance;
 },
 
 //-----------------------------------------------------------------------------
-enablePickpointMode: function(on) {
+enablePickpointMode : function (on) {
 	if(on)
 		this._startPickPoint();
 	else
 		this._stopPickPoint();
 },
 
-isPickpointModeEnabled: function() {
+isPickpointModeEnabled : function () {
 	return this._isMeasuringPickpoint;
 },
 
 //-----------------------------------------------------------------------------
-isAnyMeasurementEnabled: function() {
+isAnyMeasurementEnabled : function () {
 	return this._isMeasuring;
 },
 
 //-----------------------------------------------------------------------------
-toggleCameraType: function() {
+toggleCameraType : function () {
 	if(this._scene.space.cameraType == "ortho")
 		this._scene.space.cameraType = "perspective"
 	else
@@ -3583,32 +3588,37 @@ toggleCameraType: function() {
 	this.ui.postDrawEvent();
 },
 
-setCameraPerspective() {
+setCameraPerspective : function () {
 	this._scene.space.cameraType = "perspective";
 	this.ui.postDrawEvent();
 },
-setCameraOrthographic() {
+setCameraOrthographic : function () {
 	this._scene.space.cameraType = "ortho";
 	this.ui.postDrawEvent();
 },
 
 //-----------------------------------------------------------------------------
-toggleLighting: function () {
+toggleLighting : function () {
 	this._scene.space.useLighting = !this._scene.space.useLighting;
 	this.ui.postDrawEvent();	
 },
 
-setLighting: function (on) {
+setLighting : function (on) {
 	this._scene.space.useLighting = on;
 	this.ui.postDrawEvent();	
 },
-getLighting: function () {
+getLighting : function () {
 	return this._scene.space.useLighting;
 },
 
 //-----------------------------------------------------------------------------
-repaint() {
+repaint : function () {
 	this.ui.postDrawEvent();
 },
+
+//-----------------------------------------------------------------------------
+get version() {
+	return HOP_VERSION_MAJOR + "." + HOP_VERSION_MINOR + "." + HOP_VERSION_DEVELOPMENT;
+}
 
 }; // Presenter.prototype END

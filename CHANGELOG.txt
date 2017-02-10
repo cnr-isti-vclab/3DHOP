@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-19 December 2016
+10 February 2017
 
 #### TEAM
 ---------
@@ -25,11 +25,16 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
-* Updated TRACKBALL components;
+* Added GLOBAL LIGHTING control;
+* Updated PLANES SECTIONING TOOL;
+* Updated TRACKBALL SET;
 
 **Files Added/Modified**
 
+* Added "HOWTO_10.0_camera_lighting.html" file;
+* Updated "presenter.js" files;
 * Updated all trackballs ".js" files;
+* Updated "skins" directory;
 
 *Version 4.1*  
 
