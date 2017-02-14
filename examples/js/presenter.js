@@ -23,9 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION_MAJOR       = 4;
-const HOP_VERSION_MINOR       = 1;
-const HOP_VERSION_DEVELOPMENT = 8;
+const HOP_VERSION             = "4.1.9";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -3655,7 +3653,7 @@ repaint : function () {
 
 //-----------------------------------------------------------------------------
 get version() {
-	return HOP_VERSION_MAJOR + "." + HOP_VERSION_MINOR + "." + HOP_VERSION_DEVELOPMENT;
+	return HOP_VERSION;
 }
 
 }; // Presenter.prototype END

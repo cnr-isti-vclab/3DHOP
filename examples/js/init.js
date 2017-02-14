@@ -237,24 +237,24 @@ function sectiontoolInit() {
 	xplaneSlider.max = 1.0;
 	xplaneSlider.step = 0.01;
 	xplaneSlider.defaultValue = 0.5;
-	xplaneSlider.oninput=function(){ /*sectionxSwitch(true);*/ presenter.setClippingPointX(this.valueAsNumber);};
-	xplaneSlider.onchange=function(){ /*sectionxSwitch(true);*/ presenter.setClippingPointX(this.valueAsNumber);};
+	xplaneSlider.oninput=function(){ sectionxSwitch(true); presenter.setClippingPointX(this.valueAsNumber);};
+	xplaneSlider.onchange=function(){ sectionxSwitch(true); presenter.setClippingPointX(this.valueAsNumber);};
 
 	var yplaneSlider = $('#yplaneSlider')[0];
 	yplaneSlider.min = 0.0;
 	yplaneSlider.max = 1.0;
 	yplaneSlider.step = 0.01;
 	yplaneSlider.defaultValue = 0.5;
-	yplaneSlider.oninput=function(){/*sectionySwitch(true);*/ presenter.setClippingPointY(this.valueAsNumber);};
-	yplaneSlider.onchange=function(){/*sectionySwitch(true);*/ presenter.setClippingPointY(this.valueAsNumber);};
+	yplaneSlider.oninput=function(){ sectionySwitch(true); presenter.setClippingPointY(this.valueAsNumber);};
+	yplaneSlider.onchange=function(){ sectionySwitch(true); presenter.setClippingPointY(this.valueAsNumber);};
 
 	var zplaneSlider = $('#zplaneSlider')[0];
 	zplaneSlider.min = 0.0;
 	zplaneSlider.max = 1.0;
 	zplaneSlider.step = 0.01;
 	zplaneSlider.defaultValue = 0.5;
-	zplaneSlider.oninput=function(){/*sectionzSwitch(true);*/ presenter.setClippingPointZ(this.valueAsNumber);};
-	zplaneSlider.onchange=function(){/*sectionzSwitch(true);*/ presenter.setClippingPointZ(this.valueAsNumber);};
+	zplaneSlider.oninput=function(){ sectionzSwitch(true); presenter.setClippingPointZ(this.valueAsNumber);};
+	zplaneSlider.onchange=function(){ sectionzSwitch(true); presenter.setClippingPointZ(this.valueAsNumber);};
 
 	// set checkboxes
 	var xplaneFlip = $('#xplaneFlip')[0];
