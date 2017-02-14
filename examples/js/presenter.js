@@ -25,7 +25,7 @@ SpiderGL.openNamespace();
 // version
 const HOP_VERSION_MAJOR       = 4;
 const HOP_VERSION_MINOR       = 1;
-const HOP_VERSION_DEVELOPMENT = 5;
+const HOP_VERSION_DEVELOPMENT = 8;
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode

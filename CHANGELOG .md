@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-10 February 2017
+14 February 2017
 
 #### TEAM
 ---------
@@ -32,7 +32,9 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 **Files Added/Modified**
 
 * Added "HOWTO_10.0_camera_lighting.html" file;
-* Updated "presenter.js" files;
+* Updated "presenter.js" file;
+* Updated "init.js" file;
+* Updated "3dhop.css" file;
 * Updated all trackballs ".js" files;
 * Updated "skins" directory;
 
