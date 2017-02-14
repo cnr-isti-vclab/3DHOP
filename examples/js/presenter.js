@@ -42,7 +42,7 @@ const SGL_TRACKBALL_DOLLY     = 3;
 const SGL_TRACKBALL_SCALE     = 4;
 
 Presenter = function (canvas) {
-	this._supportsWebGL = sglHandleCanvas(canvas, this);
+	this._supportsWebGL = sglHandleCanvas(canvas, this, { stencil: true });
 	console.log("3DHOP version: " + this.version);
 };
 
@@ -151,6 +151,7 @@ _parseSpot : function (options) {
 		useSolidColor   : true,
 		alpha           : 0.5,
 		useTransparency : true,
+		useStencil      : false,
 		cursor          : "pointer",
 		ID              : 0,
 		transform       : null,
@@ -1507,6 +1508,7 @@ _drawScene : function () {
 
 	// clear buffer
 	gl.clearColor(bkg[0], bkg[1], bkg[2], bkg[3]);
+	gl.clearStencil(0);	
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
 	// draw non-transparent geometries
@@ -1875,7 +1877,34 @@ _drawScene : function () {
 				renderer.setPrimitiveMode(spot.rendermode);
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
-				renderer.renderModel();
+				if(spot.useStencil)
+				{
+					gl.clear(gl.STENCIL_BUFFER_BIT); //reset stencil
+					//first pass
+					gl.colorMask(false, false, false, false); 
+					gl.depthMask(false);
+					gl.depthFunc(gl.LESS);
+					gl.disable(gl.CULL_FACE);
+					gl.enable(gl.STENCIL_TEST);
+					gl.stencilFunc(gl.ALWAYS, 0, 255);
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); 
+
+					renderer.renderModel();
+
+					//second pass
+					gl.colorMask(true, true, true, true);
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); // Don't change the stencil buffer...
+					gl.stencilFunc(gl.EQUAL, 1, 0x01); // The stencil buffer contains the shadow values...
+				
+					renderer.renderModel();	
+
+					gl.disable(gl.STENCIL_TEST);
+					gl.enable(gl.CULL_FACE);
+				} 
+				else 
+				{
+					renderer.renderModel();
+				}
 			renderer.end();
 		}
 
@@ -2002,6 +2031,7 @@ _drawScenePickingXYZ : function () {
 	// clear buffer
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
+	gl.clearStencil(0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	this.pickFramebuffer.unbind();
 
@@ -2065,6 +2095,7 @@ _drawScenePickingXYZ : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
+				renderer.setFramebuffer(null);				
 			renderer.end();
 		}
 
@@ -2121,6 +2152,7 @@ _drawScenePickingInstances : function () {
 	// clear buffer
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
+	gl.clearStencil(0);	
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	this.pickFramebuffer.unbind();
 
@@ -2177,6 +2209,7 @@ _drawScenePickingInstances : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
+				renderer.setFramebuffer(null);				
 			renderer.end();
 		}
 
@@ -2221,6 +2254,7 @@ _drawScenePickingSpots : function () {
 	// clear buffer
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
+	gl.clearStencil(0);	
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	this.pickFramebuffer.unbind();
 
@@ -2276,7 +2310,8 @@ _drawScenePickingSpots : function () {
 				renderer.setPrimitiveMode(instance.rendermode);
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
-				renderer.renderModel();
+				renderer.renderModel();				
+				renderer.setFramebuffer(null);				
 			renderer.end();
 		}
 
@@ -2364,6 +2399,7 @@ _drawScenePickingSpots : function () {
 _drawNull : function () {
 	var gl = this.ui.gl;
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
+	gl.clearStencil(0);	
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 },
 
@@ -2452,6 +2488,7 @@ onInitialize : function () {
 
 	gl.getExtension('EXT_frag_depth');
 	gl.clearColor(0.5, 0.5, 0.5, 1.0);
+	gl.clearStencil(0);
 
 	// scene rendering support data
 	this.renderer   = new SglModelRenderer(gl);
