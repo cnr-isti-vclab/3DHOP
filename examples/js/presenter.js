@@ -336,11 +336,11 @@ _createStandardPointNXSProgram : function () {
 			renderColor = diffuse * lambert;								  \n\
 																			  \n\
 			if(uClipAxis[0] != 0.0)\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) diffuse = uClipColor; \n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor; \n\
 			if(uClipAxis[1] != 0.0)\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) diffuse = uClipColor; \n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) renderColor = uClipColor; \n\
 			if(uClipAxis[2] != 0.0)\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) diffuse = uClipColor; \n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) renderColor = uClipColor; \n\
 																			  \n\			gl_FragColor  = vec4(renderColor, uAlpha);                            \n\
 			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));      \n\
 		}                                                                     \n\
@@ -459,7 +459,7 @@ _createStandardFaceNXSProgram : function () {
 			{																  \n\
 			  vec3  normal  = normalize(vNormal);                             \n\
 			  float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
-			  lambert = max(0.0, nDotL);                            \n\
+			  lambert = max(0.0, gl_FrontFacing? nDotL : -nDotL);			  \n\
 			}                                                                 \n\
 																			  \n\
 			renderColor = diffuse * lambert;								  \n\
@@ -468,11 +468,11 @@ _createStandardFaceNXSProgram : function () {
 				renderColor = renderColor * vec3(0.4, 0.3, 0.3);              \n\
 																			  \n\
 			if(uClipAxis[0] != 0.0)\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) diffuse = uClipColor; \n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor; \n\
 			if(uClipAxis[1] != 0.0)\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) diffuse = uClipColor; \n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) renderColor = uClipColor; \n\
 			if(uClipAxis[2] != 0.0)\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) diffuse = uClipColor; \n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) renderColor = uClipColor; \n\
 																			  \n\
 			gl_FragColor  = vec4(renderColor, uAlpha);                        \n\
 		}                                                                     \n\
