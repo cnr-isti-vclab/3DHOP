@@ -1506,9 +1506,9 @@ _drawScene : function () {
 
 	// clear buffer
 	gl.clearColor(bkg[0], bkg[1], bkg[2], bkg[3]);
-	gl.clearStencil(0);	
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-
+	gl.enable(gl.DEPTH_TEST);
+		
 	// draw non-transparent geometries
 	for (var inst in instances) {
 		var instance = instances[inst];
@@ -1520,8 +1520,6 @@ _drawScene : function () {
 		if (instance.useTransparency) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
@@ -1599,8 +1597,6 @@ _drawScene : function () {
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-
 		xform.model.pop();
 	}
 
@@ -1615,7 +1611,6 @@ _drawScene : function () {
 		if (!instance.useTransparency) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthMask(false);
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -1700,7 +1695,6 @@ _drawScene : function () {
 		// GLstate cleanup
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
-		gl.disable(gl.DEPTH_TEST);
 
 		xform.model.pop();
 	}
@@ -1708,9 +1702,7 @@ _drawScene : function () {
 	// draw picked point (if valid)
 	if (this._pickValid) {
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
-
 		xform.model.push();
 
 		var lineUniforms = {
@@ -1756,17 +1748,13 @@ _drawScene : function () {
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
 		gl.depthFunc(gl.LESS);
-		gl.disable(gl.DEPTH_TEST);
-
 		xform.model.pop();
 	}
 
 	// draw measurement line (if any)
 	if (this._measurementStage >= 2) {// 0=inactive 1=picking pointA 2=picking pointB 3=measurement ready
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
-
 		xform.model.push();
 
 		var lineUniforms = {
@@ -1818,8 +1806,6 @@ _drawScene : function () {
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
 		gl.depthFunc(gl.LESS);
-		gl.disable(gl.DEPTH_TEST);
-
 		xform.model.pop();
 	}
 
@@ -1833,7 +1819,6 @@ _drawScene : function () {
 		if (!spot.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthMask(false);
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -1881,8 +1866,6 @@ _drawScene : function () {
 					//first pass
 					gl.colorMask(false, false, false, false); 
 					gl.depthMask(false);
-					gl.depthFunc(gl.LESS);
-					gl.disable(gl.CULL_FACE);
 					gl.enable(gl.STENCIL_TEST);
 					gl.stencilFunc(gl.ALWAYS, 0, 255);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); 
@@ -1897,7 +1880,6 @@ _drawScene : function () {
 					renderer.renderModel();	
 
 					gl.disable(gl.STENCIL_TEST);
-					gl.enable(gl.CULL_FACE);
 				} 
 				else 
 				{
@@ -1909,15 +1891,12 @@ _drawScene : function () {
 		// GLstate cleanup
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
-		gl.disable(gl.DEPTH_TEST);
-
 		xform.model.pop();	}
 
 	// draw clipping plane (if any)
 	if(config.showClippingPlanes)
 	{
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthMask(false);
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -2003,7 +1982,6 @@ _drawScene : function () {
 		// GLstate cleanup
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
-		gl.disable(gl.DEPTH_TEST);
 	}
 },
 
@@ -2029,8 +2007,8 @@ _drawScenePickingXYZ : function () {
 	// clear buffer
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
-	gl.clearStencil(0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	gl.enable(gl.DEPTH_TEST);	
 	this.pickFramebuffer.unbind();
 
 	for (var inst in instances) {
@@ -2042,8 +2020,6 @@ _drawScenePickingXYZ : function () {
 		if (!instance.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
@@ -2098,8 +2074,6 @@ _drawScenePickingXYZ : function () {
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-		// undo transform
 		xform.model.pop();
 	}
 
@@ -2150,8 +2124,8 @@ _drawScenePickingInstances : function () {
 	// clear buffer
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
-	gl.clearStencil(0);	
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	gl.enable(gl.DEPTH_TEST);	
 	this.pickFramebuffer.unbind();
 
 	for (var inst in instances) {
@@ -2163,8 +2137,6 @@ _drawScenePickingInstances : function () {
 		if (!instance.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
@@ -2212,8 +2184,6 @@ _drawScenePickingInstances : function () {
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-		// undo transform
 		xform.model.pop();
 	}
 
@@ -2252,8 +2222,8 @@ _drawScenePickingSpots : function () {
 	// clear buffer
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
-	gl.clearStencil(0);	
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	gl.enable(gl.DEPTH_TEST);	
 	this.pickFramebuffer.unbind();
 
 	// first pass, draw invisible instances, for occlusion
@@ -2266,8 +2236,6 @@ _drawScenePickingSpots : function () {
 		if (!instance.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
@@ -2314,8 +2282,6 @@ _drawScenePickingSpots : function () {
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-		// undo transform
 		xform.model.pop();
 	}
 
@@ -2329,8 +2295,6 @@ _drawScenePickingSpots : function () {
 		if (!spot.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(spot.transform.matrix);
@@ -2377,8 +2341,6 @@ _drawScenePickingSpots : function () {
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-		// undo transform
 		xform.model.pop();
 	}
 
@@ -2397,7 +2359,6 @@ _drawScenePickingSpots : function () {
 _drawNull : function () {
 	var gl = this.ui.gl;
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
-	gl.clearStencil(0);	
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 },
 
@@ -2487,6 +2448,7 @@ onInitialize : function () {
 	gl.getExtension('EXT_frag_depth');
 	gl.clearColor(0.5, 0.5, 0.5, 1.0);
 	gl.clearStencil(0);
+	gl.depthFunc(gl.LESS);
 
 	// scene rendering support data
 	this.renderer   = new SglModelRenderer(gl);
