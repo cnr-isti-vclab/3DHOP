@@ -1374,7 +1374,7 @@ _createPickFramebuffer : function (width, height) {
 		color : this.pickColorTexture,
 		depth : this.pickDepthRenderbuffer,
 		autoViewport : true
-	});
+	});	
 },
 
 _setupDraw : function () {
@@ -1865,7 +1865,6 @@ _drawScene : function () {
 					gl.clear(gl.STENCIL_BUFFER_BIT); //reset stencil
 					//first pass
 					gl.colorMask(false, false, false, false); 
-					gl.depthMask(false);
 					gl.enable(gl.STENCIL_TEST);
 					gl.stencilFunc(gl.ALWAYS, 0, 255);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); 
@@ -1873,7 +1872,7 @@ _drawScene : function () {
 					renderer.renderModel();
 
 					//second pass
-					gl.colorMask(true, true, true, true);
+					gl.colorMask(true, true, true, true);				
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); // Don't change the stencil buffer...
 					gl.stencilFunc(gl.EQUAL, 1, 0x01); // The stencil buffer contains the shadow values...
 				
@@ -2337,11 +2336,13 @@ _drawScenePickingSpots : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
+				renderer.setFramebuffer(null);				
 			renderer.end();
 		}
 
 		// GLstate cleanup
 		xform.model.pop();
+		gl.depthMask(true);		
 	}
 
 	this.pickFramebuffer.readPixels(pixel, {
