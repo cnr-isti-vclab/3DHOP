@@ -115,7 +115,8 @@ _parseModelInstance : function (options) {
 		mesh            : null,
 		rendermode      : null,
 		color           : [ 1.0, 1.0, 1.0 ],
-		specularColor   : [ 0.5, 0.5, 0.5, 32.0],
+		specularColor   : [ 0.5, 0.5, 0.5, 32.0 ],
+		backsideColor   : [ 1.0, 0.5, 0.5, 0.0 ],
 		useSolidColor   : false,
 		alpha           : 0.5,
 		useTransparency : false,
@@ -130,7 +131,11 @@ _parseModelInstance : function (options) {
 	}, options);
 	r.transform = this._parseTransform(r.transform);
 	r.ID = this._instancesProgressiveID;
-	if (r.color[3]) r.alpha = r.color[3];
+	if (r.color[3]) //3DHOP 2.0 backward compatibility
+	{	
+		r.alpha = r.color[3];
+		r.color = [r.color[0], r.color[1], r.color[2]]
+	}
 	this._instancesProgressiveID += 1;
 	return r;
 },
@@ -160,7 +165,11 @@ _parseSpot : function (options) {
 	}, options);
 	r.transform = this._parseTransform(r.transform);
 	r.ID = this._spotsProgressiveID;
-	if (r.color[3]) r.alpha = r.color[3]; //3DHOP 2.0 backward compatibility
+	if (r.color[3]) //3DHOP 2.0 backward compatibility
+	{	
+		r.alpha = r.color[3];
+		r.color = [r.color[0], r.color[1], r.color[2]]
+	}
 	this._spotsProgressiveID += 1;
 	return r;
 },
@@ -423,7 +432,7 @@ _createStandardFaceNXSProgram : function () {
 		uniform   float uAlpha;													\n\
 		uniform   bool uUseSolidColor;											\n\
 		uniform   bool uUseLighting;											\n\
-		uniform   vec4 uDoubleSideColor;										\n\
+		uniform   vec4 uBackSideColor;											\n\
 		uniform   vec3 uSolidColor;												\n\
 		uniform   vec4 uSpecularColor;											\n\
 		uniform   vec3 uClipPoint;												\n\
@@ -476,10 +485,10 @@ _createStandardFaceNXSProgram : function () {
 																				\n\
 			if(!gl_FrontFacing)													\n\
 			{																	\n\
-				if(uDoubleSideColor[3]==0.0) renderColor = renderColor * uDoubleSideColor.rgb;	\n\
-				else if(uDoubleSideColor[3]==1.0) renderColor = uDoubleSideColor.rgb;			\n\
-				else if(uDoubleSideColor[3]==2.0) renderColor = uSolidColor;	\n\
-				else if(uDoubleSideColor[3]==3.0) discard;						\n\
+				if(uBackSideColor[3]==0.0) renderColor = renderColor * uBackSideColor.rgb;	\n\
+				else if(uBackSideColor[3]==1.0) renderColor = uBackSideColor.rgb;			\n\
+				else if(uBackSideColor[3]==2.0) renderColor = uSolidColor;					\n\
+				else if(uBackSideColor[3]==3.0) discard;									\n\
 			}																	\n\
 																				\n\
 			if(uClipAxis[0] != 0.0)																				\n\
@@ -515,7 +524,7 @@ _createStandardFaceNXSProgram : function () {
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : false,
 			"uUseLighting"               : true,
-			"uDoubleSideColor"           : [0.4, 0.3, 0.3, 0.0],
+			"uBackSideColor"             : [0.4, 0.3, 0.3, 0.0],
 			"uSolidColor"                : [1.0, 1.0, 1.0],
 			"uSpecularColor"             : [0.5, 0.2, 0.8, 32.0],
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
@@ -765,6 +774,7 @@ _createStandardPointPLYtechnique : function () {
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
+			"uWorldViewMatrix"           : { semantic : "uWorldViewMatrix",           value : SglMat4.identity() },
 			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
@@ -772,6 +782,8 @@ _createStandardPointPLYtechnique : function () {
 			"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : false },
 			"uUseLighting"               : { semantic : "uUseLighting",               value : true },
 			"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
+			"uBackSideColor"             : { semantic : "uBackSideColor",             value : [0.4, 0.3, 0.3, 0.0] },
+			"uSpecularColor"             : { semantic : "uSpecularColor",             value : [0.5, 0.2, 0.8, 32.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
@@ -793,12 +805,15 @@ _createStandardFacePLYtechnique : function () {
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
-			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
+			"uWorldViewMatrix"           : { semantic : "uWorldViewMatrix",           value : SglMat4.identity() },
+			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },				
 			"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 			"uAlpha"                     : { semantic : "uAlpha",                     value : 1.0 },
 			"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : false },
 			"uUseLighting"               : { semantic : "uUseLighting",               value : true },
 			"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
+			"uBackSideColor"             : { semantic : "uBackSideColor",             value : [0.4, 0.3, 0.3, 0.0] },
+			"uSpecularColor"             : { semantic : "uSpecularColor",             value : [0.5, 0.2, 0.8, 32.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
@@ -1561,7 +1576,7 @@ _drawScene : function () {
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : instance.useSolidColor,
 			"uUseLighting"               : space.useLighting && instance.useLighting,
-			"uDoubleSideColor"           : [0.4, 0.3, 0.3, 0.0],
+			"uBackSideColor"             : instance.backsideColor,
 			"uSpecularColor"             : instance.specularColor,
 			"uSolidColor"                : instance.color,
 			"uClipPoint"                 : this._clipPoint,
@@ -1660,7 +1675,7 @@ _drawScene : function () {
 			"uAlpha"                     : instance.alpha,
 			"uUseSolidColor"             : instance.useSolidColor,
 			"uUseLighting"               : space.useLighting && instance.useLighting,
-			"uDoubleSideColor"           : [0.4, 0.3, 0.3, 0.0],
+			"uBackSideColor"             : instance.backsideColor,
 			"uSpecularColor"             : instance.specularColor,
 			"uSolidColor"                : instance.color,
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
