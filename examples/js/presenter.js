@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.1.9";
+const HOP_VERSION             = "4.1.10";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -68,7 +68,7 @@ _parseBackground : function (options) {
 	var r = sglGetDefaultObject({
 		image         : null,
 		isEnvironment : false,
-		color         : [ 0.0, 0.0, 0.0, 0.0 ]
+		color         : [ 0.0, 0.0, 0.0, 0.0 ],
 	}, options);
 	return r;
 },
@@ -116,7 +116,7 @@ _parseModelInstance : function (options) {
 		rendermode      : null,
 		color           : [ 1.0, 1.0, 1.0 ],
 		specularColor   : [ 0.0, 0.0, 0.0, 32.0 ],
-		backsideColor   : [ 1.0, 0.5, 0.5, 0.0 ],
+		backsideColor   : [ 0.7, 0.4, 0.4, 0.0 ],
 		useSolidColor   : false,
 		alpha           : 0.5,
 		useTransparency : false,
@@ -381,7 +381,7 @@ _createStandardPointNXSProgram : function () {
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
 			"uClipColor"				 : [1.0, 1.0, 1.0],
-			"uClipColorSize"			 : 0.5
+			"uClipColorSize"			 : 0.5,
 		}
 	});
 	if(this._isDebugging)
@@ -467,6 +467,8 @@ _createStandardFaceNXSProgram : function () {
 			if(uUseSolidColor) {												\n\
 			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)			\n\
 				diffuse = vColor.aaa;											\n\
+			  else if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -6.0)	\n\
+				diffuse = vColor.rgb;											\n\
 			  else																\n\
 				diffuse = uSolidColor;											\n\
 			}																	\n\
@@ -530,7 +532,7 @@ _createStandardFaceNXSProgram : function () {
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
 			"uClipColor"                 : [1.0, 1.0, 1.0],
 			"uClipColorSize"             : 0.5,
-			"uSampler"                   : 0
+			"uSampler"                   : 0,
 		}
 	});
 	if(this._isDebugging)
@@ -616,7 +618,7 @@ _createXYZNXSProgram : function () {
 			"uModelMatrix" 				 : SglMat4.identity(),
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
-			"uPointSize"                 : 1.0
+			"uPointSize"                 : 1.0,
 		}
 	});
 	if(this._isDebugging)
@@ -675,7 +677,7 @@ _createColorCodedIDNXSProgram : function () {
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
 			"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
-			"uPointSize"                 : 1.0
+			"uPointSize"                 : 1.0,
 		}
 	});
 	if(this._isDebugging)
@@ -751,7 +753,7 @@ _createColorShadedNXSProgram : function () {
 			"uViewSpaceNormalMatrix"     : SglMat3.identity(),
 			"uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 			"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
-			"uPointSize"                 : 1.0
+			"uPointSize"                 : 1.0,
 		}
 	});
 	if(this._isDebugging)
@@ -768,7 +770,7 @@ _createStandardPointPLYtechnique : function () {
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
-			"aPointSize" : 1.0
+			"aPointSize" : 1.0,
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -786,7 +788,7 @@ _createStandardPointPLYtechnique : function () {
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
-			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 }
+			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 },
 		}
 	});
 
@@ -817,7 +819,7 @@ _createStandardFacePLYtechnique : function () {
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
 			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 },
-			"uSampler"                   : { semantic : "uSampler",                   value : 0 }
+			"uSampler"                   : { semantic : "uSampler",                   value : 0 },
 		}
 	});
 
@@ -832,14 +834,14 @@ _createXYZPLYtechnique : function () {
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
-			"aPointSize" : 1.0
+			"aPointSize" : 1.0,
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
-			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] }
+			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 		}
 	});
 
@@ -854,12 +856,12 @@ _createColorCodedIDPLYtechnique : function () {
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
-			"aPointSize" : 1.0
+			"aPointSize" : 1.0,
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
-			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 }
+			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
 		}
 	});
 
@@ -873,14 +875,14 @@ _createColorShadedPLYtechnique : function () {
 		program  : this._createColorShadedNXSProgram(),
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
-			"aPointSize" : 1.0
+			"aPointSize" : 1.0,
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
 			"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
-			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 }
+			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
 		}
 	});
 
@@ -925,13 +927,13 @@ _createSimpleLinetechnique : function () {
 		",
 		vertexStreams : {
 			"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 0.0, 1.0 ]
+			"aColor"  : [ 1.0, 0.0, 0.0, 1.0 ],
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uLineColor"                 : { semantic : "uLineColor",                 value : [0.0, 1.0, 0.5, 1.0] },
 			"uPointA"                    : { semantic : "uPointA",                    value : [0.0, 0.0, 0.0] },
-			"uPointB"                    : { semantic : "uPointB",                    value : [1.0, 1.0, 1.0] }
+			"uPointB"                    : { semantic : "uPointB",                    value : [1.0, 1.0, 1.0] },
 		}
 	});
 
@@ -973,7 +975,7 @@ _createMultiLinesPointstechnique : function () {
 		",
 		vertexStreams : {
 			"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 1.0, 1.0 ]
+			"aColor"  : [ 1.0, 0.0, 1.0, 1.0 ],
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
