@@ -115,7 +115,7 @@ _parseModelInstance : function (options) {
 		mesh            : null,
 		rendermode      : null,
 		color           : [ 1.0, 1.0, 1.0 ],
-		specularColor   : [ 0.5, 0.5, 0.5, 32.0 ],
+		specularColor   : [ 0.0, 0.0, 0.0, 32.0 ],
 		backsideColor   : [ 1.0, 0.5, 0.5, 0.0 ],
 		useSolidColor   : false,
 		alpha           : 0.5,
@@ -487,8 +487,7 @@ _createStandardFaceNXSProgram : function () {
 			{																	\n\
 				if(uBackSideColor[3]==0.0) renderColor = renderColor * uBackSideColor.rgb;	\n\
 				else if(uBackSideColor[3]==1.0) renderColor = uBackSideColor.rgb;			\n\
-				else if(uBackSideColor[3]==2.0) renderColor = uSolidColor;					\n\
-				else if(uBackSideColor[3]==3.0) discard;									\n\
+				else if(uBackSideColor[3]==2.0) discard;									\n\
 			}																	\n\
 																				\n\
 			if(uClipAxis[0] != 0.0)																				\n\
@@ -3138,6 +3137,84 @@ toggleInstanceTransparency : function (tag, redraw) {
 			for (var tg in instances[inst].tags){
 				if(instances[inst].tags[tg] == tag)
 					instances[inst].useTransparency = !instances[inst].useTransparency;
+			}
+		}
+	}
+	if(redraw)
+		this.ui.postDrawEvent();
+},
+
+//-----------------------------------------------------------------------------
+// instance shading
+//----specular
+setInstanceSpecularityByName : function (name, color, hardness, redraw = true) {
+	var instances = this._scene.modelInstances;
+
+	if(name == HOP_ALL) {
+		for (var inst in instances)
+			instances[inst].specularColor = [color[0], color[1], color[2], hardness];
+	}
+	else {
+		if(instances[name]) // if an instance with that name exists
+			instances[name].specularColor = [color[0], color[1], color[2], hardness];
+	}
+	if(redraw)
+		this.ui.postDrawEvent();
+},
+
+setInstanceSpecularity : function (tag, color, hardness, redraw = true) {
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(tag == HOP_ALL) {
+			instances[inst].specularColor = [color[0], color[1], color[2], hardness];
+		}
+		else {
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag)
+					instances[inst].specularColor = [color[0], color[1], color[2], hardness];
+			}
+		}
+	}
+	if(redraw)
+		this.ui.postDrawEvent();
+},
+
+//----backface
+setInstanceBackfaceByName : function (name, color, mode, redraw = true) {
+	var instances = this._scene.modelInstances;
+	var modecode = 0.0;
+	if (mode == "tint") modecode = 0.0;
+	else if (mode == "fill") modecode = 1.0;
+	else if (mode == "cull") modecode = 2.0;
+	
+	if(name == HOP_ALL) {
+		for (var inst in instances)
+			instances[inst].backfaceColor = [color[0], color[1], color[2], modecode];
+	}
+	else {
+		if(instances[name]) // if an instance with that name exists
+			instances[name].backfaceColor = [color[0], color[1], color[2], modecode];
+	}
+	if(redraw)
+		this.ui.postDrawEvent();
+},
+
+setInstanceBackface : function (tag, color, mode, redraw = true) {
+	var instances = this._scene.modelInstances;
+	var modecode = 0.0;
+	if (mode == "tint") modecode = 0.0;
+	else if (mode == "fill") modecode = 1.0;
+	else if (mode == "cull") modecode = 2.0;
+	
+	for (var inst in instances) {
+		if(tag == HOP_ALL) {
+			instances[inst].backfaceColor = [color[0], color[1], color[2], modecode];
+		}
+		else {
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag)
+					instances[inst].backfaceColor = [color[0], color[1], color[2], modecode];
 			}
 		}
 	}
