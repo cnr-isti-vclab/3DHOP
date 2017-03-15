@@ -115,10 +115,12 @@ _parseModelInstance : function (options) {
 		mesh            : null,
 		rendermode      : null,
 		color           : [ 1.0, 1.0, 1.0 ],
+		specularColor   : [ 0.5, 0.5, 0.5, 32.0],
 		useSolidColor   : false,
 		alpha           : 0.5,
 		useTransparency : false,
 		useLighting     : true,
+		doubleSide      : "color",
 		cursor          : "default",
 		ID              : 0,
 		transform       : null,
@@ -253,96 +255,95 @@ _parseTransform : function (options) {
 _createStandardPointNXSProgram : function () {
 	var gl = this.ui.gl;
 	var nxsVertexShader = new SglVertexShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
-		uniform   mat3 uViewSpaceNormalMatrix;                                \n\
-		uniform   mat4 uModelMatrix;                                          \n\
-		uniform   float uPointSize;                                           \n\
-																			  \n\
-		attribute vec3 aPosition;                                             \n\
-		attribute vec3 aNormal;                                               \n\
-		attribute vec4 aColor;                                                \n\
-		attribute float aPointSize;                                           \n\
-																			  \n\
-		varying   vec3 vNormal;                                               \n\
-		varying   vec4 vColor;                                                \n\
-		varying   vec4 vModelPos;                                             \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			vNormal     = uViewSpaceNormalMatrix * aNormal;                   \n\
-			vColor      = aColor;                                             \n\
-			vModelPos   = uModelMatrix * vec4(aPosition, 1.0);                \n\
-																			  \n\
-			gl_Position  = uWorldViewProjectionMatrix * vec4(aPosition, 1.0); \n\
-			gl_PointSize = uPointSize * aPointSize;							  \n\
-		}                                                                     \n\
+		precision highp float;													\n\
+																				\n\
+		uniform   mat4 uWorldViewProjectionMatrix;								\n\
+		uniform   mat3 uViewSpaceNormalMatrix;									\n\
+		uniform   mat4 uModelMatrix;											\n\
+		uniform   float uPointSize;												\n\
+																				\n\
+		attribute vec3 aPosition;												\n\
+		attribute vec3 aNormal;													\n\
+		attribute vec4 aColor;													\n\
+		attribute float aPointSize;												\n\
+																				\n\
+		varying   vec3 vNormal;													\n\
+		varying   vec4 vColor;													\n\
+		varying   vec4 vModelPos;												\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			vNormal     = normalize(uViewSpaceNormalMatrix * aNormal);			\n\
+			vColor      = aColor;												\n\
+			vModelPos   = uModelMatrix * vec4(aPosition, 1.0);					\n\
+																				\n\
+			gl_Position  = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);	\n\
+			gl_PointSize = uPointSize * aPointSize;								\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("STD POINT Vertex Shader Log:\n" + nxsVertexShader.log);
 
 	var nxsFragmentShader = new SglFragmentShader(gl, "\
-		#extension GL_EXT_frag_depth : enable								  \n\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   vec3 uViewSpaceLightDirection;                              \n\
-		uniform   float uAlpha;                                               \n\
-		uniform   bool uUseSolidColor;                                        \n\
-		uniform   bool uUseLighting;                                          \n\
-		uniform   vec3 uSolidColor;                                           \n\
-		uniform   vec3 uClipPoint;                                            \n\
-		uniform   vec3 uClipAxis;                                             \n\
-		uniform   vec3 uClipColor;                                            \n\
-		uniform   float uClipColorSize;                                       \n\
-																			  \n\
-		varying   vec3 vNormal;                                               \n\
-		varying   vec4 vColor;                                                \n\
-		varying   vec4 vModelPos;                                             \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			if(uClipAxis[0] != 0.0)\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard; \n\
-			if(uClipAxis[1] != 0.0)\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard; \n\
-			if(uClipAxis[2] != 0.0)\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard; \n\
-																			  \n\
-			float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);				  \n\
-			float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);				  \n\
-			float c = 1.0 - (a + b);										  \n\
-			if(c < 0.0) { discard; }										  \n\
-																			  \n\
-			vec3  renderColor = vec3(1.0, 1.0, 1.0);                          \n\
-			vec3  diffuse = vColor.rgb;                                       \n\
-			float lambert = 1.0;                                              \n\
-																			  \n\
-			if(uUseSolidColor) {                                              \n\
-			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
-				diffuse = vColor.aaa;                                         \n\
-			  else                                                            \n\
-				diffuse = uSolidColor;                                        \n\
-			}                                                                 \n\
-																			  \n\
-			if((uUseLighting)&&(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0)) \n\
-			{																  \n\
-			  vec3  normal  = normalize(vNormal);                             \n\
-			  float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
-			  lambert = max(0.0, nDotL);                        		      \n\
-			}                                                                 \n\
-																			  \n\
-			renderColor = diffuse * lambert;								  \n\
-																			  \n\
-			if(uClipAxis[0] != 0.0)\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor; \n\
-			if(uClipAxis[1] != 0.0)\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) renderColor = uClipColor; \n\
-			if(uClipAxis[2] != 0.0)\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) renderColor = uClipColor; \n\
-																			  \n\			gl_FragColor  = vec4(renderColor, uAlpha);                            \n\
-			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));      \n\
-		}                                                                     \n\
+		#extension GL_EXT_frag_depth : enable									\n\
+		precision highp float;													\n\
+																				\n\
+		uniform   vec3 uViewSpaceLightDirection;								\n\
+		uniform   float uAlpha;													\n\
+		uniform   bool uUseSolidColor;											\n\
+		uniform   bool uUseLighting;											\n\
+		uniform   vec3 uSolidColor;												\n\
+		uniform   vec3 uClipPoint;												\n\
+		uniform   vec3 uClipAxis;												\n\
+		uniform   vec3 uClipColor;												\n\
+		uniform   float uClipColorSize;											\n\
+																				\n\
+		varying   vec3 vNormal;													\n\
+		varying   vec4 vColor;													\n\
+		varying   vec4 vModelPos;												\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			if(uClipAxis[0] != 0.0)													\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
+			if(uClipAxis[1] != 0.0)													\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
+			if(uClipAxis[2] != 0.0)													\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+																				\n\
+			float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);					\n\
+			float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);					\n\
+			float c = 1.0 - (a + b);											\n\
+			if(c < 0.0) { discard; }											\n\
+																				\n\
+			vec3  renderColor = vec3(1.0, 1.0, 1.0);							\n\
+			vec3  diffuse = vColor.rgb;											\n\
+			float lambert = 1.0;												\n\
+																				\n\
+			if(uUseSolidColor) {												\n\
+			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)			\n\
+				diffuse = vColor.aaa;											\n\
+			  else																\n\
+				diffuse = uSolidColor;											\n\
+			}																	\n\
+																				\n\
+			if((uUseLighting)&&(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0))	\n\
+			{																	\n\
+			  float nDotL   = dot(vNormal, -uViewSpaceLightDirection);			\n\
+			  lambert = max(0.0, nDotL);										\n\
+			}																	\n\
+																				\n\
+			renderColor = diffuse * lambert;									\n\
+																				\n\
+			if(uClipAxis[0] != 0.0)																				\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor;	\n\
+			if(uClipAxis[1] != 0.0)																				\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) renderColor = uClipColor;	\n\
+			if(uClipAxis[2] != 0.0)																				\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) renderColor = uClipColor;	\n\
+																				\n\			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
+			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));		\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("STD POINT Fragment Shader Log:\n" + nxsFragmentShader.log);
@@ -383,98 +384,113 @@ _createStandardPointNXSProgram : function () {
 _createStandardFaceNXSProgram : function () {
 	var gl = this.ui.gl;
 	var nxsVertexShader = new SglVertexShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
-		uniform   mat3 uViewSpaceNormalMatrix;                                \n\
-		uniform   mat4 uModelMatrix;                                          \n\
-																			  \n\
-		attribute vec3 aPosition;                                             \n\
-		attribute vec3 aNormal;                                               \n\
-		attribute vec4 aColor;                                                \n\
-		attribute vec2 aTextureCoord;                                         \n\
-																			  \n\
-		varying   vec3 vNormal;                                               \n\
-		varying   vec4 vColor;                                                \n\
-		varying   vec4 vModelPos;                                             \n\
-		varying   vec2 vTextureCoord;                            			  \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			vNormal       = uViewSpaceNormalMatrix * aNormal;                 \n\
-			vColor        = aColor;                                           \n\
-			vModelPos     = uModelMatrix * vec4(aPosition, 1.0);              \n\
-			vTextureCoord = aTextureCoord;                       			  \n\
-																			  \n\
-			gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-		}                                                                     \n\
+		precision highp float;													\n\
+																				\n\
+		uniform   mat4 uWorldViewProjectionMatrix;								\n\
+		uniform   mat3 uViewSpaceNormalMatrix;									\n\
+		uniform   mat4 uWorldViewMatrix;										\n\
+		uniform   mat4 uModelMatrix;											\n\
+																				\n\
+		attribute vec3 aPosition;												\n\
+		attribute vec3 aNormal;													\n\
+		attribute vec4 aColor;													\n\
+		attribute vec2 aTextureCoord;											\n\
+																				\n\
+		varying   vec3 vNormal;													\n\
+		varying   vec4 vColor;													\n\
+		varying   vec4 vModelPos;												\n\
+		varying   vec4 vModelViewPos;											\n\
+		varying   vec2 vTextureCoord;											\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			vNormal       = normalize(uViewSpaceNormalMatrix * aNormal);		\n\
+			vColor        = aColor;												\n\
+			vModelPos     = uModelMatrix * vec4(aPosition, 1.0);				\n\
+			vModelViewPos = uWorldViewMatrix * vec4(aPosition, 1.0);			\n\
+			vTextureCoord = aTextureCoord;										\n\
+																				\n\
+			gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);	\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("STD FACE Vertex Shader Log:\n" + nxsVertexShader.log);
 
 	var nxsFragmentShader = new SglFragmentShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   vec3 uViewSpaceLightDirection;                              \n\
-		uniform   float uAlpha;                                               \n\
-		uniform   bool uUseSolidColor;                                        \n\
-		uniform   bool uUseLighting;                                          \n\
-		uniform   vec3 uSolidColor;                                           \n\
-		uniform   vec3 uClipPoint;                                            \n\
-		uniform   vec3 uClipAxis;                                             \n\
-		uniform   vec3 uClipColor;                                            \n\
-		uniform   float uClipColorSize;                                       \n\
-		uniform   sampler2D uSampler;                                         \n\
-																			  \n\
-		varying   vec3 vNormal;                                               \n\
-		varying   vec4 vColor;                                                \n\
-		varying   vec4 vModelPos;                                             \n\
-		varying   vec2 vTextureCoord;                                         \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			if(uClipAxis[0] != 0.0)\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard; \n\
-			if(uClipAxis[1] != 0.0)\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard; \n\
-			if(uClipAxis[2] != 0.0)\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard; \n\
-																			  \n\
-			vec3  renderColor = vec3(1.0, 1.0, 1.0);                          \n\
-			vec3  diffuse = vColor.rgb;                                       \n\
-			float lambert = 1.0;                                              \n\
-																			  \n\
-			if(vTextureCoord.x != 0.0)                                        \n\
-			  diffuse = texture2D(uSampler, vTextureCoord).xyz;               \n\
-																			  \n\
-			if(uUseSolidColor) {                                              \n\
-			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
-				diffuse = vColor.aaa;                                         \n\
-			  else                                                            \n\
-				diffuse = uSolidColor;                                        \n\
-			}                                                                 \n\
-																			  \n\
-			if((uUseLighting)&&(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0)) \n\
-			{																  \n\
-			  vec3  normal  = normalize(vNormal);                             \n\
-			  float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
-			  lambert = max(0.0, gl_FrontFacing? nDotL : -nDotL);			  \n\
-			}                                                                 \n\
-																			  \n\
-			renderColor = diffuse * lambert;								  \n\
-																			  \n\
-			if(!gl_FrontFacing)                                               \n\
-				renderColor = renderColor * vec3(0.4, 0.3, 0.3);              \n\
-																			  \n\
-			if(uClipAxis[0] != 0.0)\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor; \n\
-			if(uClipAxis[1] != 0.0)\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) renderColor = uClipColor; \n\
-			if(uClipAxis[2] != 0.0)\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) renderColor = uClipColor; \n\
-																			  \n\
-			gl_FragColor  = vec4(renderColor, uAlpha);                        \n\
-		}                                                                     \n\
+		precision highp float;													\n\
+																				\n\
+		uniform   vec3 uViewSpaceLightDirection;								\n\
+		uniform   float uAlpha;													\n\
+		uniform   bool uUseSolidColor;											\n\
+		uniform   bool uUseLighting;											\n\
+		uniform   vec4 uDoubleSideColor;										\n\
+		uniform   vec3 uSolidColor;												\n\
+		uniform   vec4 uSpecularColor;											\n\
+		uniform   vec3 uClipPoint;												\n\
+		uniform   vec3 uClipAxis;												\n\
+		uniform   vec3 uClipColor;												\n\
+		uniform   float uClipColorSize;											\n\
+		uniform   sampler2D uSampler;											\n\
+																				\n\
+		varying   vec3 vNormal;													\n\
+		varying   vec4 vColor;													\n\
+		varying   vec4 vModelPos;												\n\
+		varying   vec4 vModelViewPos;											\n\
+		varying   vec2 vTextureCoord;											\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			if(uClipAxis[0] != 0.0)													\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
+			if(uClipAxis[1] != 0.0)													\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
+			if(uClipAxis[2] != 0.0)													\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+																				\n\
+			vec3  renderColor = vec3(1.0, 1.0, 1.0);							\n\
+			vec3  diffuse = vColor.rgb;											\n\
+			float lambert = 1.0;												\n\
+			vec3  specular = vec3(0.0, 0.0, 0.0);								\n\
+																				\n\
+			if(vTextureCoord.x != 0.0)											\n\
+			  diffuse = texture2D(uSampler, vTextureCoord).xyz;					\n\
+																				\n\
+			if(uUseSolidColor) {												\n\
+			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)			\n\
+				diffuse = vColor.aaa;											\n\
+			  else																\n\
+				diffuse = uSolidColor;											\n\
+			}																	\n\
+																				\n\
+			if((uUseLighting)&&(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0))	\n\
+			{																	\n\
+			  float nDotL   = dot(vNormal, -uViewSpaceLightDirection);			\n\
+			  lambert = max(0.0, gl_FrontFacing? nDotL : -nDotL);				\n\
+																				\n\
+              vec3 halfV = normalize(-uViewSpaceLightDirection -vModelViewPos.xyz);\n\
+              float spc = pow(max(dot(vNormal, halfV),0.0), uSpecularColor.a);	\n\
+              specular = spc * uSpecularColor.rgb;								\n\
+			}																	\n\
+																				\n\
+			renderColor = (diffuse * lambert) + specular;						\n\
+																				\n\
+			if(!gl_FrontFacing)													\n\
+			{																	\n\
+				if(uDoubleSideColor[3]==0.0) renderColor = renderColor * uDoubleSideColor.rgb;	\n\
+				else if(uDoubleSideColor[3]==1.0) renderColor = uDoubleSideColor.rgb;			\n\
+				else if(uDoubleSideColor[3]==2.0) renderColor = uSolidColor;	\n\
+				else if(uDoubleSideColor[3]==3.0) discard;						\n\
+			}																	\n\
+																				\n\
+			if(uClipAxis[0] != 0.0)																				\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor;	\n\
+			if(uClipAxis[1] != 0.0)																				\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) renderColor = uClipColor;	\n\
+			if(uClipAxis[2] != 0.0)																				\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) renderColor = uClipColor;	\n\
+																				\n\
+			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("STD FACE Fragment Shader Log:\n" + nxsFragmentShader.log);
@@ -493,12 +509,15 @@ _createStandardFaceNXSProgram : function () {
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
 			"uViewSpaceNormalMatrix"     : SglMat3.identity(),
+			"uWorldViewMatrix"           : SglMat3.identity(),
 			"uModelMatrix"               : SglMat4.identity(),
 			"uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : false,
-			"uUseLighting"               : true,			
+			"uUseLighting"               : true,
+			"uDoubleSideColor"           : [0.4, 0.3, 0.3, 0.0],
 			"uSolidColor"                : [1.0, 1.0, 1.0],
+			"uSpecularColor"             : [0.5, 0.2, 0.8, 32.0],
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
 			"uClipColor"                 : [1.0, 1.0, 1.0],
@@ -1374,7 +1393,7 @@ _createPickFramebuffer : function (width, height) {
 		color : this.pickColorTexture,
 		depth : this.pickDepthRenderbuffer,
 		autoViewport : true
-	});	
+	});
 },
 
 _setupDraw : function () {
@@ -1508,7 +1527,7 @@ _drawScene : function () {
 	gl.clearColor(bkg[0], bkg[1], bkg[2], bkg[3]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	gl.enable(gl.DEPTH_TEST);
-		
+
 	// draw non-transparent geometries
 	for (var inst in instances) {
 		var instance = instances[inst];
@@ -1536,17 +1555,21 @@ _drawScene : function () {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 			"uModelMatrix"               : modelMatrix,
+			"uWorldViewMatrix"           : xform.modelViewMatrix,
 			"uViewSpaceLightDirection"   : this._lightDirection,
 			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : instance.useSolidColor,
 			"uUseLighting"               : space.useLighting && instance.useLighting,
-			"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
+			"uDoubleSideColor"           : [0.4, 0.3, 0.3, 0.0],
+			"uSpecularColor"             : instance.specularColor,
+			"uSolidColor"                : instance.color,
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
 			"uClipColor"                 : config.clippingBorderColor,
 			"uClipColorSize"             : thisClipBordersize
 		};
+		// double side parameters
 
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
@@ -1556,7 +1579,7 @@ _drawScene : function () {
 			nexus.viewMatrix       = xform.viewMatrix;
 			nexus.projectionMatrix = xform.projectionMatrix;
 			nexus.viewport         = [0, 0, width, height];
-			var fps = this.ui.framesPerSecond;			
+			var fps = this.ui.framesPerSecond;
 			if(nexus._targetFps && fps) {
 				var newBudget = (nexus.drawBudget * fps) / nexus._targetFps;
 				if(newBudget < nexus._minDrawBudget)
@@ -1631,17 +1654,20 @@ _drawScene : function () {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 			"uModelMatrix"               : modelMatrix,
+			"uWorldViewMatrix"           : xform.modelViewMatrix,
 			"uViewSpaceLightDirection"   : this._lightDirection,
 			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : instance.alpha,
 			"uUseSolidColor"             : instance.useSolidColor,
-			"uUseLighting"               : space.useLighting && instance.useLighting,			
-			"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
+			"uUseLighting"               : space.useLighting && instance.useLighting,
+			"uDoubleSideColor"           : [0.4, 0.3, 0.3, 0.0],
+			"uSpecularColor"             : instance.specularColor,
+			"uSolidColor"                : instance.color,
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
 			"uClipColor"                 : config.clippingBorderColor,
-			"uClipColorSize"             : thisClipBordersize
+			"uClipColorSize"             : thisClipBordersize,
 		};
 
 		if(mesh.isNexus) {
@@ -1652,7 +1678,7 @@ _drawScene : function () {
 			nexus.viewMatrix       = xform.viewMatrix;
 			nexus.projectionMatrix = xform.projectionMatrix;
 			nexus.viewport         = [0, 0, width, height];
-			var fps = this.ui.framesPerSecond;			
+			var fps = this.ui.framesPerSecond;
 			if(nexus._targetFps && fps) {
 				var newBudget = (nexus.drawBudget * fps) / nexus._targetFps;
 				if(newBudget < nexus._minDrawBudget)
@@ -1864,23 +1890,23 @@ _drawScene : function () {
 				{
 					gl.clear(gl.STENCIL_BUFFER_BIT); //reset stencil
 					//first pass
-					gl.colorMask(false, false, false, false); 
+					gl.colorMask(false, false, false, false);
 					gl.enable(gl.STENCIL_TEST);
 					gl.stencilFunc(gl.ALWAYS, 0, 255);
-					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); 
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
 
 					renderer.renderModel();
 
 					//second pass
-					gl.colorMask(true, true, true, true);				
+					gl.colorMask(true, true, true, true);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); // Don't change the stencil buffer...
 					gl.stencilFunc(gl.EQUAL, 1, 0x01); // The stencil buffer contains the shadow values...
-				
-					renderer.renderModel();	
+
+					renderer.renderModel();
 
 					gl.disable(gl.STENCIL_TEST);
-				} 
-				else 
+				}
+				else
 				{
 					renderer.renderModel();
 				}
@@ -1900,7 +1926,7 @@ _drawScene : function () {
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
-		if(this._clipAxis[0] != 0.0) {	
+		if(this._clipAxis[0] != 0.0) {
 			xform.model.push();
 			xform.model.translate([this._clipPoint[0], this._sceneBboxCenter[1], this._sceneBboxCenter[2]]);
 			xform.model.scale([(this._sceneBboxMax[0] - this._sceneBboxMin[0]),
@@ -2007,7 +2033,7 @@ _drawScenePickingXYZ : function () {
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-	gl.enable(gl.DEPTH_TEST);	
+	gl.enable(gl.DEPTH_TEST);
 	this.pickFramebuffer.unbind();
 
 	for (var inst in instances) {
@@ -2068,7 +2094,7 @@ _drawScenePickingXYZ : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
-				renderer.setFramebuffer(null);				
+				renderer.setFramebuffer(null);
 			renderer.end();
 		}
 
@@ -2124,7 +2150,7 @@ _drawScenePickingInstances : function () {
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-	gl.enable(gl.DEPTH_TEST);	
+	gl.enable(gl.DEPTH_TEST);
 	this.pickFramebuffer.unbind();
 
 	for (var inst in instances) {
@@ -2178,7 +2204,7 @@ _drawScenePickingInstances : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
-				renderer.setFramebuffer(null);				
+				renderer.setFramebuffer(null);
 			renderer.end();
 		}
 
@@ -2222,7 +2248,7 @@ _drawScenePickingSpots : function () {
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-	gl.enable(gl.DEPTH_TEST);	
+	gl.enable(gl.DEPTH_TEST);
 	this.pickFramebuffer.unbind();
 
 	// first pass, draw invisible instances, for occlusion
@@ -2275,8 +2301,8 @@ _drawScenePickingSpots : function () {
 				renderer.setPrimitiveMode(instance.rendermode);
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
-				renderer.renderModel();				
-				renderer.setFramebuffer(null);				
+				renderer.renderModel();
+				renderer.setFramebuffer(null);
 			renderer.end();
 		}
 
@@ -2336,13 +2362,13 @@ _drawScenePickingSpots : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
-				renderer.setFramebuffer(null);				
+				renderer.setFramebuffer(null);
 			renderer.end();
 		}
 
 		// GLstate cleanup
 		xform.model.pop();
-		gl.depthMask(true);		
+		gl.depthMask(true);
 	}
 
 	this.pickFramebuffer.readPixels(pixel, {
@@ -2459,8 +2485,8 @@ onInitialize : function () {
 	// nexus parameters
 	this._nexusTargetFps = 15.0;
 	this._nexusTargetError = 1.0;
-	this._nexusCacheSize = 50000000;	
-	
+	this._nexusCacheSize = 50000000;
+
 	// shaders
 	this.faceNXSProgram = this._createStandardFaceNXSProgram();
 	this.pointNXSProgram = this._createStandardPointNXSProgram();
@@ -3598,12 +3624,12 @@ setCameraOrthographic : function () {
 //-----------------------------------------------------------------------------
 toggleLighting : function () {
 	this._scene.space.useLighting = !this._scene.space.useLighting;
-	this.ui.postDrawEvent();	
+	this.ui.postDrawEvent();
 },
 
 setLighting : function (on) {
 	this._scene.space.useLighting = on;
-	this.ui.postDrawEvent();	
+	this.ui.postDrawEvent();
 },
 getLighting : function () {
 	return this._scene.space.useLighting;
