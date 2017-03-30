@@ -115,13 +115,12 @@ _parseModelInstance : function (options) {
 		mesh            : null,
 		rendermode      : null,
 		color           : [ 1.0, 1.0, 1.0 ],
-		specularColor   : [ 0.0, 0.0, 0.0, 32.0 ],
-		backsideColor   : [ 0.7, 0.4, 0.4, 0.0 ],
 		useSolidColor   : false,
+		specularColor   : [ 0.0, 0.0, 0.0, 32.0 ],
+		backfaceColor   : [ 0.7, 0.4, 0.4, 0.0 ],
 		alpha           : 0.5,
 		useTransparency : false,
 		useLighting     : true,
-		doubleSide      : "color",
 		cursor          : "default",
 		ID              : 0,
 		transform       : null,
@@ -268,6 +267,7 @@ _createStandardPointNXSProgram : function () {
 																				\n\
 		uniform   mat4 uWorldViewProjectionMatrix;								\n\
 		uniform   mat3 uViewSpaceNormalMatrix;									\n\
+		uniform   mat4 uWorldViewMatrix;										\n\
 		uniform   mat4 uModelMatrix;											\n\
 		uniform   float uPointSize;												\n\
 																				\n\
@@ -279,12 +279,14 @@ _createStandardPointNXSProgram : function () {
 		varying   vec3 vNormal;													\n\
 		varying   vec4 vColor;													\n\
 		varying   vec4 vModelPos;												\n\
+		varying   vec4 vModelViewPos;											\n\
 																				\n\
 		void main(void)															\n\
 		{																		\n\
-			vNormal     = normalize(uViewSpaceNormalMatrix * aNormal);			\n\
-			vColor      = aColor;												\n\
-			vModelPos   = uModelMatrix * vec4(aPosition, 1.0);					\n\
+			vNormal       = normalize(uViewSpaceNormalMatrix * aNormal);		\n\
+			vColor        = aColor;												\n\
+			vModelPos     = uModelMatrix * vec4(aPosition, 1.0);				\n\
+			vModelViewPos = uWorldViewMatrix * vec4(aPosition, 1.0);			\n\
 																				\n\
 			gl_Position  = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);	\n\
 			gl_PointSize = uPointSize * aPointSize;								\n\
@@ -302,14 +304,17 @@ _createStandardPointNXSProgram : function () {
 		uniform   bool uUseSolidColor;											\n\
 		uniform   bool uUseLighting;											\n\
 		uniform   vec3 uSolidColor;												\n\
+		uniform   vec4 uSpecularColor;											\n\
 		uniform   vec3 uClipPoint;												\n\
 		uniform   vec3 uClipAxis;												\n\
+		uniform   vec4 uClipPlane;												\n\
 		uniform   vec3 uClipColor;												\n\
 		uniform   float uClipColorSize;											\n\
 																				\n\
 		varying   vec3 vNormal;													\n\
 		varying   vec4 vColor;													\n\
 		varying   vec4 vModelPos;												\n\
+		varying   vec4 vModelViewPos;											\n\
 																				\n\
 		void main(void)															\n\
 		{																		\n\
@@ -328,6 +333,7 @@ _createStandardPointNXSProgram : function () {
 			vec3  renderColor = vec3(1.0, 1.0, 1.0);							\n\
 			vec3  diffuse = vColor.rgb;											\n\
 			float lambert = 1.0;												\n\
+			vec3  specular = vec3(0.0, 0.0, 0.0);								\n\
 																				\n\
 			if(uUseSolidColor) {												\n\
 			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)			\n\
@@ -336,13 +342,17 @@ _createStandardPointNXSProgram : function () {
 				diffuse = uSolidColor;											\n\
 			}																	\n\
 																				\n\
-			if((uUseLighting)&&(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0))	\n\
+			if((uUseLighting)&&(length(vNormal) > 0.0))							\n\
 			{																	\n\
 			  float nDotL   = dot(vNormal, -uViewSpaceLightDirection);			\n\
 			  lambert = max(0.0, nDotL);										\n\
+																				\n\
+              vec3 halfV = normalize(-uViewSpaceLightDirection -vModelViewPos.xyz);\n\
+              float spc = pow(max(dot(vNormal, halfV),0.0), uSpecularColor.a);	\n\
+              specular = spc * uSpecularColor.rgb;								\n\
 			}																	\n\
 																				\n\
-			renderColor = diffuse * lambert;									\n\
+			renderColor = (diffuse * lambert) + specular;						\n\
 																				\n\
 			if(uClipAxis[0] != 0.0)																				\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor;	\n\
@@ -371,15 +381,18 @@ _createStandardPointNXSProgram : function () {
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
 			"uViewSpaceNormalMatrix"     : SglMat3.identity(),
-			"uModelMatrix" 				 : SglMat4.identity(),
+			"uWorldViewMatrix"           : SglMat3.identity(),
+			"uModelMatrix"               : SglMat4.identity(),
 			"uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 			"uPointSize"                 : 1.0,
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : false,
 			"uUseLighting"               : true,
 			"uSolidColor"                : [1.0, 1.0, 1.0],
+			"uSpecularColor"             : [0.0, 0.0, 0.0, 32.0],
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uClipColor"				 : [1.0, 1.0, 1.0],
 			"uClipColorSize"			 : 0.5,
 		}
@@ -432,11 +445,12 @@ _createStandardFaceNXSProgram : function () {
 		uniform   float uAlpha;													\n\
 		uniform   bool uUseSolidColor;											\n\
 		uniform   bool uUseLighting;											\n\
-		uniform   vec4 uBackSideColor;											\n\
+		uniform   vec4 uBackFaceColor;											\n\
 		uniform   vec3 uSolidColor;												\n\
 		uniform   vec4 uSpecularColor;											\n\
 		uniform   vec3 uClipPoint;												\n\
 		uniform   vec3 uClipAxis;												\n\
+		uniform   vec4 uClipPlane;												\n\
 		uniform   vec3 uClipColor;												\n\
 		uniform   float uClipColorSize;											\n\
 		uniform   sampler2D uSampler;											\n\
@@ -449,6 +463,8 @@ _createStandardFaceNXSProgram : function () {
 																				\n\
 		void main(void)															\n\
 		{																		\n\
+			if(length(uClipPlane.xyz) > 0.0)									\n\
+				if( dot(vModelPos, uClipPlane) > 0.0) discard;					\n\
 			if(uClipAxis[0] != 0.0)													\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
 			if(uClipAxis[1] != 0.0)													\n\
@@ -473,7 +489,7 @@ _createStandardFaceNXSProgram : function () {
 				diffuse = uSolidColor;											\n\
 			}																	\n\
 																				\n\
-			if((uUseLighting)&&(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0))	\n\
+			if((uUseLighting)&&(length(vNormal) > 0.0))							\n\
 			{																	\n\
 			  float nDotL   = dot(vNormal, -uViewSpaceLightDirection);			\n\
 			  lambert = max(0.0, gl_FrontFacing? nDotL : -nDotL);				\n\
@@ -484,14 +500,15 @@ _createStandardFaceNXSProgram : function () {
 			}																	\n\
 																				\n\
 			renderColor = (diffuse * lambert) + specular;						\n\
-																				\n\
 			if(!gl_FrontFacing)													\n\
 			{																	\n\
-				if(uBackSideColor[3]==0.0) renderColor = renderColor * uBackSideColor.rgb;	\n\
-				else if(uBackSideColor[3]==1.0) renderColor = uBackSideColor.rgb;			\n\
-				else if(uBackSideColor[3]==2.0) discard;									\n\
+				if(uBackFaceColor[3]==0.0) renderColor = renderColor * uBackFaceColor.rgb;	\n\
+				else if(uBackFaceColor[3]==1.0) renderColor = uBackFaceColor.rgb;			\n\
+				else if(uBackFaceColor[3]==2.0) discard;									\n\
 			}																	\n\
 																				\n\
+			if(length(uClipPlane.xyz) > 0.0) \n\
+				if( dot(vModelPos, uClipPlane) > -uClipColorSize) renderColor = uClipColor;	\n\
 			if(uClipAxis[0] != 0.0)																				\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor;	\n\
 			if(uClipAxis[1] != 0.0)																				\n\
@@ -525,11 +542,12 @@ _createStandardFaceNXSProgram : function () {
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : false,
 			"uUseLighting"               : true,
-			"uBackSideColor"             : [0.4, 0.3, 0.3, 0.0],
+			"uBackFaceColor"             : [0.4, 0.3, 0.3, 0.0],
 			"uSolidColor"                : [1.0, 1.0, 1.0],
-			"uSpecularColor"             : [0.5, 0.2, 0.8, 32.0],
+			"uSpecularColor"             : [0.0, 0.0, 0.0, 32.0],
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uClipColor"                 : [1.0, 1.0, 1.0],
 			"uClipColorSize"             : 0.5,
 			"uSampler"                   : 0,
@@ -783,10 +801,11 @@ _createStandardPointPLYtechnique : function () {
 			"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : false },
 			"uUseLighting"               : { semantic : "uUseLighting",               value : true },
 			"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
-			"uBackSideColor"             : { semantic : "uBackSideColor",             value : [0.4, 0.3, 0.3, 0.0] },
+			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
 			"uSpecularColor"             : { semantic : "uSpecularColor",             value : [0.5, 0.2, 0.8, 32.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },			
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
 			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 },
 		}
@@ -813,10 +832,11 @@ _createStandardFacePLYtechnique : function () {
 			"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : false },
 			"uUseLighting"               : { semantic : "uUseLighting",               value : true },
 			"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
-			"uBackSideColor"             : { semantic : "uBackSideColor",             value : [0.4, 0.3, 0.3, 0.0] },
+			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
 			"uSpecularColor"             : { semantic : "uSpecularColor",             value : [0.5, 0.2, 0.8, 32.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
 			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 },
 			"uSampler"                   : { semantic : "uSampler",                   value : 0 },
@@ -842,6 +862,7 @@ _createXYZPLYtechnique : function () {
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },			
 		}
 	});
 
@@ -1565,6 +1586,7 @@ _drawScene : function () {
 		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
 		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];		
 		var thisClipBordersize = config.showClippingBorder?config.clippingBorderSize:0.0;
 
 		var uniforms = {
@@ -1577,15 +1599,15 @@ _drawScene : function () {
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : instance.useSolidColor,
 			"uUseLighting"               : space.useLighting && instance.useLighting,
-			"uBackSideColor"             : instance.backsideColor,
+			"uBackFaceColor"             : instance.backfaceColor,
 			"uSpecularColor"             : instance.specularColor,
 			"uSolidColor"                : instance.color,
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
+			"uClipPlane"                 : thisClipPlane,
 			"uClipColor"                 : config.clippingBorderColor,
 			"uClipColorSize"             : thisClipBordersize
 		};
-		// double side parameters
 
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
@@ -1676,7 +1698,7 @@ _drawScene : function () {
 			"uAlpha"                     : instance.alpha,
 			"uUseSolidColor"             : instance.useSolidColor,
 			"uUseLighting"               : space.useLighting && instance.useLighting,
-			"uBackSideColor"             : instance.backsideColor,
+			"uBackFaceColor"             : instance.backfaceColor,
 			"uSpecularColor"             : instance.specularColor,
 			"uSolidColor"                : instance.color,
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
@@ -2588,6 +2610,7 @@ onInitialize : function () {
 	// plane section
 	this._clipPoint = [0.0, 0.0, 0.0];
 	this._clipAxis  = [0.0, 0.0, 0.0];
+	this._clipPlane = [0.0, 0.0, 0.0, 0.0];
 	this._sceneBboxMin = [0.0, 0.0, 0.0]
 	this._sceneBboxMax = [0.0, 0.0, 0.0];
 	this._sceneBboxCenter = [0.0, 0.0, 0.0];
@@ -3626,11 +3649,38 @@ getClippingRendermode : function () {
 	return rendermode;
 },
 
+resetClippingPlane : function () {
+	this._calculateBounding();
+	this._clipPlane = [0.0, 0.0, 0.0, 0.0];
+	this.ui.postDrawEvent();
+},
+
+setClippingPlaneExplicit : function (axis, offset) {
+	this._calculateBounding();
+	this._clipPlane = [axis[0], axis[1], axis[2], offset];
+	this.ui.postDrawEvent();
+},
+setClippingPlane : function (angleH, angleV, sign, offset) {
+	this._calculateBounding();
+	var axis;
+	var m = SglMat4.identity();	
+
+	// horizontal angle
+	m = SglMat4.mul(m, SglMat4.rotationAngleAxis(sglDegToRad(angleH), [0.0, -1.0, 0.0]));
+	// vertical angle
+	m = SglMat4.mul(m, SglMat4.rotationAngleAxis(sglDegToRad(angleV), [0.0, 0.0, 1.0]));	
+	
+	axis = [sign*1.0, 0.0, 0.0, 1.0];
+	axis = SglMat4.mul4(m, axis);
+
+	this._clipPlane = [axis[0], axis[1], axis[2], sign*(-offset)];			
+	this.ui.postDrawEvent();
+},
+
 //-----------------------------------------------------------------------------
 zoomIn : function () {
 	this.onMouseWheel(1);
 },
-
 zoomOut : function () {
 	this.onMouseWheel(-1);
 },
@@ -3653,7 +3703,6 @@ rotateLight : function (x, y) {
 enableLightTrackball : function (on) {
 	this._movingLight = on;
 },
-
 isLightTrackballEnabled : function () {
 	return this._movingLight;
 },
@@ -3674,24 +3723,20 @@ enableMeasurementTool : function(on) {
 	else
 		this._stopMeasurement();
 },
-
 isMeasurementToolEnabled : function() {
 	return this._isMeasuringDistance;
 },
 
-//-----------------------------------------------------------------------------
 enablePickpointMode : function (on) {
 	if(on)
 		this._startPickPoint();
 	else
 		this._stopPickPoint();
 },
-
 isPickpointModeEnabled : function () {
 	return this._isMeasuringPickpoint;
 },
 
-//-----------------------------------------------------------------------------
 isAnyMeasurementEnabled : function () {
 	return this._isMeasuring;
 },
@@ -3713,6 +3758,9 @@ setCameraPerspective : function () {
 setCameraOrthographic : function () {
 	this._scene.space.cameraType = "ortho";
 	this.ui.postDrawEvent();
+},
+getCameraType : function () {
+	return this._scene.space.cameraType;
 },
 
 //-----------------------------------------------------------------------------

@@ -1,0 +1,168 @@
+<!DOCTYPE>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta content="charset=UTF-8"/>
+<title>3DHOP - 3D Heritage Online Presenter</title>
+<!--STYLESHEET-->
+<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>  
+<!--SPIDERGL-->
+<script type="text/javascript" src="js/spidergl.js"></script>
+<!--JQUERY-->
+<script type="text/javascript" src="js/jquery.js"></script>
+<!--PRESENTER-->
+<script type="text/javascript" src="js/presenter.js"></script>
+<!--3D MODELS LOADING AND RENDERING-->
+<script type="text/javascript" src="js/nexus.js"></script>
+<script type="text/javascript" src="js/ply.js"></script>
+<!--TRACKBALLS-->
+<script type="text/javascript" src="js/trackball_sphere.js"></script>
+<script type="text/javascript" src="js/trackball_turntable.js"></script>
+<script type="text/javascript" src="js/trackball_turntable_pan.js"></script>
+<script type="text/javascript" src="js/trackball_pantilt.js"></script>
+<!--UTILITY-->
+<script type="text/javascript" src="js/init.js"></script>
+</head>
+<body>
+<div id="3dhop" class="tdhop" onmousedown="if (event.preventDefault) event.preventDefault()"><div id="tdhlg"></div>
+ <div id="toolbar">
+  <img id="home"        title="Home"                   src="skins/dark/home.png"     /><br/>
+  <img id="zoomin"      title="Zoom In"                src="skins/dark/zoomin.png"   /><br/>
+  <img id="zoomout"     title="Zoom Out"               src="skins/dark/zoomout.png"  /><br/>
+  <img id="light_on"    title="Disable Light Control"  src="skins/dark/light_on.png"    style="position:absolute; visibility:hidden;"/>
+  <img id="light"       title="Enable Light Control"   src="skins/dark/light.png"    /><br/>
+  <img id="full_on"     title="Exit Full Screen"       src="skins/dark/full_on.png"     style="position:absolute; visibility:hidden;"/>
+  <img id="full"        title="Full Screen"            src="skins/dark/full.png"     /><br/>
+  <img id="slice"       title="init plane"   src="skins/dark/menu.png"    /><br/>   
+ </div>
+
+ <canvas id="draw-canvas" style="background-image: url(skins/backgrounds/light.jpg)"/>
+</div> 
+
+<div style="width:800px; float:left;">
+ <h4 style="text-align:center;">Set Oblique Plane</h4>
+<button style="cursor:hand; width:20%;" onclick="
+	document.querySelector('#angle1').value = 0.0;
+	document.querySelector('#angle2').value = 0.0;
+	document.querySelector('#sign').checked = false;
+	setPlane();
+ ">X+</button>
+<button style="cursor:hand; width:20%;" onclick="
+	document.querySelector('#angle1').value = 0.0;
+	document.querySelector('#angle2').value = 90.0;
+	document.querySelector('#sign').checked = false;
+	setPlane();
+ ">Y+</button>
+<button style="cursor:hand; width:20%;" onclick="
+	document.querySelector('#angle1').value = 90.0;
+	document.querySelector('#angle2').value = 0.0;
+	document.querySelector('#sign').checked = false;
+	setPlane();
+ ">Z+</button> </br>
+<button style="cursor:hand; width:20%;" onclick="
+	document.querySelector('#angle1').value = 0.0;
+	document.querySelector('#angle2').value = 0.0;
+	document.querySelector('#sign').checked = true;
+	setPlane();
+ ">X-</button>
+<button style="cursor:hand; width:20%;" onclick="
+	document.querySelector('#angle1').value = 0.0;
+	document.querySelector('#angle2').value = 90.0;
+	document.querySelector('#sign').checked = true;
+	setPlane();
+ ">Y-</button>
+<button style="cursor:hand; width:20%;" onclick="
+	document.querySelector('#angle1').value = 90.0;
+	document.querySelector('#angle2').value = 0.0;
+	document.querySelector('#sign').checked = true;
+	setPlane();
+ ">Z-</button> </br>
+ </br>
+ Horizontal Angle <input type="number" id="angle1" value="0" step="3" min="-90" max="90" onchange="setPlane();"></br>
+ Vertical Angle <input type="number" id="angle2" value="0" step="3" min="-90" max="90" onchange="setPlane();"></br>
+ Flip <input type="checkbox" id="sign" onchange="setPlane();"></br>  
+ Offset <input type="number" id="offset" value="0" step="5" onchange="setPlane();"></br>
+ </br> 
+
+
+</div>
+
+</body>
+
+<script type="text/javascript">
+var presenter = null;
+
+function setup3dhop() { 
+	presenter = new Presenter("draw-canvas");
+
+	presenter.setScene({
+		meshes: {
+			"Gargoyle" : { 
+				url: "models/multires/gargo.nxs",
+			},
+			"Cube" : { url: "models/singleres/cube.ply" }
+		},
+		modelInstances : {
+			"Gargo" : {
+				mesh : "Gargoyle",
+				transform : { 
+					translation : [0.0, -50.0, 0.0],
+				},				
+			},
+			"Base" : {
+				mesh : "Cube",
+				transform : { 
+					translation : [0.0, -55.0, 0.0],
+					scale       : [3.0, 0.2, 3.0]
+				},
+				clippable : false
+			}
+		},
+		trackball: {
+			type : TurnTableTrackball,
+			trackOptions : {
+				startDistance : 1.3,
+				minMaxDist    : [0.8, 2.5],
+				minMaxTheta   : [-30.0, 70.0]
+			}
+		},
+		space: {
+			centerMode: "scene",
+			radiusMode: "scene"
+		},
+		config : {
+			showClippingPlanes  : true,
+			showClippingBorder  : true,
+			clippingBorderSize  : 0.5,
+			clippingBorderColor : [0.0, 1.0, 1.0]
+		}
+	});
+}
+
+function actionsToolbar(action) {
+	if(action=='home') presenter.resetTrackball(); 
+	else if(action=='zoomin') presenter.zoomIn();
+	else if(action=='zoomout') presenter.zoomOut(); 
+	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
+	else if(action=='sections' || action=='sections_on') { sectiontoolReset(); sectiontoolSwitch(); } 
+	else if(action=='full' || action=='full_on') fullscreenSwitch();
+	else if(action=='slice') presenter._clipPlane = [ 1.0, 0.0, 0.0, 0.0];
+}
+
+function setPlane() {
+	var ah = document.querySelector('#angle1').value;
+	var av = document.querySelector('#angle2').value;
+	var s = document.querySelector('#sign').checked ? -1.0 : 1.0;
+	var o = document.querySelector('#offset').value;
+	presenter.setClippingPlane(ah, av, s, o);
+}
+
+$(document).ready(function(){
+	init3dhop();
+
+	setup3dhop();
+
+	resizeCanvas(800,600);
+});
+</script>
+
+</html>
