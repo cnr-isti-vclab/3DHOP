@@ -193,6 +193,9 @@ RailTrackball.prototype = {
 		m = SglMat4.mul(m, SglMat4.translation([-this._currPosition[0], -this._currPosition[1], -this._currPosition[2]]));
 
 		this._matrix = m;
+		
+		if(typeof onTrackballUpdate != "undefined")
+			onTrackballUpdate(this.getState());	
 	},
 
 	stepFW : function() {

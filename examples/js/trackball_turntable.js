@@ -112,6 +112,9 @@ TurnTableTrackball.prototype = {
 		m = SglMat4.mul(m, SglMat4.rotationAngleAxis(this._phi, [0.0, -1.0, 0.0]));
 
 		this._matrix = m;
+
+		if(typeof onTrackballUpdate != "undefined")
+			onTrackballUpdate(this.getState());
 	},
 
 	getState : function () {

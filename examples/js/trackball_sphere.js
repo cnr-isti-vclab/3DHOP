@@ -68,6 +68,9 @@ SphereTrackball.prototype = {
 		m = SglMat4.mul(m, this._sphereMatrix);
 
 		this._matrix = m;
+	  
+		if(typeof onTrackballUpdate != "undefined")
+			onTrackballUpdate(this.getState());
 	},
 
 	_projectOnSphere : function(x, y) {

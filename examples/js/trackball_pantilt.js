@@ -123,6 +123,9 @@ PanTiltTrackball.prototype = {
 		m = SglMat4.mul(m, SglMat4.translation([this._panX, this._panY, 0.0]));
 
 		this._matrix = m;
+
+		if(typeof onTrackballUpdate != "undefined")
+			onTrackballUpdate(this.getState());
 	},
 
 	getState : function () {
