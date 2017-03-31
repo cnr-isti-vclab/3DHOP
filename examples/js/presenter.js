@@ -318,12 +318,12 @@ _createStandardPointNXSProgram : function () {
 																				\n\
 		void main(void)															\n\
 		{																		\n\
-			if(uClipAxis[0] != 0.0)													\n\
+			if(length(uClipAxis) > 0.0)											\n\
+			{																	\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
-			if(uClipAxis[1] != 0.0)													\n\
 				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
-			if(uClipAxis[2] != 0.0)													\n\
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+			}																	\n\
 																				\n\
 			float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);					\n\
 			float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);					\n\
@@ -354,12 +354,12 @@ _createStandardPointNXSProgram : function () {
 																				\n\
 			renderColor = (diffuse * lambert) + specular;						\n\
 																				\n\
-			if(uClipAxis[0] != 0.0)																				\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor;	\n\
-			if(uClipAxis[1] != 0.0)																				\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) renderColor = uClipColor;	\n\
-			if(uClipAxis[2] != 0.0)																				\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) renderColor = uClipColor;	\n\
+			if((length(uClipAxis) > 0.0)&&(uClipColorSize>0.0))					\n\
+			{																	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
+			}																	\n\
 																				\n\			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
 			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));		\n\
 		}																		\n\
@@ -465,12 +465,12 @@ _createStandardFaceNXSProgram : function () {
 		{																		\n\
 			if(length(uClipPlane.xyz) > 0.0)									\n\
 				if( dot(vModelPos, uClipPlane) > 0.0) discard;					\n\
-			if(uClipAxis[0] != 0.0)													\n\
+			if(length(uClipAxis) > 0.0)											\n\
+			{																	\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
-			if(uClipAxis[1] != 0.0)													\n\
 				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
-			if(uClipAxis[2] != 0.0)													\n\
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+			}																	\n\
 																				\n\
 			vec3  renderColor = vec3(1.0, 1.0, 1.0);							\n\
 			vec3  diffuse = vColor.rgb;											\n\
@@ -507,14 +507,14 @@ _createStandardFaceNXSProgram : function () {
 				else if(uBackFaceColor[3]==2.0) discard;									\n\
 			}																	\n\
 																				\n\
-			if(length(uClipPlane.xyz) > 0.0) \n\
+			if((length(uClipPlane.xyz) > 0.0)&&(uClipColorSize>0.0))			\n\
 				if( dot(vModelPos, uClipPlane) > -uClipColorSize) renderColor = uClipColor;	\n\
-			if(uClipAxis[0] != 0.0)																				\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > -uClipColorSize) renderColor = uClipColor;	\n\
-			if(uClipAxis[1] != 0.0)																				\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > -uClipColorSize) renderColor = uClipColor;	\n\
-			if(uClipAxis[2] != 0.0)																				\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > -uClipColorSize) renderColor = uClipColor;	\n\
+			if((length(uClipAxis) > 0.0)&&(uClipColorSize>0.0))					\n\
+			{																	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
+			}																	\n\
 																				\n\
 			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
 		}																		\n\
@@ -587,35 +587,35 @@ _createXYZNXSProgram : function () {
 		console.log("XYZ Vertex Shader Log:\n" + nxsVertexShader.log);
 
 	var nxsFragmentShader = new SglFragmentShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   vec3 uClipPoint;                                            \n\
-		uniform   vec3 uClipAxis;                                             \n\
-																			  \n\
-		varying   vec4 vModelPos;                                             \n\
-																			  \n\
-		vec4 pack_depth(const in float depth)                                         \n\
-		{                                                                             \n\
-			const vec4 bit_shift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);  \n\
-			const vec4 bit_mask  = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);        \n\
-			vec4 res = fract(depth * bit_shift);                                      \n\
-			res -= res.xxyz * bit_mask;                                               \n\
-			return res;                                                               \n\
-		}                                                                             \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			if(uClipAxis[0] != 0.0)\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard; \n\
-			if(uClipAxis[1] != 0.0)\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard; \n\
-			if(uClipAxis[2] != 0.0)\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard; \n\
-																			  \n\
-			vec4 myColor;                                                     \n\
-			myColor = pack_depth(gl_FragCoord.z);                             \n\
-			gl_FragColor  = myColor;                                          \n\
-		}                                                                     \n\
+		precision highp float;													\n\
+																				\n\
+		uniform   vec3 uClipPoint;												\n\
+		uniform   vec3 uClipAxis;												\n\
+																				\n\
+		varying   vec4 vModelPos;												\n\
+																				\n\
+		vec4 pack_depth(const in float depth)											\n\
+		{																				\n\
+			const vec4 bit_shift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);	\n\
+			const vec4 bit_mask  = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);			\n\
+			vec4 res = fract(depth * bit_shift);										\n\
+			res -= res.xxyz * bit_mask;													\n\
+			return res;																	\n\
+		}																				\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			if(length(uClipAxis) > 0.0)											\n\
+			{																	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+			}																	\n\
+																				\n\
+			vec4 myColor;														\n\
+			myColor = pack_depth(gl_FragCoord.z);								\n\
+			gl_FragColor  = myColor;											\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("XYZ Fragment Shader Log:\n" + nxsFragmentShader.log);
