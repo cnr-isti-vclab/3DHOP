@@ -1964,6 +1964,58 @@ _drawScene : function () {
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
+		if(SglVec3.length([this._clipPlane[0], this._clipPlane[1], this._clipPlane[2]]) > 0.0) {
+			var planepoint = [0.0, 0.0, 0.0];
+			/*
+			planepoint[0] = this._sceneBboxCenter[0] + (this._clipPlane[0] * -this._clipPlane[3]);
+			planepoint[1] = this._sceneBboxCenter[1] + (this._clipPlane[1] * -this._clipPlane[3]);
+			planepoint[2] = this._sceneBboxCenter[2] + (this._clipPlane[2] * -this._clipPlane[3]);
+			*/
+			
+			var k = SglVec3.dot(this._sceneBboxCenter, [this._clipPlane[0], this._clipPlane[1], this._clipPlane[2]]) + this._clipPlane[3];
+			planepoint[0] = this._sceneBboxCenter[0] - (this._clipPlane[0] * k);
+			planepoint[1] = this._sceneBboxCenter[1] - (this._clipPlane[1] * k);
+			planepoint[2] = this._sceneBboxCenter[2] - (this._clipPlane[2] * k);
+			
+			/*
+			planepoint[0] = this._sceneBboxCenter[0] + (this._clipPlane[0] * -this._clipPlane[3]);
+			planepoint[1] = this._sceneBboxCenter[1] + (this._clipPlane[1] * -this._clipPlane[3]);
+			planepoint[2] = this._sceneBboxCenter[2] + (this._clipPlane[2] * -this._clipPlane[3]);
+			*/
+			//var planepoint = [this.sceneCenter[0], this.sceneCenter[1], this.sceneCenter[2]];
+			
+			var rotm = SglMat4.identity();
+			// horizontal angle
+			rotm = SglMat4.mul(rotm, SglMat4.rotationAngleAxis(sglDegToRad(this._clipPlaneAH), [0.0, -1.0, 0.0]));
+			// vertical angle
+			rotm = SglMat4.mul(rotm, SglMat4.rotationAngleAxis(sglDegToRad(this._clipPlaneAV), [0.0, 0.0, 1.0]));
+			
+			var psize = this._sceneBboxDiag;
+			
+			xform.model.push();
+			xform.model.translate(planepoint);
+			xform.model.multiply(rotm);			
+			xform.model.scale([psize, psize, psize ]);
+
+			var QuadUniforms = {
+				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
+				"uViewSpaceLightDirection"   : this._lightDirection,
+				"uColorID"                   : [1.0, 0.0, 1.0, 0.25]
+			};
+
+			renderer.begin();
+				renderer.setTechnique(CCTechnique);
+				renderer.setDefaultGlobals();
+				renderer.setPrimitiveMode("FILL");
+				renderer.setGlobals(QuadUniforms);
+				renderer.setModel(this.simpleQuadXModel);
+				renderer.renderModel();
+			renderer.end();
+
+			xform.model.pop();		
+		}
+		
 		if(this._clipAxis[0] != 0.0) {
 			xform.model.push();
 			xform.model.translate([this._clipPoint[0], this._sceneBboxCenter[1], this._sceneBboxCenter[2]]);
@@ -2614,6 +2666,7 @@ onInitialize : function () {
 	this._sceneBboxMin = [0.0, 0.0, 0.0]
 	this._sceneBboxMax = [0.0, 0.0, 0.0];
 	this._sceneBboxCenter = [0.0, 0.0, 0.0];
+	this._sceneBboxDiag = 0.0;
 },
 
 onDrag : function (button, x, y, e) {
@@ -2976,7 +3029,7 @@ setCenterModeSpecific : function (instancename) {
 		return "ERROR - No such instance";
 },
 setCenterModeExplicit : function (newcenter) {
-	if((newcenter.constructor === Array)&&(newcenter.lenght = 3)&&(isFinite(String(newcenter[0])))&&(isFinite(String(newcenter[1])))&&(isFinite(String(newcenter[2]))))
+	if((newcenter.constructor === Array)&&(newcenter.length = 3)&&(isFinite(String(newcenter[0])))&&(isFinite(String(newcenter[1])))&&(isFinite(String(newcenter[2]))))
 	{
 		this._scene.space.centerMode = "explicit";
 		this._scene.space.explicitCenter = newcenter;
@@ -3592,6 +3645,7 @@ _calculateBounding : function () {	var meshes    = this._scene.meshes;
 	this._sceneBboxMin = SglVec3.maxNumber();
 	this._sceneBboxMax = SglVec3.minNumber();
 	this._sceneBboxCenter = [0.0, 0.0, 0.0];
+	this._sceneBboxDiag = 0.0;
 	var imin = [0.0, 0.0, 0.0];
 	var imax = [0.0, 0.0, 0.0];
 
@@ -3631,6 +3685,8 @@ _calculateBounding : function () {	var meshes    = this._scene.meshes;
 	this._sceneBboxCenter[0] = (this._sceneBboxMin[0] + this._sceneBboxMax[0]) / 2.0;
 	this._sceneBboxCenter[1] = (this._sceneBboxMin[1] + this._sceneBboxMax[1]) / 2.0;
 	this._sceneBboxCenter[2] = (this._sceneBboxMin[2] + this._sceneBboxMax[2]) / 2.0;
+	
+	this._sceneBboxDiag = SglVec3.length([ this._sceneBboxMax[0]-this._sceneBboxMin[0], this._sceneBboxMax[1]-this._sceneBboxMin[1], this._sceneBboxMax[2]-this._sceneBboxMin[2]]);
 },
 
 setClippingRendermode : function (showPlanes, showBorder, borderSize, borderColor) {
@@ -3664,7 +3720,9 @@ setClippingPlane : function (angleH, angleV, sign, offset) {
 	this._calculateBounding();
 	var axis;
 	var m = SglMat4.identity();	
-
+	this._clipPlaneAH = angleH;
+	this._clipPlaneAV = angleV;	
+	
 	// horizontal angle
 	m = SglMat4.mul(m, SglMat4.rotationAngleAxis(sglDegToRad(angleH), [0.0, -1.0, 0.0]));
 	// vertical angle
@@ -3672,8 +3730,12 @@ setClippingPlane : function (angleH, angleV, sign, offset) {
 	
 	axis = [sign*1.0, 0.0, 0.0, 1.0];
 	axis = SglMat4.mul4(m, axis);
-
-	this._clipPlane = [axis[0], axis[1], axis[2], sign*(-offset)];			
+	
+	var sceneOff = (this._sceneBboxDiag / 2.0) * (offset / 100.0);
+	var position = [this._sceneBboxCenter[0] + (axis[0] * sceneOff), this._sceneBboxCenter[1] + (axis[1] * sceneOff), this._sceneBboxCenter[2] + (axis[2] * sceneOff)];
+	sceneOff = SglVec3.dot([axis[0], axis[1], axis[2]], position);
+	
+	this._clipPlane = [axis[0], axis[1], axis[2], -sceneOff];			
 	this.ui.postDrawEvent();
 },
 

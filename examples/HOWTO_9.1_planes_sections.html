@@ -77,10 +77,10 @@
 	setPlane();
  ">Z-</button> </br>
  </br>
- Horizontal Angle <input type="number" id="angle1" value="0" step="3" min="-90" max="90" onchange="setPlane();"></br>
- Vertical Angle <input type="number" id="angle2" value="0" step="3" min="-90" max="90" onchange="setPlane();"></br>
+ Horizontal Angle <input type="number" id="angle1" value="0" step="3" min="0" max="90" onchange="setPlane();"></br>
+ Vertical Angle <input type="number" id="angle2" value="0" step="3" min="0" max="90" onchange="setPlane();"></br>
  Flip <input type="checkbox" id="sign" onchange="setPlane();"></br>  
- Offset <input type="number" id="offset" value="0" step="5" onchange="setPlane();"></br>
+ Offset (%)<input type="number" id="offset" value="0" step="5" min="-100" max="100" onchange="setPlane();"></br>
  </br> 
 
 
@@ -102,27 +102,43 @@ function setup3dhop() {
 			"Cube" : { url: "models/singleres/cube.ply" }
 		},
 		modelInstances : {
-			"Gargo" : {
+			"Gargo1" : {
 				mesh : "Gargoyle",
 				transform : { 
-					translation : [0.0, -50.0, 0.0],
-				},				
-			},
-			"Base" : {
-				mesh : "Cube",
-				transform : { 
-					translation : [0.0, -55.0, 0.0],
-					scale       : [3.0, 0.2, 3.0]
+					translation : [100.0, 50.0, -150.0],
 				},
-				clippable : false
-			}
+				backfaceColor   : [ 0.7, 0.4, 0.4, 1.0 ],
+			},
+			"Gargo2" : {
+				mesh : "Gargoyle",
+				transform : { 
+					translation : [180.0, 50.0, -100.0],
+				},
+				backfaceColor   : [ 0.4, 0.7, 0.4, 1.0 ],
+			},			
+			"Gargo3" : {
+				mesh : "Gargoyle",
+				transform : { 
+					translation : [260.0, 50.0, -50.0],
+				},
+				backfaceColor   : [ 0.0, 0.4, 0.7, 1.0 ],
+			},			
 		},
 		trackball: {
-			type : TurnTableTrackball,
-			trackOptions : {
-				startDistance : 1.3,
-				minMaxDist    : [0.8, 2.5],
-				minMaxTheta   : [-30.0, 70.0]
+			type: TurntablePanTrackball,
+			trackOptions: {
+				startPhi      : 0.0,
+				startTheta    : 0.0,
+				startDistance : 1.5,
+				startPanX     : 0.0,
+				startPanY     : 0.0,
+				startPanZ     : 0.0,
+				minMaxPhi     : [-180, 180],
+				minMaxTheta   : [-70.0, 70.0],
+				minMaxDist    : [0.5, 3.0],
+				minMaxPanX    : [-0.6, 0.6],
+				minMaxPanY    : [-0.6, 0.6],
+				minMaxPanZ    : [-0.6, 0.6],
 			}
 		},
 		space: {
