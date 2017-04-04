@@ -381,7 +381,7 @@ _createStandardPointNXSProgram : function () {
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
 			"uViewSpaceNormalMatrix"     : SglMat3.identity(),
-			"uWorldViewMatrix"           : SglMat3.identity(),
+			"uWorldViewMatrix"           : SglMat4.identity(),
 			"uModelMatrix"               : SglMat4.identity(),
 			"uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 			"uPointSize"                 : 1.0,
@@ -536,7 +536,7 @@ _createStandardFaceNXSProgram : function () {
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
 			"uViewSpaceNormalMatrix"     : SglMat3.identity(),
-			"uWorldViewMatrix"           : SglMat3.identity(),
+			"uWorldViewMatrix"           : SglMat4.identity(),
 			"uModelMatrix"               : SglMat4.identity(),
 			"uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 			"uAlpha"                     : 1.0,
@@ -1966,28 +1966,14 @@ _drawScene : function () {
 
 		if(SglVec3.length([this._clipPlane[0], this._clipPlane[1], this._clipPlane[2]]) > 0.0) {
 			var planepoint = [0.0, 0.0, 0.0];
-			/*
-			planepoint[0] = this._sceneBboxCenter[0] + (this._clipPlane[0] * -this._clipPlane[3]);
-			planepoint[1] = this._sceneBboxCenter[1] + (this._clipPlane[1] * -this._clipPlane[3]);
-			planepoint[2] = this._sceneBboxCenter[2] + (this._clipPlane[2] * -this._clipPlane[3]);
-			*/
 			
 			var k = SglVec3.dot(this._sceneBboxCenter, [this._clipPlane[0], this._clipPlane[1], this._clipPlane[2]]) + this._clipPlane[3];
 			planepoint[0] = this._sceneBboxCenter[0] - (this._clipPlane[0] * k);
 			planepoint[1] = this._sceneBboxCenter[1] - (this._clipPlane[1] * k);
 			planepoint[2] = this._sceneBboxCenter[2] - (this._clipPlane[2] * k);
 			
-			/*
-			planepoint[0] = this._sceneBboxCenter[0] + (this._clipPlane[0] * -this._clipPlane[3]);
-			planepoint[1] = this._sceneBboxCenter[1] + (this._clipPlane[1] * -this._clipPlane[3]);
-			planepoint[2] = this._sceneBboxCenter[2] + (this._clipPlane[2] * -this._clipPlane[3]);
-			*/
-			//var planepoint = [this.sceneCenter[0], this.sceneCenter[1], this.sceneCenter[2]];
-			
 			var rotm = SglMat4.identity();
-			// horizontal angle
 			rotm = SglMat4.mul(rotm, SglMat4.rotationAngleAxis(sglDegToRad(this._clipPlaneAH), [0.0, -1.0, 0.0]));
-			// vertical angle
 			rotm = SglMat4.mul(rotm, SglMat4.rotationAngleAxis(sglDegToRad(this._clipPlaneAV), [0.0, 0.0, 1.0]));
 			
 			var psize = this._sceneBboxDiag;
