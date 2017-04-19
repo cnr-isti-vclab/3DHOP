@@ -1161,7 +1161,8 @@ _measureRefresh : function (button, x, y, e) {
 			this.measurement = SglVec3.length(SglVec3.sub(this._pointA, this._pointB));
 			this._measurementStage=3;
 			this.ui.postDrawEvent();
-			if(this._onEndMeasurement) this._onEndMeasurement(this.measurement, this._pointA, this._pointB);
+			if(this._onEndMeasurement) 
+				this._onEndMeasurement(this.measurement, [this._pointA[0], this._pointA[1], this._pointA[2]], [this._pointB[0], this._pointB[1], this._pointB[2]]);
 		}
 	}
 },
@@ -1196,7 +1197,8 @@ _pickpointRefresh : function (button, x, y, e) {
 		{
 			this._pickedPoint = ppoint;
 			this._pickValid = true;
-			if(this._onEndPickingPoint) this._onEndPickingPoint(this._pickedPoint);
+			if(this._onEndPickingPoint) 
+				this._onEndPickingPoint([this._pickedPoint[0], this._pickedPoint[1], this._pickedPoint[2]]);
 			this.ui.postDrawEvent();
 		}
 	}
