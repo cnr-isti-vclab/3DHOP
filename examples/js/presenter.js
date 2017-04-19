@@ -318,6 +318,8 @@ _createStandardPointNXSProgram : function () {
 																				\n\
 		void main(void)															\n\
 		{																		\n\
+			if(length(uClipPlane.xyz) > 0.0)									\n\
+				if( dot(vModelPos, uClipPlane) > 0.0) discard;					\n\
 			if(length(uClipAxis) > 0.0)											\n\
 			{																	\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
@@ -354,6 +356,8 @@ _createStandardPointNXSProgram : function () {
 																				\n\
 			renderColor = (diffuse * lambert) + specular;						\n\
 																				\n\
+			if((length(uClipPlane.xyz) > 0.0)&&(uClipColorSize>0.0))			\n\
+				if( dot(vModelPos, uClipPlane) > -uClipColorSize) renderColor = uClipColor;	\n\
 			if((length(uClipAxis) > 0.0)&&(uClipColorSize>0.0))					\n\
 			{																	\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
@@ -591,6 +595,7 @@ _createXYZNXSProgram : function () {
 																				\n\
 		uniform   vec3 uClipPoint;												\n\
 		uniform   vec3 uClipAxis;												\n\
+		uniform   vec4 uClipPlane;												\n\
 																				\n\
 		varying   vec4 vModelPos;												\n\
 																				\n\
@@ -605,6 +610,8 @@ _createXYZNXSProgram : function () {
 																				\n\
 		void main(void)															\n\
 		{																		\n\
+			if(length(uClipPlane.xyz) > 0.0)									\n\
+				if( dot(vModelPos, uClipPlane) > 0.0) discard;					\n\
 			if(length(uClipAxis) > 0.0)											\n\
 			{																	\n\
 				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
@@ -636,6 +643,7 @@ _createXYZNXSProgram : function () {
 			"uModelMatrix" 				 : SglMat4.identity(),
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],			
 			"uPointSize"                 : 1.0,
 		}
 	});
@@ -1197,8 +1205,7 @@ _pickpointRefresh : function (button, x, y, e) {
 		{
 			this._pickedPoint = ppoint;
 			this._pickValid = true;
-			if(this._onEndPickingPoint) 
-				this._onEndPickingPoint([this._pickedPoint[0], this._pickedPoint[1], this._pickedPoint[2]]);
+			if(this._onEndPickingPoint) this._onEndPickingPoint([this._pickedPoint[0], this._pickedPoint[1], this._pickedPoint[2]]);
 			this.ui.postDrawEvent();
 		}
 	}
@@ -1688,6 +1695,7 @@ _drawScene : function () {
 		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
 		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
 		var thisClipBordersize = config.showClippingBorder?config.clippingBorderSize:0.0;
 
 		var uniforms = {
@@ -1706,6 +1714,7 @@ _drawScene : function () {
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
+			"uClipPlane"                 : thisClipPlane,			
 			"uClipColor"                 : config.clippingBorderColor,
 			"uClipColorSize"             : thisClipBordersize,
 		};
@@ -2133,12 +2142,14 @@ _drawScenePickingXYZ : function () {
 		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
 		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
-
+		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
+		
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uModelMatrix"               : modelMatrix,
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
+			"uClipPlane"                 : thisClipPlane,
 			"uPointSize"                 : this._scene.config.pointSize
 		};
 
