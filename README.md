@@ -1,4 +1,4 @@
-**3DHOP**
+![3DHOP Logo](documentation/img/logo.png) **3DHOP**
 =========
 3D Heritage Online Presenter
 ----------------------------
