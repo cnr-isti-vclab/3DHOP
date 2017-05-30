@@ -240,8 +240,8 @@ _parseTransform : function (options) {
 	if((r.rotation[0] != 0.0)||(r.rotation[1] != 0.0)||(r.rotation[2] != 0.0))
 	{
 		var mrX = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[0]), [1.0, 0.0, 0.0]);
-		var mrY = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[1]), [0.0, 1.0, 0.0])
-		var mrZ = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[2]), [0.0, 0.0, 1.0])
+		var mrY = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[1]), [0.0, 1.0, 0.0]);
+		var mrZ = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[2]), [0.0, 0.0, 1.0]);
 		matrixR = SglMat4.mul(SglMat4.mul(mrZ, mrY), mrX);
 		overwrite = true;
 	}
@@ -3715,7 +3715,7 @@ setClippingPlaneExplicit : function (axis, offset) {
 	this._clipPlane = [axis[0], axis[1], axis[2], offset];
 	this.ui.postDrawEvent();
 },
-setClippingPlane : function (angleH, angleV, sign, offset) {
+setClippingPlane : function (angleH, angleV, sign, delta, deltaabs) {
 	this._calculateBounding();
 	var axis;
 	var m = SglMat4.identity();	
@@ -3730,7 +3730,9 @@ setClippingPlane : function (angleH, angleV, sign, offset) {
 	axis = [sign*1.0, 0.0, 0.0, 1.0];
 	axis = SglMat4.mul4(m, axis);
 	
-	var sceneOff = (this._sceneBboxDiag / 2.0) * (offset / 100.0);
+	var sceneOff = (this._sceneBboxDiag / 2.0) * (delta / 100.0);
+	if(typeof deltaabs !== "undefined")
+		sceneOff = deltaabs;	
 	var position = [this._sceneBboxCenter[0] + (axis[0] * sceneOff), this._sceneBboxCenter[1] + (axis[1] * sceneOff), this._sceneBboxCenter[2] + (axis[2] * sceneOff)];
 	sceneOff = SglVec3.dot([axis[0], axis[1], axis[2]], position);
 	
