@@ -660,6 +660,7 @@ _createColorCodedIDNXSProgram : function () {
 		precision highp float;                                                \n\
 																			  \n\
 		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+		uniform   mat4 uModelMatrix;                                          \n\
 		uniform   float uPointSize;                                           \n\
 																			  \n\
 		attribute vec3 aPosition;                                             \n\
@@ -667,8 +668,11 @@ _createColorCodedIDNXSProgram : function () {
 		attribute vec3 aColor;                                                \n\
 		attribute float aPointSize;                                           \n\
 																			  \n\
+		varying   vec4 vModelPos;                                             \n\
+																			  \n\
 		void main(void)                                                       \n\
 		{                                                                     \n\
+			vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
 			gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
 			gl_PointSize = uPointSize * aPointSize;							  \n\
 		}                                                                     \n\
@@ -680,9 +684,23 @@ _createColorCodedIDNXSProgram : function () {
 		precision highp float;                                                \n\
 																			  \n\
 		uniform   vec4 uColorID;                                              \n\
-																			  \n\
+		uniform   vec3 uClipPoint;                                            \n\
+		uniform   vec3 uClipAxis;                                             \n\
+		uniform   vec4 uClipPlane;                                            \n\
+                                                                              \n\
+		varying   vec4 vModelPos;                                             \n\
+                                                                              \n\
 		void main(void)                                                       \n\
 		{                                                                     \n\
+			if(length(uClipPlane.xyz) > 0.0)                                  \n\
+				if( dot(vModelPos, uClipPlane) > 0.0) discard;                \n\
+			if(length(uClipAxis) > 0.0)                                       \n\
+			{                                                                 \n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+			}                                                                 \n\
+                                                                              \n\
 			gl_FragColor  = uColorID;                                         \n\
 		}                                                                     \n\
 	");
@@ -702,6 +720,10 @@ _createColorCodedIDNXSProgram : function () {
 		},
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
+			"uModelMatrix" 				 : SglMat4.identity(),
+			"uClipPoint"                 : [0.0, 0.0, 0.0],
+			"uClipAxis"                  : [0.0, 0.0, 0.0],
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],			
 			"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
 			"uPointSize"                 : 1.0,
 		}
@@ -2255,10 +2277,21 @@ _drawScenePickingInstances : function () {
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
 		xform.model.multiply(mesh.transform.matrix);
-
+		
+		var modelMatrix = SglMat4.identity();
+		modelMatrix = SglMat4.mul(modelMatrix, space.transform.matrix);
+		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
+		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);		
+		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
+		
 		var colorID = this._ID2Color(instance.ID);
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+			"uModelMatrix"               : modelMatrix,			
+			"uClipPoint"                 : this._clipPoint,
+			"uClipAxis"                  : thisClipAxis,
+			"uClipPlane"                 : thisClipPlane,			
 			"uPointSize"                 : this._scene.config.pointSize,
 			"uColorID"                   : colorID
 		};
@@ -3774,7 +3807,6 @@ isLightTrackballEnabled : function () {
 enableOnHover : function (on) {
 	this._onHover = on;
 },
-
 isOnHoverEnabled : function () {
 	return this._onHover;
 },
