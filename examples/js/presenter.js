@@ -892,7 +892,7 @@ _createXYZPLYtechnique : function () {
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
-			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },			
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 		}
 	});
 
@@ -911,8 +911,12 @@ _createColorCodedIDPLYtechnique : function () {
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
+			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
+			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
+			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 		}
 	});
 
