@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.1.11";
+const HOP_VERSION             = "4.1.12";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -1512,6 +1512,7 @@ _setupDraw : function () {
 	// scale to unit box + recenter
 	xform.model.scale([this.sceneRadiusInv, this.sceneRadiusInv, this.sceneRadiusInv]);
 	xform.model.translate(SglVec3.neg(this.sceneCenter));
+	Nexus.beginFrame(this.ui.gl, this.ui.framesPerSecond);													   
 },
 
 _ID2Color : function (ID) {
@@ -1648,19 +1649,7 @@ _drawScene : function () {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
-			var fps = this.ui.framesPerSecond;
-			if(nexus._targetFps && fps) {
-				var newBudget = (nexus.drawBudget * fps) / nexus._targetFps;
-				if(newBudget < nexus._minDrawBudget)
-					newBudget = nexus._minDrawBudget;
-				// logic: increase budget only if we stop rendering because of it (instead of just waiting for download.
-				if(newBudget < nexus.drawBudget || nexus._drawSize > nexus.drawBudget)
-					nexus.drawBudget = 0.9 * nexus.drawBudget + 0.1*newBudget;
-			}
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			var program;
 			if(instance.rendermode=="FILL")
@@ -1669,10 +1658,8 @@ _drawScene : function () {
 				program = CurrPointProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 		}
 		else { //drawing ply
@@ -1749,19 +1736,7 @@ _drawScene : function () {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
-			var fps = this.ui.framesPerSecond;
-			if(nexus._targetFps && fps) {
-				var newBudget = (nexus.drawBudget * fps) / nexus._targetFps;
-				if(newBudget < nexus._minDrawBudget)
-					newBudget = nexus._minDrawBudget;
-				// logic: increase budget only if we stop rendering because of it (instead of just waiting for download.
-				if(newBudget < nexus.drawBudget || nexus._drawSize > nexus.drawBudget)
-					nexus.drawBudget = 0.9 * nexus.drawBudget + 0.1*newBudget;
-			}
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			var program;
 			if(instance.rendermode=="FILL")
@@ -1770,10 +1745,8 @@ _drawScene : function () {
 				program = CurrPointProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 		}
 		else { //drawing ply
@@ -1940,18 +1913,13 @@ _drawScene : function () {
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			var program = CCProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(spot.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 		}
 		else { //drawing ply
@@ -2121,6 +2089,7 @@ _drawScene : function () {
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
 	}
+	Nexus.endFrame(this.ui.gl);
 },
 
 _drawScenePickingXYZ : function () {
@@ -2182,20 +2151,15 @@ _drawScenePickingXYZ : function () {
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
@@ -2303,20 +2267,15 @@ _drawScenePickingInstances : function () {
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
@@ -2401,20 +2360,15 @@ _drawScenePickingSpots : function () {
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
@@ -2461,20 +2415,15 @@ _drawScenePickingSpots : function () {
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(spot.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
@@ -2864,47 +2813,29 @@ toggleDebugMode : function () {
 	this._isDebugging = !this._isDebugging;
 },
 
-setNexusTargetFps : function (fps) {
+setNexusTargetFps: function(fps) {
 	this._nexusTargetFps = fps;
-	var scene = this._scene;
-	if(!scene) return;
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
-		if(!mesh.isNexus) continue;
-		mesh.renderable._targetFps = fps;
-	}
+	Nexus.setTargetFps(this.ui.gl, fps);
 },
 
-getNexusTargetFps : function () {
+getNexusTargetFps: function() {
 	return this._nexusTargetFps;
 },
-setNexusTargetError : function (error) {
+setNexusTargetError: function(error) {
 	this._nexusTargetError = error;
-	var scene = this._scene;
-	if(!scene) return;
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
-		if(!mesh.isNexus) continue;
-		mesh.renderable._targetError = error;
-	}
+	Nexus.setTargetError(this.ui.gl, error);
 },
 
-getNexusTargetError : function () {
+getNexusTargetError: function() {
 	return this._nexusTargetError;
 },
 
-setNexusCacheSize : function(size) {
+setNexusCacheSize: function(size) {
 	this._nexusCacheSize = size;
-	var scene = this._scene;
-	if(!scene) return;
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
-		if(!mesh.isNexus) continue;
-		mesh.renderable._maxCacheSize = size;
-	}
+	Nexus.maxCacheSize(this.ui.gl, error);
 },
 
-getNexusCacheSize : function () {
+getNexusCacheSize: function() {
 	return this._nexusCacheSize;
 },
 
@@ -2964,11 +2895,12 @@ setScene : function (options) {
 			var nexus = new Nexus.Renderer(gl);
 			mesh.renderable = nexus;
 			mesh.isNexus = true;
-			nexus.targetError = this._nexusTargetError;
+			Nexus.setTargetError(this.ui.gl, this._nexusTargetError);
 			//nexus.drawBudget = 0.5*1024*1024;
-			nexus._targetFps = this._nexusTargetFps;
-			nexus._maxCacheSize = this._nexusCacheSize;
-			nexus.onSceneReady = function () { that._onMeshReady(); };
+			Nexus.setTargetFps(this.ui.gl, this._nexusTargetFps);
+			Nexus.setMaxCacheSize(this.ui.gl, this._nexusCacheSize);
+
+			nexus.onLoad = function () { that._onMeshReady(); };
 			nexus.onUpdate = this.ui.postDrawEvent;
 			nexus.open(mesh.url);
 		}
@@ -3261,7 +3193,7 @@ toggleInstanceTransparency : function (tag, redraw) {
 //-----------------------------------------------------------------------------
 // instance shading
 //----specular
-setInstanceSpecularityByName : function (name, color, hardness, redraw = true) {
+setInstanceSpecularityByName : function (name, color, hardness, redraw) {
 	var instances = this._scene.modelInstances;
 
 	if(name == HOP_ALL) {
@@ -3276,7 +3208,7 @@ setInstanceSpecularityByName : function (name, color, hardness, redraw = true) {
 		this.ui.postDrawEvent();
 },
 
-setInstanceSpecularity : function (tag, color, hardness, redraw = true) {
+setInstanceSpecularity : function (tag, color, hardness, redraw) {
 	var instances = this._scene.modelInstances;
 
 	for (var inst in instances) {
@@ -3295,7 +3227,7 @@ setInstanceSpecularity : function (tag, color, hardness, redraw = true) {
 },
 
 //----backface
-setInstanceBackfaceByName : function (name, color, mode, redraw = true) {
+setInstanceBackfaceByName : function (name, color, mode, redraw) {
 	var instances = this._scene.modelInstances;
 	var modecode = 0.0;
 	if (mode == "tint") modecode = 0.0;
@@ -3314,7 +3246,7 @@ setInstanceBackfaceByName : function (name, color, mode, redraw = true) {
 		this.ui.postDrawEvent();
 },
 
-setInstanceBackface : function (tag, color, mode, redraw = true) {
+setInstanceBackface : function (tag, color, mode, redraw) {
 	var instances = this._scene.modelInstances;
 	var modecode = 0.0;
 	if (mode == "tint") modecode = 0.0;
@@ -3573,30 +3505,30 @@ isSpotVisibilityEnabled : function (tag) {
 
 //-----------------------------------------------------------------------------
 // sections
-resetClippingXYZ : function () {
+resetClippingXYZ: function() {
 	this._calculateBounding();
 	this._clipAxis = [0.0, 0.0, 0.0];
 	this._clipPoint = [0.0, 0.0, 0.0];
 	this.ui.postDrawEvent();
 },
 
-setClippingXYZ : function (cx, cy, cz) {
+setClippingXYZ: function(cx, cy, cz) {
 	this._calculateBounding();
 	this._clipAxis = [cx,cy,cz];
 	this.ui.postDrawEvent();
 },
 
-setClippingX : function (cx) {
+setClippingX: function(cx) {
 	this._calculateBounding();
 	this._clipAxis[0] = cx;
 	this.ui.postDrawEvent();
 },
-setClippingY : function (cy) {
+setClippingY: function(cy) {
 	this._calculateBounding();
 	this._clipAxis[1] = cy;
 	this.ui.postDrawEvent();
 },
-setClippingZ : function (cz) {
+setClippingZ: function(cz) {
 	this._calculateBounding();
 	this._clipAxis[2] = cz;
 	this.ui.postDrawEvent();
@@ -3612,29 +3544,29 @@ getClippingZ : function () {
 	return this._clipAxis[2];
 },
 
-setClippingPointXYZabs: function (clx, cly, clz) {
+setClippingPointXYZabs: function(clx, cly, clz) {
 	this._calculateBounding();
 	this._clipPoint = [clx, cly, clz];
 	this.ui.postDrawEvent();
 },
 
-setClippingPointXabs : function (clx) {
+setClippingPointXabs: function(clx) {
 	this._calculateBounding();
 	this._clipPoint[0] = clx;
 	this.ui.postDrawEvent();
 },
-setClippingPointYabs : function (cly) {
+setClippingPointYabs: function(cly) {
 	this._calculateBounding();
 	this._clipPoint[1] = cly;
 	this.ui.postDrawEvent();
 },
-setClippingPointZabs : function (clz) {
+setClippingPointZabs: function(clz) {
 	this._calculateBounding();
 	this._clipPoint[2] = clz;
 	this.ui.postDrawEvent();
 },
 
-setClippingPointXYZ : function (clx, cly, clz) {
+setClippingPointXYZ: function(clx, cly, clz) {
 	var nClipPoint = [0.0, 0.0, 0.0];
 
 	this._calculateBounding();
@@ -3651,7 +3583,7 @@ setClippingPointXYZ : function (clx, cly, clz) {
 	this.ui.postDrawEvent();
 },
 
-setClippingPointX : function (clx) {
+setClippingPointX: function(clx) {
 	var nClipPoint = 0.0;
 	this._calculateBounding();
 	if(clx<0.0) clx=0.0; else if(clx>1.0) clx=1.0;
@@ -3659,7 +3591,7 @@ setClippingPointX : function (clx) {
 	this._clipPoint[0] = nClipPoint;
 	this.ui.postDrawEvent();
 },
-setClippingPointY : function (cly) {
+setClippingPointY: function(cly) {
 	var nClipPoint = 0.0;
 	this._calculateBounding();
 	if(cly<0.0) cly=0.0; else if(cly>1.0) cly=1.0;
@@ -3667,7 +3599,7 @@ setClippingPointY : function (cly) {
 	this._clipPoint[1] = nClipPoint;
 	this.ui.postDrawEvent();
 },
-setClippingPointZ : function (clz) {
+setClippingPointZ: function(clz) {
 	var nClipPoint = 0.0;
 	this._calculateBounding();
 	if(clz<0.0) clz=0.0; else if(clz>1.0) clz=1.0;
@@ -3676,7 +3608,7 @@ setClippingPointZ : function (clz) {
 	this.ui.postDrawEvent();
 },
 
-_calculateBounding : function () {	var meshes    = this._scene.meshes;
+_calculateBounding: function() {	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
 	this._sceneBboxMin = SglVec3.maxNumber();
 	this._sceneBboxMax = SglVec3.minNumber();
@@ -3725,7 +3657,7 @@ _calculateBounding : function () {	var meshes    = this._scene.meshes;
 	this._sceneBboxDiag = SglVec3.length([ this._sceneBboxMax[0]-this._sceneBboxMin[0], this._sceneBboxMax[1]-this._sceneBboxMin[1], this._sceneBboxMax[2]-this._sceneBboxMin[2]]);
 },
 
-setClippingRendermode : function (showPlanes, showBorder, borderSize, borderColor) {
+setClippingRendermode: function(showPlanes, showBorder, borderSize, borderColor) {
 	this._calculateBounding();
 	this._scene.config.showClippingPlanes = showPlanes;
 	this._scene.config.showClippingBorder = showBorder;
@@ -3736,7 +3668,7 @@ setClippingRendermode : function (showPlanes, showBorder, borderSize, borderColo
 	this.ui.postDrawEvent();
 },
 
-getClippingRendermode : function () {
+getClippingRendermode: function() {
 	var rendermode = [this._scene.config.showClippingPlanes, this._scene.config.showClippingBorder, this._scene.config.clippingBorderSize, this._scene.config.clippingBorderColor];
 	return rendermode;
 },
@@ -3778,15 +3710,15 @@ setClippingPlane : function (angleH, angleV, sign, delta, deltaabs) {
 },
 
 //-----------------------------------------------------------------------------
-zoomIn : function () {
+zoomIn: function() {
 	this.onMouseWheel(1);
 },
-zoomOut : function () {
+zoomOut: function() {
 	this.onMouseWheel(-1);
 },
 
 //-----------------------------------------------------------------------------
-rotateLight : function (x, y) {
+rotateLight: function(x, y) {
 	x *= 2;
 	y *= 2;
 	var r = Math.sqrt(x*x + y*y);
@@ -3800,48 +3732,48 @@ rotateLight : function (x, y) {
 	this.ui.postDrawEvent();
 },
 
-enableLightTrackball : function (on) {
+enableLightTrackball: function(on) {
 	this._movingLight = on;
 },
-isLightTrackballEnabled : function () {
+isLightTrackballEnabled: function() {
 	return this._movingLight;
 },
 
 //-----------------------------------------------------------------------------
-enableOnHover : function (on) {
+enableOnHover: function(on) {
 	this._onHover = on;
 },
-isOnHoverEnabled : function () {
+isOnHoverEnabled: function() {
 	return this._onHover;
 },
 
 //-----------------------------------------------------------------------------
-enableMeasurementTool : function(on) {
+enableMeasurementTool: function(on) {
 	if(on)
 		this._startMeasurement();
 	else
 		this._stopMeasurement();
 },
-isMeasurementToolEnabled : function() {
+isMeasurementToolEnabled: function() {
 	return this._isMeasuringDistance;
 },
 
-enablePickpointMode : function (on) {
+enablePickpointMode: function(on) {
 	if(on)
 		this._startPickPoint();
 	else
 		this._stopPickPoint();
 },
-isPickpointModeEnabled : function () {
+isPickpointModeEnabled: function() {
 	return this._isMeasuringPickpoint;
 },
 
-isAnyMeasurementEnabled : function () {
+isAnyMeasurementEnabled: function() {
 	return this._isMeasuring;
 },
 
 //-----------------------------------------------------------------------------
-toggleCameraType : function () {
+toggleCameraType: function() {
 	if(this._scene.space.cameraType == "ortho")
 		this._scene.space.cameraType = "perspective"
 	else
@@ -3850,11 +3782,11 @@ toggleCameraType : function () {
 	this.ui.postDrawEvent();
 },
 
-setCameraPerspective : function () {
+setCameraPerspective: function() {
 	this._scene.space.cameraType = "perspective";
 	this.ui.postDrawEvent();
 },
-setCameraOrthographic : function () {
+setCameraOrthographic: function() {
 	this._scene.space.cameraType = "ortho";
 	this.ui.postDrawEvent();
 },
