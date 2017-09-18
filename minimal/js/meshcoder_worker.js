@@ -33,8 +33,9 @@ onmessage = function(job) {
 		buffer = coder.decode(node.buffer);
 	}
 	node.buffer = buffer;
+	node.owner = job.owner;
 //	var elapsed = new Date().getTime() - now;
-	var t = node.nface;
+//	var t = node.nface;
 //	console.log("Z Time: " + elapsed + " Size: " + size + " KT/s " + (t/(elapsed)) + " Mbps " + (8*1000*node.buffer.byteLength/elapsed)/(1<<20));
 	postMessage(node);
 }

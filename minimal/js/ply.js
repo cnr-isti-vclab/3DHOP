@@ -681,6 +681,11 @@ var importPly = (function(){
 					faceLines.push(tabStr + "view.setUint32(offset, element.vertex_indices[1], littleEndian); offset += sui32;");
 					faceLines.push(tabStr + "view.setUint32(offset, element.vertex_indices[2], littleEndian); offset += sui32;");
 				}
+				else if (props["vertex_index"]) {
+					faceLines.push(tabStr + "view.setUint32(offset, element.vertex_index[0], littleEndian); offset += sui32;");
+					faceLines.push(tabStr + "view.setUint32(offset, element.vertex_index[1], littleEndian); offset += sui32;");
+					faceLines.push(tabStr + "view.setUint32(offset, element.vertex_index[2], littleEndian); offset += sui32;");
+				}
 				else {
 					facesCount = 0;
 				}

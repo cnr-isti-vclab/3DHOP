@@ -237,21 +237,24 @@ function sectiontoolInit() {
 	xplaneSlider.max = 1.0;
 	xplaneSlider.step = 0.01;
 	xplaneSlider.defaultValue = 0.5;
-	xplaneSlider.oninput=function(){presenter.setClippingPointX(this.valueAsNumber);};
+	xplaneSlider.oninput=function(){ sectionxSwitch(true); presenter.setClippingPointX(this.valueAsNumber);};
+	xplaneSlider.onchange=function(){ sectionxSwitch(true); presenter.setClippingPointX(this.valueAsNumber);};
 
 	var yplaneSlider = $('#yplaneSlider')[0];
 	yplaneSlider.min = 0.0;
 	yplaneSlider.max = 1.0;
 	yplaneSlider.step = 0.01;
 	yplaneSlider.defaultValue = 0.5;
-	yplaneSlider.oninput=function(){presenter.setClippingPointY(this.valueAsNumber);};
+	yplaneSlider.oninput=function(){ sectionySwitch(true); presenter.setClippingPointY(this.valueAsNumber);};
+	yplaneSlider.onchange=function(){ sectionySwitch(true); presenter.setClippingPointY(this.valueAsNumber);};
 
 	var zplaneSlider = $('#zplaneSlider')[0];
 	zplaneSlider.min = 0.0;
 	zplaneSlider.max = 1.0;
 	zplaneSlider.step = 0.01;
 	zplaneSlider.defaultValue = 0.5;
-	zplaneSlider.oninput=function(){presenter.setClippingPointZ(this.valueAsNumber);};
+	zplaneSlider.oninput=function(){ sectionzSwitch(true); presenter.setClippingPointZ(this.valueAsNumber);};
+	zplaneSlider.onchange=function(){ sectionzSwitch(true); presenter.setClippingPointZ(this.valueAsNumber);};
 
 	// set checkboxes
 	var xplaneFlip = $('#xplaneFlip')[0];
@@ -323,8 +326,10 @@ function sectiontoolReset() {
 	presenter.setClippingRendermode(presenter.getClippingRendermode()[0], edgesCheck.checked);
 }
 
-function sectionxSwitch() {
-	if(presenter.getClippingX()==0) {
+function sectionxSwitch(on) {
+  if(on === undefined) on = (presenter.getClippingX()==0);
+
+	if(on){
 		$('#xplane').css("visibility", "hidden");
 		$('#xplane_on').css("visibility", "visible");
 		var xplaneFlip = $('#xplaneFlip')[0]; 
@@ -338,8 +343,10 @@ function sectionxSwitch() {
 	}
 }
 
-function sectionySwitch() {
-	if(presenter.getClippingY()==0) {
+function sectionySwitch(on) {
+  if(on === undefined) on = (presenter.getClippingY()==0);
+
+	if(on){
 		$('#yplane').css("visibility", "hidden");
 		$('#yplane_on').css("visibility", "visible");
 		var yplaneFlip = $('#yplaneFlip')[0];
@@ -353,8 +360,10 @@ function sectionySwitch() {
 	}
 }
 
-function sectionzSwitch() {
-	if(presenter.getClippingZ()==0) {
+function sectionzSwitch(on) {
+  if(on === undefined) on = (presenter.getClippingZ()==0);
+
+	if(on){
 		$('#zplane').css("visibility", "hidden");
 		$('#zplane_on').css("visibility", "visible");
 		var zplaneFlip = $('#zplaneFlip')[0];
