@@ -596,6 +596,7 @@ _createXYZNXSProgram : function () {
 		uniform   vec3 uClipPoint;												\n\
 		uniform   vec3 uClipAxis;												\n\
 		uniform   vec4 uClipPlane;												\n\
+		uniform   vec4 uBackFaceColor;											\n\
 																				\n\
 		varying   vec4 vModelPos;												\n\
 																				\n\
@@ -618,6 +619,7 @@ _createXYZNXSProgram : function () {
 				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
 			}																	\n\
+			if((!gl_FrontFacing) &&	(uBackFaceColor[3]==2.0)) discard;			\n\
 																				\n\
 			vec4 myColor;														\n\
 			myColor = pack_depth(gl_FragCoord.z);								\n\
@@ -643,7 +645,8 @@ _createXYZNXSProgram : function () {
 			"uModelMatrix" 				 : SglMat4.identity(),
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
-			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],			
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
+			"uBackFaceColor"             : [0.4, 0.3, 0.3, 0.0],
 			"uPointSize"                 : 1.0,
 		}
 	});
@@ -890,6 +893,7 @@ _createXYZPLYtechnique : function () {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
+			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },			
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
@@ -2142,6 +2146,7 @@ _drawScenePickingXYZ : function () {
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uModelMatrix"               : modelMatrix,
+			"uBackFaceColor"             : instance.backfaceColor,			
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
 			"uClipPlane"                 : thisClipPlane,
