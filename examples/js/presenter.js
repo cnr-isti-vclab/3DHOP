@@ -360,9 +360,9 @@ _createStandardPointNXSProgram : function () {
 				if( dot(vModelPos, uClipPlane) > -uClipColorSize) renderColor = uClipColor;	\n\
 			if((length(uClipAxis) > 0.0)&&(uClipColorSize>0.0))					\n\
 			{																	\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0] + (uClipAxis[0]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1] + (uClipAxis[1]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + (uClipAxis[2]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
 			}																	\n\
 																				\n\			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
 			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));		\n\
@@ -515,9 +515,9 @@ _createStandardFaceNXSProgram : function () {
 				if( dot(vModelPos, uClipPlane) > -uClipColorSize) renderColor = uClipColor;	\n\
 			if((length(uClipAxis) > 0.0)&&(uClipColorSize>0.0))					\n\
 			{																	\n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + uClipColorSize) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0] + (uClipAxis[0]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1] + (uClipAxis[1]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + (uClipAxis[2]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
 			}																	\n\
 																				\n\
 			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
