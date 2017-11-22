@@ -157,7 +157,7 @@ function actionsToolbar(action) {
 	else if(action=='zoomin') presenter.zoomIn();
 	else if(action=='zoomout') presenter.zoomOut(); 
 	else if(action=='ortho') {presenter.toggleCameraType();}
-	else if(action=='lighting') {presenter.toggleLighting();}
+	else if(action=='lighting') {presenter.toggleSceneLighting();}
 	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
 	else if(action=='sections' || action=='sections_on') { sectiontoolReset(); sectiontoolSwitch(); } 
 	else if(action=='full' || action=='full_on') fullscreenSwitch(); 

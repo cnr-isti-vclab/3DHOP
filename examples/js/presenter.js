@@ -131,7 +131,7 @@ _parseModelInstance : function (options) {
 	r.transform = this._parseTransform(r.transform);
 	r.ID = this._instancesProgressiveID;
 	if (r.color[3]) //3DHOP 2.0 backward compatibility
-	{	
+	{
 		r.alpha = r.color[3];
 		r.color = [r.color[0], r.color[1], r.color[2]]
 	}
@@ -165,7 +165,7 @@ _parseSpot : function (options) {
 	r.transform = this._parseTransform(r.transform);
 	r.ID = this._spotsProgressiveID;
 	if (r.color[3]) //3DHOP 2.0 backward compatibility
-	{	
+	{
 		r.alpha = r.color[3];
 		r.color = [r.color[0], r.color[1], r.color[2]]
 	}
@@ -726,7 +726,7 @@ _createColorCodedIDNXSProgram : function () {
 			"uModelMatrix" 				 : SglMat4.identity(),
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
-			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],			
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
 			"uPointSize"                 : 1.0,
 		}
@@ -838,7 +838,7 @@ _createStandardPointPLYtechnique : function () {
 			"uSpecularColor"             : { semantic : "uSpecularColor",             value : [0.5, 0.2, 0.8, 32.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
-			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },			
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
 			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 },
 		}
@@ -859,7 +859,7 @@ _createStandardFacePLYtechnique : function () {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
 			"uWorldViewMatrix"           : { semantic : "uWorldViewMatrix",           value : SglMat4.identity() },
-			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },				
+			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 			"uAlpha"                     : { semantic : "uAlpha",                     value : 1.0 },
 			"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : false },
@@ -893,7 +893,7 @@ _createXYZPLYtechnique : function () {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
-			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },			
+			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
@@ -1199,7 +1199,7 @@ _measureRefresh : function (button, x, y, e) {
 			this.measurement = SglVec3.length(SglVec3.sub(this._pointA, this._pointB));
 			this._measurementStage=3;
 			this.ui.postDrawEvent();
-			if(this._onEndMeasurement) 
+			if(this._onEndMeasurement)
 				this._onEndMeasurement(this.measurement, [this._pointA[0], this._pointA[1], this._pointA[2]], [this._pointB[0], this._pointB[1], this._pointB[2]]);
 		}
 	}
@@ -1516,7 +1516,7 @@ _setupDraw : function () {
 	// scale to unit box + recenter
 	xform.model.scale([this.sceneRadiusInv, this.sceneRadiusInv, this.sceneRadiusInv]);
 	xform.model.translate(SglVec3.neg(this.sceneCenter));
-	Nexus.beginFrame(this.ui.gl, this.ui.framesPerSecond);													   
+	Nexus.beginFrame(this.ui.gl, this.ui.framesPerSecond);
 },
 
 _ID2Color : function (ID) {
@@ -1626,7 +1626,7 @@ _drawScene : function () {
 		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
 		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
-		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];		
+		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
 		var thisClipBordersize = config.showClippingBorder?config.clippingBorderSize:0.0;
 
 		var uniforms = {
@@ -1731,7 +1731,7 @@ _drawScene : function () {
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
-			"uClipPlane"                 : thisClipPlane,			
+			"uClipPlane"                 : thisClipPlane,
 			"uClipColor"                 : config.clippingBorderColor,
 			"uClipColorSize"             : thisClipBordersize,
 		};
@@ -1975,21 +1975,21 @@ _drawScene : function () {
 
 		if(SglVec3.length([this._clipPlane[0], this._clipPlane[1], this._clipPlane[2]]) > 0.0) {
 			var planepoint = [0.0, 0.0, 0.0];
-			
+
 			var k = SglVec3.dot(this._sceneBboxCenter, [this._clipPlane[0], this._clipPlane[1], this._clipPlane[2]]) + this._clipPlane[3];
 			planepoint[0] = this._sceneBboxCenter[0] - (this._clipPlane[0] * k);
 			planepoint[1] = this._sceneBboxCenter[1] - (this._clipPlane[1] * k);
 			planepoint[2] = this._sceneBboxCenter[2] - (this._clipPlane[2] * k);
-			
+
 			var rotm = SglMat4.identity();
 			rotm = SglMat4.mul(rotm, SglMat4.rotationAngleAxis(sglDegToRad(this._clipPlaneAH), [0.0, -1.0, 0.0]));
 			rotm = SglMat4.mul(rotm, SglMat4.rotationAngleAxis(sglDegToRad(this._clipPlaneAV), [0.0, 0.0, 1.0]));
-			
+
 			var psize = this._sceneBboxDiag;
-			
+
 			xform.model.push();
 			xform.model.translate(planepoint);
-			xform.model.multiply(rotm);			
+			xform.model.multiply(rotm);
 			xform.model.scale([psize, psize, psize ]);
 
 			var QuadUniforms = {
@@ -2008,9 +2008,9 @@ _drawScene : function () {
 				renderer.renderModel();
 			renderer.end();
 
-			xform.model.pop();		
+			xform.model.pop();
 		}
-		
+
 		if(this._clipAxis[0] != 0.0) {
 			xform.model.push();
 			xform.model.translate([this._clipPoint[0], this._sceneBboxCenter[1], this._sceneBboxCenter[2]]);
@@ -2142,11 +2142,11 @@ _drawScenePickingXYZ : function () {
 		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
 		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
-		
+
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uModelMatrix"               : modelMatrix,
-			"uBackFaceColor"             : instance.backfaceColor,			
+			"uBackFaceColor"             : instance.backfaceColor,
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
 			"uClipPlane"                 : thisClipPlane,
@@ -2250,21 +2250,21 @@ _drawScenePickingInstances : function () {
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
 		xform.model.multiply(mesh.transform.matrix);
-		
+
 		var modelMatrix = SglMat4.identity();
 		modelMatrix = SglMat4.mul(modelMatrix, space.transform.matrix);
 		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
-		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);		
+		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
 		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
-		
+
 		var colorID = this._ID2Color(instance.ID);
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uModelMatrix"               : modelMatrix,			
+			"uModelMatrix"               : modelMatrix,
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
-			"uClipPlane"                 : thisClipPlane,			
+			"uClipPlane"                 : thisClipPlane,
 			"uPointSize"                 : this._scene.config.pointSize,
 			"uColorID"                   : colorID
 		};
@@ -2954,8 +2954,6 @@ resetTrackball : function () {
 	this.trackball.reset();
 	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 	this._lightDirection = HOP_DEFAULTLIGHT; // also reset lighting
-//		this._scene.config.pointSize = HOP_DEFAULTPOINTSIZE; // also reset points size
-
 	this.ui.postDrawEvent();
 },
 
@@ -3238,7 +3236,7 @@ setInstanceBackfaceByName : function (name, color, mode, redraw) {
 	if (mode == "tint") modecode = 0.0;
 	else if (mode == "fill") modecode = 1.0;
 	else if (mode == "cull") modecode = 2.0;
-	
+
 	if(name == HOP_ALL) {
 		for (var inst in instances)
 			instances[inst].backfaceColor = [color[0], color[1], color[2], modecode];
@@ -3257,7 +3255,7 @@ setInstanceBackface : function (tag, color, mode, redraw) {
 	if (mode == "tint") modecode = 0.0;
 	else if (mode == "fill") modecode = 1.0;
 	else if (mode == "cull") modecode = 2.0;
-	
+
 	for (var inst in instances) {
 		if(tag == HOP_ALL) {
 			instances[inst].backfaceColor = [color[0], color[1], color[2], modecode];
@@ -3658,7 +3656,7 @@ _calculateBounding: function() {	var meshes    = this._scene.meshes;
 	this._sceneBboxCenter[0] = (this._sceneBboxMin[0] + this._sceneBboxMax[0]) / 2.0;
 	this._sceneBboxCenter[1] = (this._sceneBboxMin[1] + this._sceneBboxMax[1]) / 2.0;
 	this._sceneBboxCenter[2] = (this._sceneBboxMin[2] + this._sceneBboxMax[2]) / 2.0;
-	
+
 	this._sceneBboxDiag = SglVec3.length([ this._sceneBboxMax[0]-this._sceneBboxMin[0], this._sceneBboxMax[1]-this._sceneBboxMin[1], this._sceneBboxMax[2]-this._sceneBboxMin[2]]);
 },
 
@@ -3692,25 +3690,25 @@ setClippingPlaneExplicit : function (axis, offset) {
 setClippingPlane : function (angleH, angleV, sign, delta, deltaabs) {
 	this._calculateBounding();
 	var axis;
-	var m = SglMat4.identity();	
+	var m = SglMat4.identity();
 	this._clipPlaneAH = angleH;
-	this._clipPlaneAV = angleV;	
-	
+	this._clipPlaneAV = angleV;
+
 	// horizontal angle
 	m = SglMat4.mul(m, SglMat4.rotationAngleAxis(sglDegToRad(angleH), [0.0, -1.0, 0.0]));
 	// vertical angle
-	m = SglMat4.mul(m, SglMat4.rotationAngleAxis(sglDegToRad(angleV), [0.0, 0.0, 1.0]));	
-	
+	m = SglMat4.mul(m, SglMat4.rotationAngleAxis(sglDegToRad(angleV), [0.0, 0.0, 1.0]));
+
 	axis = [sign*1.0, 0.0, 0.0, 1.0];
 	axis = SglMat4.mul4(m, axis);
-	
+
 	var sceneOff = (this._sceneBboxDiag / 2.0) * (delta / 100.0);
 	if(typeof deltaabs !== "undefined")
-		sceneOff = deltaabs;	
+		sceneOff = deltaabs;
 	var position = [this._sceneBboxCenter[0] + (axis[0] * sceneOff), this._sceneBboxCenter[1] + (axis[1] * sceneOff), this._sceneBboxCenter[2] + (axis[2] * sceneOff)];
 	sceneOff = SglVec3.dot([axis[0], axis[1], axis[2]], position);
-	
-	this._clipPlane = [axis[0], axis[1], axis[2], -sceneOff];			
+
+	this._clipPlane = [axis[0], axis[1], axis[2], -sceneOff];
 	this.ui.postDrawEvent();
 },
 
@@ -3800,17 +3798,133 @@ getCameraType : function () {
 },
 
 //-----------------------------------------------------------------------------
-toggleLighting : function () {
+toggleSceneLighting : function () {
 	this._scene.space.useLighting = !this._scene.space.useLighting;
 	this.ui.postDrawEvent();
 },
 
-setLighting : function (on) {
-	this._scene.space.useLighting = on;
+setSceneLighting : function (newState) {
+	this._scene.space.useLighting = newState;
 	this.ui.postDrawEvent();
 },
-getLighting : function () {
+getSceneLighting : function () {
 	return this._scene.space.useLighting;
+},
+
+setInstanceLightingByName : function (name, newState, redraw) {
+	var instances = this._scene.modelInstances;
+
+	if(name == HOP_ALL) {
+		for (var inst in instances)
+			instances[inst].useLighting = newState;
+	}
+	else {
+		if(instances[name]) // if an instance with that name exists
+			instances[name].useLighting = newState;
+	}
+	if(redraw)
+		this.ui.postDrawEvent();
+},
+
+setInstanceLighting : function (tag, newState, redraw) {
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(tag == HOP_ALL) {
+			instances[inst].useLighting = newState;
+		}
+		else {
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag)
+					instances[inst].useLighting = newState;
+			}
+		}
+	}
+	if(redraw)
+		this.ui.postDrawEvent();
+},
+
+toggleInstanceLightingByName : function (name, redraw) {
+	var instances = this._scene.modelInstances;
+
+	if(name == HOP_ALL) {
+		for (var inst in instances)
+			instances[inst].useLighting = !instances[inst].useLighting;
+	}
+	else {
+		if(instances[name]) // if an instance with that name exists
+			instances[name].useLighting = !instances[name].useLighting;
+	}
+	if(redraw)
+		this.ui.postDrawEvent();
+},
+
+toggleInstanceLighting : function (tag, redraw) {
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(tag == HOP_ALL)
+		{
+			instances[inst].useLighting = !instances[inst].useLighting;
+		}
+		else
+		{
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag)
+					instances[inst].useLighting = !instances[inst].useLighting;
+			}
+		}
+	}
+	if(redraw)
+		this.ui.postDrawEvent();
+},
+
+isInstanceLightingEnabledByName : function (name) {
+	var Lighting = false;
+	var instances = this._scene.modelInstances;
+
+	if(!name || name==HOP_ALL) {
+		for (var inst in instances) {
+			if(instances[inst].useLighting){
+				Lighting = true;
+				return Lighting;
+			}
+		}
+	}
+	else {
+		if(instances[name]) { // if an instance with that name exists
+			if(instances[name].useLighting){
+				Lighting = true;
+				return Lighting;
+			}
+		 }
+	}
+	return Lighting;
+},
+
+isInstanceLightingEnabled : function (tag) {
+	var Lighting = false;
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(!tag || tag==HOP_ALL){
+			if(instances[inst].useLighting){
+				Lighting = true;
+				return Lighting;
+			}
+		}
+		else{
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag){
+					if(instances[inst].useLighting){
+						Lighting = true;
+						return Lighting;
+					}
+				 }
+			}
+		}
+	}
+	return Lighting;
 },
 
 //-----------------------------------------------------------------------------
