@@ -841,7 +841,7 @@ _createStandardPointPLYtechnique : function () {
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
-			"uClipColorSize"             : { semantic : "uClipColorSize"             value : 0.5 },
+			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 }
 		}
 	});
 
@@ -873,7 +873,7 @@ _createStandardFacePLYtechnique : function () {
 			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
 			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 },
-			"uSampler"                   : { semantic : "uSampler"                   value : 0 },
+			"uSampler"                   : { semantic : "uSampler",                   value : 0 }
 		}
 	});
 
@@ -897,7 +897,7 @@ _createXYZPLYtechnique : function () {
 			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
-			"uClipPlane"                 : { semantic : "uClipPlane"                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] }
 		}
 	});
 
@@ -921,7 +921,7 @@ _createColorCodedIDPLYtechnique : function () {
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
-			"uClipPlane"                 : { semantic : "uClipPlane"                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] }
 		}
 	});
 
@@ -942,7 +942,7 @@ _createColorShadedPLYtechnique : function () {
 			"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
 			"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
-			"uPointSize"                 : { semantic : "uPointSize"                 value : 1.0 },
+			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 }
 		}
 	});
 
@@ -993,7 +993,7 @@ _createSimpleLinetechnique : function () {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uLineColor"                 : { semantic : "uLineColor",                 value : [0.0, 1.0, 0.5, 1.0] },
 			"uPointA"                    : { semantic : "uPointA",                    value : [0.0, 0.0, 0.0] },
-			"uPointB"                    : { semantic : "uPointB"                    value : [1.0, 1.0, 1.0] },
+			"uPointB"                    : { semantic : "uPointB",                    value : [1.0, 1.0, 1.0] }
 		}
 	});
 
