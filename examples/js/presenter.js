@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2017, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.1.12";
+const HOP_VERSION             = "4.1.13";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -68,7 +68,7 @@ _parseBackground : function (options) {
 	var r = sglGetDefaultObject({
 		image         : null,
 		isEnvironment : false,
-		color         : [ 0.0, 0.0, 0.0, 0.0 ],
+		color         : [ 0.0, 0.0, 0.0, 0.0 ]
 	}, options);
 	return r;
 },
@@ -364,7 +364,8 @@ _createStandardPointNXSProgram : function () {
 				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1] + (uClipAxis[1]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + (uClipAxis[2]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
 			}																	\n\
-																				\n\			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
+																				\n\
+			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
 			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));		\n\
 		}																		\n\
 	");
@@ -398,7 +399,7 @@ _createStandardPointNXSProgram : function () {
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
 			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uClipColor"				 : [1.0, 1.0, 1.0],
-			"uClipColorSize"			 : 0.5,
+			"uClipColorSize"			 : 0.5
 		}
 	});
 	if(this._isDebugging)
@@ -554,7 +555,7 @@ _createStandardFaceNXSProgram : function () {
 			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uClipColor"                 : [1.0, 1.0, 1.0],
 			"uClipColorSize"             : 0.5,
-			"uSampler"                   : 0,
+			"uSampler"                   : 0
 		}
 	});
 	if(this._isDebugging)
@@ -647,7 +648,7 @@ _createXYZNXSProgram : function () {
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
 			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uBackFaceColor"             : [0.4, 0.3, 0.3, 0.0],
-			"uPointSize"                 : 1.0,
+			"uPointSize"                 : 1.0
 		}
 	});
 	if(this._isDebugging)
@@ -728,7 +729,7 @@ _createColorCodedIDNXSProgram : function () {
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
 			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
-			"uPointSize"                 : 1.0,
+			"uPointSize"                 : 1.0
 		}
 	});
 	if(this._isDebugging)
@@ -804,7 +805,7 @@ _createColorShadedNXSProgram : function () {
 			"uViewSpaceNormalMatrix"     : SglMat3.identity(),
 			"uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 			"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
-			"uPointSize"                 : 1.0,
+			"uPointSize"                 : 1.0
 		}
 	});
 	if(this._isDebugging)
@@ -821,7 +822,7 @@ _createStandardPointPLYtechnique : function () {
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
-			"aPointSize" : 1.0,
+			"aPointSize" : 1.0
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -840,7 +841,7 @@ _createStandardPointPLYtechnique : function () {
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
 			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
-			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 },
+			"uClipColorSize"             : { semantic : "uClipColorSize"             value : 0.5 },
 		}
 	});
 
@@ -872,7 +873,7 @@ _createStandardFacePLYtechnique : function () {
 			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
 			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 },
-			"uSampler"                   : { semantic : "uSampler",                   value : 0 },
+			"uSampler"                   : { semantic : "uSampler"                   value : 0 },
 		}
 	});
 
@@ -896,7 +897,7 @@ _createXYZPLYtechnique : function () {
 			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
-			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane"                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 		}
 	});
 
@@ -920,7 +921,7 @@ _createColorCodedIDPLYtechnique : function () {
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
-			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane"                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 		}
 	});
 
@@ -934,14 +935,14 @@ _createColorShadedPLYtechnique : function () {
 		program  : this._createColorShadedNXSProgram(),
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
-			"aPointSize" : 1.0,
+			"aPointSize" : 1.0
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
 			"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
-			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
+			"uPointSize"                 : { semantic : "uPointSize"                 value : 1.0 },
 		}
 	});
 
@@ -986,13 +987,13 @@ _createSimpleLinetechnique : function () {
 		",
 		vertexStreams : {
 			"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 0.0, 1.0 ],
+			"aColor"  : [ 1.0, 0.0, 0.0, 1.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uLineColor"                 : { semantic : "uLineColor",                 value : [0.0, 1.0, 0.5, 1.0] },
 			"uPointA"                    : { semantic : "uPointA",                    value : [0.0, 0.0, 0.0] },
-			"uPointB"                    : { semantic : "uPointB",                    value : [1.0, 1.0, 1.0] },
+			"uPointB"                    : { semantic : "uPointB"                    value : [1.0, 1.0, 1.0] },
 		}
 	});
 
@@ -1034,7 +1035,7 @@ _createMultiLinesPointstechnique : function () {
 		",
 		vertexStreams : {
 			"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 1.0, 1.0 ],
+			"aColor"  : [ 1.0, 0.0, 1.0, 1.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -1516,6 +1517,7 @@ _setupDraw : function () {
 	// scale to unit box + recenter
 	xform.model.scale([this.sceneRadiusInv, this.sceneRadiusInv, this.sceneRadiusInv]);
 	xform.model.translate(SglVec3.neg(this.sceneCenter));
+
 	Nexus.beginFrame(this.ui.gl, this.ui.framesPerSecond);
 },
 
@@ -1733,7 +1735,7 @@ _drawScene : function () {
 			"uClipAxis"                  : thisClipAxis,
 			"uClipPlane"                 : thisClipPlane,
 			"uClipColor"                 : config.clippingBorderColor,
-			"uClipColorSize"             : thisClipBordersize,
+			"uClipColorSize"             : thisClipBordersize
 		};
 
 		if(mesh.isNexus) {
@@ -1963,7 +1965,8 @@ _drawScene : function () {
 		// GLstate cleanup
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
-		xform.model.pop();	}
+		xform.model.pop();
+	}
 
 	// draw clipping plane (if any)
 	if(config.showClippingPlanes)
@@ -2075,7 +2078,8 @@ _drawScene : function () {
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 				"uViewSpaceLightDirection"   : this._lightDirection,
 				"uColorID"                   : [0.0, 0.0, 1.0, 0.25]
-			};
+			};
+
 
 			renderer.begin();
 				renderer.setTechnique(CCTechnique);
@@ -3611,7 +3615,8 @@ setClippingPointZ: function(clz) {
 	this.ui.postDrawEvent();
 },
 
-_calculateBounding: function() {	var meshes    = this._scene.meshes;
+_calculateBounding: function() {
+	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
 	this._sceneBboxMin = SglVec3.maxNumber();
 	this._sceneBboxMax = SglVec3.minNumber();
@@ -3716,6 +3721,7 @@ setClippingPlane : function (angleH, angleV, sign, delta, deltaabs) {
 zoomIn: function() {
 	this.onMouseWheel(1);
 },
+
 zoomOut: function() {
 	this.onMouseWheel(-1);
 },
@@ -3738,6 +3744,7 @@ rotateLight: function(x, y) {
 enableLightTrackball: function(on) {
 	this._movingLight = on;
 },
+
 isLightTrackballEnabled: function() {
 	return this._movingLight;
 },
@@ -3746,6 +3753,7 @@ isLightTrackballEnabled: function() {
 enableOnHover: function(on) {
 	this._onHover = on;
 },
+
 isOnHoverEnabled: function() {
 	return this._onHover;
 },
@@ -3757,20 +3765,24 @@ enableMeasurementTool: function(on) {
 	else
 		this._stopMeasurement();
 },
+
 isMeasurementToolEnabled: function() {
 	return this._isMeasuringDistance;
 },
 
+//-----------------------------------------------------------------------------
 enablePickpointMode: function(on) {
 	if(on)
 		this._startPickPoint();
 	else
 		this._stopPickPoint();
 },
+
 isPickpointModeEnabled: function() {
 	return this._isMeasuringPickpoint;
 },
 
+//-----------------------------------------------------------------------------
 isAnyMeasurementEnabled: function() {
 	return this._isMeasuring;
 },

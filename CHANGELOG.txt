@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-27 May 2017
+28 November 2017
 
 #### TEAM
 ---------
@@ -27,6 +27,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 * Added OBLIQUE PLANES SECTIONING TOOL;
 * Added GLOBAL LIGHTING control;
+* Updated TEXTURE HANDLING and DATA CACHING systems;
 * Updated PLY parser;
 * Updated PICKING functions;
 * Updated PLANES SECTIONING TOOL;
@@ -37,6 +38,8 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 * Added "HOWTO_10.0_camera_lighting.html" file;
 * Added "HOWTO_9.1_planes_sections.html" file;
 * Added "logo.png" file;
+* Updated "meshcoder_worker.js" file;
+* Updated "nexus.js" file;
 * Updated "ply.js" file;
 * Updated "presenter.js" file;
 * Updated "init.js" file;

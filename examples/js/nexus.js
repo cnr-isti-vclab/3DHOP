@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Federico Ponchio - Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2017, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -859,7 +859,6 @@ Instance.prototype = {
 		if(!colorEnabled && attr.color >= 0) gl.disableVertexAttribArray(attr.color);
 		if(!uvEnabled && attr.uv >= 0) gl.disableVertexAttribArray(attr.uv);
 
-
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 		if(t.mode != "POINT")
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
@@ -877,7 +876,7 @@ var contexts = [];
 
 function getContext(gl) {
 	var c = null;
-	if(!gl.isTexture) throw "Somethingg wrong";
+	if(!gl.isTexture) throw "CONTEXT EXCEPTION";
 	contexts.forEach(function(g) { 
 		if(g.gl == gl) c = g;
 	});
