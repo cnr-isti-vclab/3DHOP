@@ -14,7 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 Nexus = function() {
@@ -41,7 +41,7 @@ for(i = 0; i < scripts.length; i++) {
 }
 var meco = null;
 function loadMeco() {
-	if(presenter) //back compatible for 3dhop
+	if(typeof(presenter) != "undefined") //back compatible for 3DHOP
 		meco = new Worker(path.replace('nexus.js', 'meshcoder_worker.js'));
 	else
 		meco = new Worker(path.replace('nexus.js', 'meco.js'));
@@ -800,11 +800,11 @@ Instance.prototype = {
 			if (Debug.draw) continue;
 
 			if(t.mode == "POINT") {
-				var error = t.nodeError(n); //because we lost it due to the instance problem
-				var pointsize = Math.floor(0.30*error);
-				if(pointsize > 1) pointsize = 1;
+				var pointsize = Math.ceil(0.30*t.currentError);
+				if(pointsize > 2) pointsize = 2;
 				gl.vertexAttrib1fv(4, [pointsize]);
 
+				var error = t.nodeError(n);
 				var fraction = (error/t.currentError - 1);
 				if(fraction > 1) fraction = 1;
 
@@ -876,7 +876,7 @@ var contexts = [];
 
 function getContext(gl) {
 	var c = null;
-	if(!gl.isTexture) throw "CONTEXT EXCEPTION";
+	if(!gl.isTexture) throw "Something wrong";
 	contexts.forEach(function(g) { 
 		if(g.gl == gl) c = g;
 	});
