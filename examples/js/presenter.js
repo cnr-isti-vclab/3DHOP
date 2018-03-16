@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.1.13";
+const HOP_VERSION             = "4.1.14";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -603,8 +603,8 @@ _createXYZNXSProgram : function () {
 																				\n\
 		vec4 pack_depth(const in float depth)											\n\
 		{																				\n\
-			const vec4 bit_shift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);	\n\
-			const vec4 bit_mask  = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);			\n\
+			const vec4 bit_shift = vec4(255.0*255.0*255.0, 255.0*255.0, 255.0, 1.0);	\n\
+			const vec4 bit_mask  = vec4(0.0, 1.0/255.0, 1.0/255.0, 1.0/255.0);			\n\
 			vec4 res = fract(depth * bit_shift);										\n\
 			res -= res.xxyz * bit_mask;													\n\
 			return res;																	\n\
@@ -1132,9 +1132,9 @@ _pickingRefresh: function(x,y) {
 			else{
 				this._pickedSpot = null;
 				if(this._onHover){
-					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha  -= 0.2;
+					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.2;
 					if(/*!this._movingLight ||*/ !this._isMeasuring) document.getElementById(this.ui.canvas.id).style.cursor = "default";
-					if(this._onLeaveSpot && this._lastPickedSpot!=null)  this._onLeaveSpot(this._lastPickedSpot);
+					if(this._onLeaveSpot && this._lastPickedSpot!=null) this._onLeaveSpot(this._lastPickedSpot);
 					//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
 					this._lastPickedSpot = null;
 					this.ui.postDrawEvent();
@@ -1184,8 +1184,7 @@ _pickingRefresh: function(x,y) {
 },
 
 _measureRefresh : function (button, x, y, e) {
-//		if(e.target.id!=this.ui.gl.canvas.id) return;
-
+//	if(e.target.id!=this.ui.gl.canvas.id) return;
 	if(this._isMeasuringDistance){
 		this._pickpoint[0] = x;
 		this._pickpoint[1] = y;
@@ -1227,7 +1226,7 @@ _stopMeasurement  : function () {
 },
 
 _pickpointRefresh : function (button, x, y, e) {
-//		if(e.target.id!=this.ui.gl.canvas.id) return;
+//	if(e.target.id!=this.ui.gl.canvas.id) return;
 	if(this._isMeasuringPickpoint){
 		this._pickpoint[0] = x;
 		this._pickpoint[1] = y;
@@ -2203,7 +2202,7 @@ _drawScenePickingXYZ : function () {
 	var gg = pixel[1] / 255.0;
 	var bb = pixel[2] / 255.0;
 	var aa = pixel[3] / 255.0;
-	var depth = aa  + ( bb / (256.0)) + ( gg / (256.0*256.0)) + ( rr / (256.0*256.0*256.0));
+	var depth = aa  + ( bb / (255.0)) + ( gg / (255.0*255.0)) + ( rr / (255.0*255.0*255.0));
 
 	var ppointc;
 
@@ -2567,9 +2566,9 @@ onInitialize : function () {
 	this.viewMatrix = SglMat4.identity();
 
 	// nexus parameters
-	this._nexusTargetFps = 15.0;
+	this._nexusTargetFps   = 15.0;
 	this._nexusTargetError = 1.0;
-	this._nexusCacheSize = 50000000;
+	this._nexusCacheSize   = 50000000;
 
 	// shaders
 	this.faceNXSProgram = this._createStandardFaceNXSProgram();
@@ -2626,6 +2625,8 @@ onInitialize : function () {
 	this._animating      = false;
 	this._movingLight    = false;
 
+	this._resizable      = true;
+
 	this._clickable      = false;
 	this._onHover        = false;
 
@@ -2666,6 +2667,8 @@ onInitialize : function () {
 onDrag : function (button, x, y, e) {
 	var ui = this.ui;
 
+	if(this._clickable) this._clickable = false;
+
 	if(this._movingLight && ui.isMouseButtonDown(0)){
 		var dxl = (x / (ui.width  - 1)) * 2.0 - 1.0;
 		var dyl = (y / (ui.height - 1)) * 2.0 - 1.0;
@@ -2698,41 +2701,51 @@ onDrag : function (button, x, y, e) {
 
 onMouseMove : function (x, y, e) {
 	if(e.target.id!=this.ui.gl.canvas.id) return;
-	if(this._onHover && !this.ui.isDragging(0) && !this.isAnimate()) this._pickingRefresh(x, y);
+	if(this._onHover)
+		if (!this.ui.isDragging(0) && !this.ui.isDragging(1) && !this.ui.isDragging(2)) this._pickingRefresh(x, y);
 },
 
-onMouseOut : function (x, y) {
-	if(this._onHover && !this.ui.isDragging(0)) this._pickingRefresh();
+onMouseOut : function (x, y, e) {
+	if(this._onHover) this._pickingRefresh(-1,-1);
+	this._clickable = false;
 },
 
 onMouseButtonDown : function (button, x, y, e) {
-	this._clickable = true;
+	if(this._onHover) this._pickingRefresh(x,y);
+	if(button==0) this._clickable = true;
 },
 
-onMouseButtonUp : function (button, x, y, e) {
-	if(this._clickable && button==0 && !(this.ui.isDragging(0) && (Math.abs(this.ui.dragDeltaX(0))>=3 || Math.abs(this.ui.dragDeltaY(0)>=3))) && e.detail!=-1) {
+onClick : function (button, x, y, e) {
+	var xy = this.ui._getMouseClientPos(e);
+
+	this.ui._clickPrevPos = this.ui._clickPos;
+	this.ui._clickPos = xy;
+
+	var clickDeltaPos = [this.ui._clickPos[0] - this.ui._clickPrevPos[0], this.ui._clickPos[1] - this.ui._clickPrevPos[1]];
+	var clickDeltaTime = this.ui._clickPos[3] - this.ui._clickPrevPos[3];
+
+	var clickDeltaDist = SpiderGL.Math.Vec2.length(clickDeltaPos);
+
+	if (this._clickable) {
 		this._pickingRefresh(x, y);
+
+		if(clickDeltaDist <= 30 && clickDeltaTime <= 250) {
+			if(this.trackball.recenter){
+				var ppoint = this._drawScenePickingXYZ();
+				if (ppoint!=null) {
+					this.ui.animateRate = 30;
+					this.trackball.recenter(ppoint);
+					this.ui.postDrawEvent();
+				}
+			}
+		}
+
 		if(this._onPickedSpot && this._pickedSpot!=null) this._onPickedSpot(this._pickedSpot);
 		if(this._onPickedInstance && this._pickedInstance!=null) this._onPickedInstance(this._pickedInstance);
 		if(this._isMeasuringPickpoint) this._pickpointRefresh(0, x, y, e);
 		if(this._isMeasuringDistance) this._measureRefresh(0, x, y, e);
 	}
 	this._clickable = false;
-},
-
-onDoubleClick : function (button, x, y, e) {
-	//only if trackball does support recentering, we do it
-	if(this.trackball.recenter){
-		this._pickpoint[0] = x;
-		this._pickpoint[1] = y;
-		var ppoint = this._drawScenePickingXYZ();
-		if (ppoint!=null)
-		{
-			this.ui.animateRate = 30;
-			this.trackball.recenter(ppoint);
-			this.ui.postDrawEvent();
-		}
-	}
 },
 
 onKeyPress : function (key, e) {
@@ -2775,6 +2788,7 @@ onMouseWheel: function (wheelDelta, x, y, e) {
 	}
 	else {
 		var action = SGL_TRACKBALL_SCALE;
+
 		var factor = wheelDelta > 0.0 ? (0.90) : (1.10);
 
 		var testMatrix = this.trackball._matrix.slice();
@@ -2799,7 +2813,7 @@ onAnimate : function (dt) {
 		}
 		else {
 			this.ui.animateRate = 0;
-			if(this._onHover && !this.ui.isDragging(0)) this._pickingRefresh(this.ui.cursorX, this.ui.cursorY);
+			if(this._onHover && !this.ui._cursorPos[2]) this._pickingRefresh(this.ui._cursorPos[0], this.ui._cursorPos[1]);
 		}
 	}
 },
@@ -2830,6 +2844,7 @@ setNexusTargetFps: function(fps) {
 getNexusTargetFps: function() {
 	return this._nexusTargetFps;
 },
+
 setNexusTargetError: function(error) {
 	this._nexusTargetError = error;
 	Nexus.setTargetError(this.ui.gl, error);
@@ -2841,7 +2856,7 @@ getNexusTargetError: function() {
 
 setNexusCacheSize: function(size) {
 	this._nexusCacheSize = size;
-	Nexus.maxCacheSize(this.ui.gl, error);
+	Nexus.setMaxCacheSize(this.ui.gl, size);
 },
 
 getNexusCacheSize: function() {
@@ -2900,18 +2915,18 @@ setScene : function (options) {
 	for (var m in scene.meshes) {
 		var mesh = scene.meshes[m];
 		if (!mesh.url) continue;
-		if(String(mesh.url).lastIndexOf(".nxs") == (String(mesh.url).length - 4)) {
-			var nexus = new Nexus.Renderer(gl);
-			mesh.renderable = nexus;
-			mesh.isNexus = true;
-			Nexus.setTargetError(this.ui.gl, this._nexusTargetError);
-			//nexus.drawBudget = 0.5*1024*1024;
-			Nexus.setTargetFps(this.ui.gl, this._nexusTargetFps);
-			Nexus.setMaxCacheSize(this.ui.gl, this._nexusCacheSize);
+		if((String(mesh.url).lastIndexOf(".nxs") == (String(mesh.url).length - 4))||(String(mesh.url).lastIndexOf(".nxz") == (String(mesh.url).length - 4))) {
+			Nexus.setTargetError(gl, this._nexusTargetError);
+			Nexus.setTargetFps(gl, this._nexusTargetFps);
+			Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
 
-			nexus.onLoad = function () { that._onMeshReady(); };
-			nexus.onUpdate = this.ui.postDrawEvent;
-			nexus.open(mesh.url);
+			var nxs = new Nexus.Renderer(gl);
+			nxs.onLoad = function () { that._onMeshReady(); };
+			nxs.onUpdate = this.ui.postDrawEvent;
+			nxs.open(mesh.url);
+
+			mesh.renderable = nxs;
+			mesh.isNexus = true;
 		}
 		else {
 			mesh.renderable = null;

@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-28 November 2017
+16 March 2018
 
 #### TEAM
 ---------
@@ -25,8 +25,11 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
-* Added OBLIQUE PLANES SECTIONING TOOL;
 * Added GLOBAL LIGHTING control;
+* Added basic MOBILE DEVICE support;
+* Updated CAMERA PROJECTION modes and functions;
+* Updated TOUCH HANDLING;
+* Updated UI system;
 * Updated TEXTURE HANDLING and DATA CACHING systems;
 * Updated PLY parser;
 * Updated PICKING functions;
@@ -36,15 +39,11 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 **Files Added/Modified**
 
 * Added "HOWTO_10.0_camera_lighting.html" file;
-* Added "HOWTO_9.1_planes_sections.html" file;
 * Added "logo.png" file;
-* Updated "meshcoder_worker.js" file;
-* Updated "nexus.js" file;
-* Updated "ply.js" file;
-* Updated "presenter.js" file;
-* Updated "init.js" file;
+* Added "meco.js" file;
+* Updated "index_all_tools.html" file;
+* Updated all "*.js" files;
 * Updated "3dhop.css" file;
-* Updated all trackballs ".js" files;
 * Updated "skins" directory;
 
 *Version 4.1*  
