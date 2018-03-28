@@ -176,7 +176,8 @@ _parseSpot : function (options) {
 _parseTrackball : function (options) {
 	var r = sglGetDefaultObject({
 		type         : TurnTableTrackball,
-		trackOptions : {}
+		trackOptions : {},
+		locked       : false
 	}, options);
 	return r;
 },
@@ -2676,6 +2677,9 @@ onDrag : function (button, x, y, e) {
 		return;
 	}
 
+	// if locked trackball, just return. we check AFTER the light-trackball test
+	if (this._scene.trackball.locked) return;
+	
 	if(ui.dragDeltaX(button) != 0) this.x += (ui.cursorDeltaX/500);
 	if(ui.dragDeltaY(button) != 0) this.y += (ui.cursorDeltaY/500);
 
@@ -2787,6 +2791,9 @@ onMouseWheel: function (wheelDelta, x, y, e) {
 		}
 	}
 	else {
+		// if locked trackball, just return.
+		if (this._scene.trackball.locked) return;
+		
 		var action = SGL_TRACKBALL_SCALE;
 
 		var factor = wheelDelta > 0.0 ? (0.90) : (1.10);
@@ -3822,6 +3829,19 @@ setCameraOrthographic: function() {
 },
 getCameraType : function () {
 	return this._scene.space.cameraType;
+},
+
+//-----------------------------------------------------------------------------
+toggleTrackballLock: function() {
+	this._scene.trackball.locked = !this._scene.trackball.locked;
+},
+
+setTrackballLock: function(newState) {
+	this._scene.trackball.locked = newState;
+},
+
+isTrackballLockEnabled: function() {
+	return this._scene.trackball.locked;
 },
 
 //-----------------------------------------------------------------------------
