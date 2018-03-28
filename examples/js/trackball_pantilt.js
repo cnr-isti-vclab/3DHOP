@@ -228,7 +228,7 @@ PanTiltTrackball.prototype = {
 		var newpanX = -(newpoint[0]-presenter.sceneCenter[0]) * presenter.sceneRadiusInv;
 		var newpanY = -(newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
 
-		this.animateToState([newpanX, newpanY, sglRadToDeg(this._angleX), sglRadToDeg(this._angleY), (this._distance * 0.8)]);
+		this.animateToState([newpanX, newpanY, sglRadToDeg(this._angleX), sglRadToDeg(this._angleY), (this._distance * 0.6)]);
 	},
 
 	tick : function (dt) {
