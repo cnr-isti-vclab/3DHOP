@@ -282,7 +282,7 @@ TurntablePanTrackball.prototype = {
 		var newpanY = (newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
 		var newpanZ = (newpoint[2]-presenter.sceneCenter[2]) * presenter.sceneRadiusInv;
 
-		this.animateToState([sglRadToDeg(this._phi), sglRadToDeg(this._theta), newpanX, newpanY, newpanZ, (this._distance * 0.8)]);
+		this.animateToState([sglRadToDeg(this._phi), sglRadToDeg(this._theta), newpanX, newpanY, newpanZ, (this._distance * 0.6)]);
 	},
 
 	tick : function (dt) {

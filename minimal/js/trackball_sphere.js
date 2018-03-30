@@ -130,7 +130,7 @@ SphereTrackball.prototype = {
 		this._sphereMatrix[12] = -newpanX;
 		this._sphereMatrix[13] = -newpanY;
 		this._sphereMatrix[14] = -newpanZ;
-		this._distance *= 0.8;
+		this._distance *= 0.6;
 		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
 		this._computeMatrix();
 	},
