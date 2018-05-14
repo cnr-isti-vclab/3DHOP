@@ -305,6 +305,7 @@ Mesh.prototype = {
 					if(mesh.reqAttempt < maxReqAttempt) mesh.open(mesh.url + '?' + Math.random()); // BLINK ENGINE CACHE BUG PATCH
 					return null;
 				}
+				mesh.reqAttempt = 0;
 				for(i in header)
 					mesh[i] = header[i];
 				mesh.vertex = mesh.signature.vertex;
@@ -508,18 +509,6 @@ Instance.prototype = {
 	open: function(url) {
 		var t = this;
 		t.context = getContext(t.gl);
-		var mesh;
-		t.context.meshes.forEach(function(m) {
-			if(m.url == url)
-			t.mesh = m;
-			//m.instances.push(t);
-		});
-		if(!t.mesh) {
-			t.mesh = new Mesh();
-			t.mesh.onLoad = function() { t.renderMode = t.mesh.renderMode; t.mode = t.renderMode[0]; t.onLoad(); }
-			t.mesh.open(url);
-			t.context.meshes.push(t.mesh);
-		}
 
 		t.modelMatrix      = new Float32Array(16);
 		t.viewMatrix       = new Float32Array(16);
@@ -531,7 +520,24 @@ Instance.prototype = {
 		t.planes           = new Float32Array(24);
 		t.viewport         = new Float32Array(4);
 		t.viewpoint        = new Float32Array(4);
+
+		t.context.meshes.forEach(function(m) {
+			if(m.url == url){
+				t.mesh = m;
+				t.renderMode = t.mesh.renderMode;
+				t.mode = t.renderMode[0];
+				t.onLoad();
+			}
+		});
+
+		if(!t.mesh) {
+			t.mesh = new Mesh();
+			t.mesh.onLoad = function() { t.renderMode = t.mesh.renderMode; t.mode = t.renderMode[0]; t.onLoad(); }
+			t.mesh.open(url);
+			t.context.meshes.push(t.mesh);
+		}
 	},
+
 	close: function() {
 		//remove instance from mesh.
 	},

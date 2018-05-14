@@ -193,14 +193,14 @@ _parseSpace : function (options) {
 		explicitRadius   : 1.0,
 		transform        : null,
 		cameraFOV        : 60.0,
-		cameraNearFar    : [0.1, 10.0],
+		cameraNearFar    : [0.01, 10.0],
 		cameraType       : "perspective",
 		useLighting      : true,
 	}, options);
 	r.transform = this._parseTransform(r.transform);
-	if(r.cameraFOV < 2.0) r.cameraFOV=2.0;
-	if(r.cameraFOV > 88.0) r.cameraFOV=88.0;
-	if((r.cameraType != "perspective") && (r.cameraType != "ortho"))
+	if(r.cameraFOV < 2.0)  r.cameraFOV = 2.0;
+	if(r.cameraFOV > 88.0) r.cameraFOV = 88.0;
+	if((r.cameraType != "perspective") && (r.cameraType != "orthographic"))
 		r.cameraType = "perspective";
 	return r;
 },
@@ -1072,7 +1072,7 @@ _testReady : function () {
 
 	this._sceneReady = this._scenePrepare();
 
-	this.repaint()
+	this.repaint();
 },
 
 _scenePrepare : function () {
@@ -1122,7 +1122,7 @@ _pickingRefresh: function(x,y) {
 							}
 							if(this._onLeaveSpot && this._lastPickedSpot!=null)  this._onLeaveSpot(this._lastPickedSpot);
 							if(this._onEnterSpot && this._pickedSpot!=null) this._onEnterSpot(this._pickedSpot);
-							this.repaint()
+							this.repaint();
 						}
 						this._lastPickedSpot = spt;
 						break;
@@ -1138,7 +1138,7 @@ _pickingRefresh: function(x,y) {
 					if(this._onLeaveSpot && this._lastPickedSpot!=null) this._onLeaveSpot(this._lastPickedSpot);
 					//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
 					this._lastPickedSpot = null;
-					this.repaint()
+					this.repaint();
 				}
 				this._lastSpotID = ID;
 			}
@@ -1159,7 +1159,7 @@ _pickingRefresh: function(x,y) {
 						if(/*!this._movingLight ||*/ !this._isMeasuring){
 							this._lastCursor = cursor;
 							if(this._pickedSpot==null)document.getElementById(this.ui.canvas.id).style.cursor = cursor;
-							this.repaint()
+							this.repaint();
 						}
 						if(this._onLeaveInstance && this._lastPickedInstance!=null)  this._onLeaveInstance(this._lastPickedInstance);
 						if(this._onEnterInstance && this._pickedInstance!=null) this._onEnterInstance(this._pickedInstance);
@@ -1176,7 +1176,7 @@ _pickingRefresh: function(x,y) {
 				if((/*!this._movingLight ||*/ !this._isMeasuring) && this._pickedSpot==null) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 				if(this._onLeaveInstance && this._lastPickedInstance!=null)  this._onLeaveInstance(this._lastPickedInstance);
 				//if(this._onEnterInstance) this._onEnterInstance(this._pickedInstance);
-				this.repaint()
+				this.repaint();
 			}
 			this._lastPickedInstance = null;
 		}
@@ -1193,13 +1193,13 @@ _measureRefresh : function (button, x, y, e) {
 		if ((ppoint!=null)&&(this._measurementStage != 2)) {
 			this._pointA = ppoint;
 			this._measurementStage=2;
-			this.repaint()
+			this.repaint();
 		}
 		else if ((ppoint!=null)&&(this._measurementStage == 2)) {
 			this._pointB = ppoint;
 			this.measurement = SglVec3.length(SglVec3.sub(this._pointA, this._pointB));
 			this._measurementStage=3;
-			this.repaint()
+			this.repaint();
 			if(this._onEndMeasurement)
 				this._onEndMeasurement(this.measurement, [this._pointA[0], this._pointA[1], this._pointA[2]], [this._pointB[0], this._pointB[1], this._pointB[2]]);
 		}
@@ -1213,7 +1213,7 @@ _startMeasurement  : function () {
 	this._pointA = [0.0, 0.0, 0.0];
 	this._pointB = [0.0, 0.0, 0.0];
 	this.measurement = 0.0;
-	this.repaint()
+	this.repaint();
 },
 
 _stopMeasurement  : function () {
@@ -1223,7 +1223,7 @@ _stopMeasurement  : function () {
 	this._pointA = [0.0, 0.0, 0.0];
 	this._pointB = [0.0, 0.0, 0.0];
 	this.measurement = 0.0;
-	this.repaint()
+	this.repaint();
 },
 
 _pickpointRefresh : function (button, x, y, e) {
@@ -1237,7 +1237,7 @@ _pickpointRefresh : function (button, x, y, e) {
 			this._pickedPoint = ppoint;
 			this._pickValid = true;
 			if(this._onEndPickingPoint) this._onEndPickingPoint([this._pickedPoint[0], this._pickedPoint[1], this._pickedPoint[2]]);
-			this.repaint()
+			this.repaint();
 		}
 	}
 },
@@ -1247,7 +1247,7 @@ _startPickPoint : function () {
 	this._isMeasuring = this._isMeasuringPickpoint = true;
 	this._pickValid = false;
 	this._pickedPoint = [0.0, 0.0, 0.0];
-	this.repaint()
+	this.repaint();
 },
 
 _stopPickPoint : function () {
@@ -1255,7 +1255,7 @@ _stopPickPoint : function () {
 	if (!this._isMeasuringDistance) this._isMeasuring = this._isMeasuringPickpoint;
 	this._pickValid = false;
 	this._pickedPoint = [0.0, 0.0, 0.0];
-	this.repaint()
+	this.repaint();
 },
 
 //----------------------------------------------------------------------------------------
@@ -1490,9 +1490,9 @@ _setupDraw : function () {
 
 	xform.projection.loadIdentity();
 
-	if(space.cameraType == "ortho")
+	if(space.cameraType == "orthographic")
 	{
-		//default camera distance in ortho view is "as large as scene size"
+		//default camera distance in orthographic view is "as large as scene size"
 		// then, if the trackball is able to provide a better value, we use it
 		var cDistance = 1.0;
 		if(typeof this.trackball.distance != "undefined")
@@ -2739,7 +2739,7 @@ onClick : function (button, x, y, e) {
 				if (ppoint!=null) {
 					this.ui.animateRate = 30;
 					this.trackball.recenter(ppoint);
-					this.repaint()
+					this.repaint();
 				}
 			}
 		}
@@ -2754,15 +2754,16 @@ onClick : function (button, x, y, e) {
 
 onKeyPress : function (key, e) {
 	if(this._isDebugging) { // DEBUGGING-AUTHORING keys
-		if((e.charCode == '80') || (e.charCode == '112')) // key "P" to print trackball
-			console.log(this.trackball.getState());
 		if (e.charCode == '49') { // key "1" to show nexus patches
-			Nexus.Debug.nodes=!Nexus.Debug.nodes;
-			this.repaint()
+			Nexus.Debug.nodes =! Nexus.Debug.nodes;
+			this.repaint();
 		}
-		if (e.charCode == '50') { // key "2" to toggle camera perspective/ortho
+		else if (e.charCode == '50') { // key "2" to toggle camera perspective/orthographic
 			this.toggleCameraType();
+			this.repaint();
 		}
+		else if((e.charCode == '80') || (e.charCode == '112')) // key "P" to print trackball
+			console.log(this.trackball.getState());
 	}
 },
 
@@ -2809,14 +2810,14 @@ onMouseWheel: function (wheelDelta, x, y, e) {
 		}
 	}
 
-	if(diff) this.repaint()
+	if(diff) this.repaint();
 },
 
 onAnimate : function (dt) {
 	if (this._isSceneReady()) {
 		// animate trackball
 		if(this.trackball.tick(dt)) {
-			this.repaint()
+			this.repaint();
 		}
 		else {
 			this.ui.animateRate = 0;
@@ -2921,19 +2922,21 @@ setScene : function (options) {
 
 	for (var m in scene.meshes) {
 		var mesh = scene.meshes[m];
+
 		if (!mesh.url) continue;
 		if((String(mesh.url).lastIndexOf(".nxs") == (String(mesh.url).length - 4))||(String(mesh.url).lastIndexOf(".nxz") == (String(mesh.url).length - 4))) {
 			Nexus.setTargetError(gl, this._nexusTargetError);
 			Nexus.setTargetFps(gl, this._nexusTargetFps);
 			Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
 
-			var nxs = new Nexus.Renderer(gl);
-			nxs.onLoad = function () { that._onMeshReady(); };
-			nxs.onUpdate = this.ui.postDrawEvent;
-			nxs.open(mesh.url);
+			var instance = new Nexus.Renderer(gl);
+			instance.onLoad = function () { that._onMeshReady(); };
+			instance.onUpdate = this.ui.postDrawEvent;
 
-			mesh.renderable = nxs;
+			mesh.renderable = instance;
 			mesh.isNexus = true;
+
+			instance.open(mesh.url);
 		}
 		else {
 			mesh.renderable = null;
@@ -2969,7 +2972,7 @@ setScene : function (options) {
 	}
 
 	// create point-to-point line model
-	this._createLineModel()
+	this._createLineModel();
 	// create quad models
 	this._createQuadModels();
 
@@ -2980,7 +2983,7 @@ resetTrackball : function () {
 	this.trackball.reset();
 	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 	this._lightDirection = HOP_DEFAULTLIGHT; // also reset lighting
-	this.repaint()
+	this.repaint();
 },
 
 getTrackballPosition : function () {
@@ -2989,13 +2992,13 @@ getTrackballPosition : function () {
 
 setTrackballPosition : function (newposition) {
 	this.trackball.setState(newposition);
-	this.repaint()
+	this.repaint();
 },
 
 animateToTrackballPosition : function (newposition, newtime) {
 	this.ui.animateRate = 30;
 	this.trackball.animateToState(newposition, newtime);
-	this.repaint()
+	this.repaint();
 },
 
 isAnimate : function () {
@@ -3009,28 +3012,31 @@ isAnimate : function () {
 
 setCenterModeFirst : function () {
 	this._scene.space.centerMode = "first";
-	this.repaint()
+	this.repaint();
 },
+
 setCenterModeScene : function () {
 	this._scene.space.centerMode = "scene";
-	this.repaint()
+	this.repaint();
 },
+
 setCenterModeSpecific : function (instancename) {
 	if(this._scene.modelInstances[instancename])
 	{
 		this._scene.space.centerMode = "specific";
 		this._scene.space.whichInstanceCenter = instancename;
-		this.repaint()
+		this.repaint();
 	}
 	else
 		return "ERROR - No such instance";
 },
+
 setCenterModeExplicit : function (newcenter) {
 	if((newcenter.constructor === Array)&&(newcenter.length = 3)&&(isFinite(String(newcenter[0])))&&(isFinite(String(newcenter[1])))&&(isFinite(String(newcenter[2]))))
 	{
 		this._scene.space.centerMode = "explicit";
 		this._scene.space.explicitCenter = newcenter;
-		this.repaint()
+		this.repaint();
 	}
 	else
 		return "ERROR - Not a point";
@@ -3038,28 +3044,31 @@ setCenterModeExplicit : function (newcenter) {
 
 setRadiusModeFirst : function () {
 	this._scene.space.radiusMode = "first";
-	this.repaint()
+	this.repaint();
 },
+
 setRadiusModeScene : function () {
 	this._scene.space.radiusMode = "scene";
-	this.repaint()
+	this.repaint();
 },
+
 setRadiusModeSpecific : function (instancename) {
 	if(this._scene.modelInstances[instancename])
 	{
 		this._scene.space.radiusMode = "specific";
 		this._scene.space.whichInstanceRadius = instancename;
-		this.repaint()
+		this.repaint();
 	}
 	else
 		return "ERROR - No such instance";
 },
+
 setRadiusModeExplicit : function (newradius) {
 	if((isFinite(String(newradius)))&&(newradius>0.0))
 	{
 		this._scene.space.radiusMode = "explicit";
 		this._scene.space.explicitRadius = newradius;
-		this.repaint()
+		this.repaint();
 	}
 	else
 		return "ERROR - Not a radius";
@@ -3085,7 +3094,7 @@ setInstanceSolidColorByName : function (name, newState, redraw, newColor) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 setInstanceSolidColor : function (tag, newState, redraw, newColor) {
@@ -3108,7 +3117,7 @@ setInstanceSolidColor : function (tag, newState, redraw, newColor) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleInstanceSolidColorByName : function (name, redraw) {
@@ -3121,7 +3130,7 @@ toggleInstanceSolidColorByName : function (name, redraw) {
 		if(instances[name]) // if an instance with that name exists
 			instances[name].useSolidColor = !instances[name].useSolidColor;
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleInstanceSolidColor : function (tag, redraw) {
@@ -3136,7 +3145,7 @@ toggleInstanceSolidColor : function (tag, redraw) {
 					instances[inst].useSolidColor = !instances[inst].useSolidColor;
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 //-----------------------------------------------------------------------------
@@ -3158,7 +3167,7 @@ setInstanceTransparencyByName : function (name, newState, redraw, newAlpha) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 setInstanceTransparency : function (tag, newState, redraw, newAlpha) {
@@ -3181,7 +3190,7 @@ setInstanceTransparency : function (tag, newState, redraw, newAlpha) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleInstanceTransparencyByName : function (name, redraw) {
@@ -3196,7 +3205,7 @@ toggleInstanceTransparencyByName : function (name, redraw) {
 			instances[name].useTransparency = !instances[name].useTransparency;
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleInstanceTransparency : function (tag, redraw) {
@@ -3216,7 +3225,7 @@ toggleInstanceTransparency : function (tag, redraw) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 //-----------------------------------------------------------------------------
@@ -3234,7 +3243,7 @@ setInstanceSpecularityByName : function (name, color, hardness, redraw) {
 			instances[name].specularColor = [color[0], color[1], color[2], hardness];
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 setInstanceSpecularity : function (tag, color, hardness, redraw) {
@@ -3252,7 +3261,7 @@ setInstanceSpecularity : function (tag, color, hardness, redraw) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 //----backface
@@ -3272,7 +3281,7 @@ setInstanceBackfaceByName : function (name, color, mode, redraw) {
 			instances[name].backfaceColor = [color[0], color[1], color[2], modecode];
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 setInstanceBackface : function (tag, color, mode, redraw) {
@@ -3294,7 +3303,7 @@ setInstanceBackface : function (tag, color, mode, redraw) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 //-----------------------------------------------------------------------------
@@ -3311,7 +3320,7 @@ setInstanceVisibilityByName : function (name, newState, redraw) {
 			instances[name].visible = newState;
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 setInstanceVisibility : function (tag, newState, redraw) {
@@ -3329,7 +3338,7 @@ setInstanceVisibility : function (tag, newState, redraw) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleInstanceVisibilityByName : function (name, redraw) {
@@ -3344,7 +3353,7 @@ toggleInstanceVisibilityByName : function (name, redraw) {
 			instances[name].visible = !instances[name].visible;
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleInstanceVisibility : function (tag, redraw) {
@@ -3364,7 +3373,7 @@ toggleInstanceVisibility : function (tag, redraw) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 isInstanceVisibilityEnabledByName : function (name) {
@@ -3429,7 +3438,7 @@ setSpotVisibilityByName : function (name, newState, redraw) {
 			spots[name].visible = newState;
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 setSpotVisibility : function (tag, newState, redraw) {
@@ -3448,7 +3457,7 @@ setSpotVisibility : function (tag, newState, redraw) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleSpotVisibilityByName : function (name, redraw) {
@@ -3462,7 +3471,7 @@ toggleSpotVisibilityByName : function (name, redraw) {
 			spots[name].visible = !spots[name].visible;
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleSpotVisibility : function (tag, redraw) {
@@ -3481,7 +3490,7 @@ toggleSpotVisibility : function (tag, redraw) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 isSpotVisibilityEnabledByName : function (name) {
@@ -3538,29 +3547,29 @@ resetClippingXYZ: function() {
 	this._calculateBounding();
 	this._clipAxis = [0.0, 0.0, 0.0];
 	this._clipPoint = [0.0, 0.0, 0.0];
-	this.repaint()
+	this.repaint();
 },
 
 setClippingXYZ: function(cx, cy, cz) {
 	this._calculateBounding();
 	this._clipAxis = [cx,cy,cz];
-	this.repaint()
+	this.repaint();
 },
 
 setClippingX: function(cx) {
 	this._calculateBounding();
 	this._clipAxis[0] = cx;
-	this.repaint()
+	this.repaint();
 },
 setClippingY: function(cy) {
 	this._calculateBounding();
 	this._clipAxis[1] = cy;
-	this.repaint()
+	this.repaint();
 },
 setClippingZ: function(cz) {
 	this._calculateBounding();
 	this._clipAxis[2] = cz;
-	this.repaint()
+	this.repaint();
 },
 
 getClippingX : function () {
@@ -3576,23 +3585,23 @@ getClippingZ : function () {
 setClippingPointXYZabs: function(clx, cly, clz) {
 	this._calculateBounding();
 	this._clipPoint = [clx, cly, clz];
-	this.repaint()
+	this.repaint();
 },
 
 setClippingPointXabs: function(clx) {
 	this._calculateBounding();
 	this._clipPoint[0] = clx;
-	this.repaint()
+	this.repaint();
 },
 setClippingPointYabs: function(cly) {
 	this._calculateBounding();
 	this._clipPoint[1] = cly;
-	this.repaint()
+	this.repaint();
 },
 setClippingPointZabs: function(clz) {
 	this._calculateBounding();
 	this._clipPoint[2] = clz;
-	this.repaint()
+	this.repaint();
 },
 
 setClippingPointXYZ: function(clx, cly, clz) {
@@ -3609,7 +3618,7 @@ setClippingPointXYZ: function(clx, cly, clz) {
 	nClipPoint[2] = this._sceneBboxMin[2] + clz * (this._sceneBboxMax[2] - this._sceneBboxMin[2]);
 
 	this._clipPoint = nClipPoint;
-	this.repaint()
+	this.repaint();
 },
 
 setClippingPointX: function(clx) {
@@ -3618,7 +3627,7 @@ setClippingPointX: function(clx) {
 	if(clx<0.0) clx=0.0; else if(clx>1.0) clx=1.0;
 	nClipPoint = this._sceneBboxMin[0] + clx * (this._sceneBboxMax[0] - this._sceneBboxMin[0]);
 	this._clipPoint[0] = nClipPoint;
-	this.repaint()
+	this.repaint();
 },
 setClippingPointY: function(cly) {
 	var nClipPoint = 0.0;
@@ -3626,7 +3635,7 @@ setClippingPointY: function(cly) {
 	if(cly<0.0) cly=0.0; else if(cly>1.0) cly=1.0;
 	nClipPoint = this._sceneBboxMin[1] + cly * (this._sceneBboxMax[1] - this._sceneBboxMin[1]);
 	this._clipPoint[1] = nClipPoint;
-	this.repaint()
+	this.repaint();
 },
 setClippingPointZ: function(clz) {
 	var nClipPoint = 0.0;
@@ -3634,7 +3643,7 @@ setClippingPointZ: function(clz) {
 	if(clz<0.0) clz=0.0; else if(clz>1.0) clz=1.0;
 	nClipPoint = this._sceneBboxMin[2] + clz * (this._sceneBboxMax[2] - this._sceneBboxMin[2]);
 	this._clipPoint[2] = nClipPoint;
-	this.repaint()
+	this.repaint();
 },
 
 _calculateBounding: function() {
@@ -3695,7 +3704,7 @@ setClippingRendermode: function(showPlanes, showBorder, borderSize, borderColor)
 		this._scene.config.clippingBorderSize = borderSize;
 	if(borderColor)
 		this._scene.config.clippingBorderColor = borderColor;
-	this.repaint()
+	this.repaint();
 },
 
 getClippingRendermode: function() {
@@ -3706,13 +3715,13 @@ getClippingRendermode: function() {
 resetClippingPlane : function () {
 	this._calculateBounding();
 	this._clipPlane = [0.0, 0.0, 0.0, 0.0];
-	this.repaint()
+	this.repaint();
 },
 
 setClippingPlaneExplicit : function (axis, offset) {
 	this._calculateBounding();
 	this._clipPlane = [axis[0], axis[1], axis[2], offset];
-	this.repaint()
+	this.repaint();
 },
 setClippingPlane : function (angleH, angleV, sign, delta, deltaabs) {
 	this._calculateBounding();
@@ -3736,7 +3745,7 @@ setClippingPlane : function (angleH, angleV, sign, delta, deltaabs) {
 	sceneOff = SglVec3.dot([axis[0], axis[1], axis[2]], position);
 
 	this._clipPlane = [axis[0], axis[1], axis[2], -sceneOff];
-	this.repaint()
+	this.repaint();
 },
 
 //-----------------------------------------------------------------------------
@@ -3760,7 +3769,7 @@ rotateLight: function(x, y) {
 	}
 	var z = Math.sqrt(1 - r*r);
 	this._lightDirection = [-x, -y, -z];
-	this.repaint()
+	this.repaint();
 },
 
 enableLightTrackball: function(on) {
@@ -3811,22 +3820,24 @@ isAnyMeasurementEnabled: function() {
 
 //-----------------------------------------------------------------------------
 toggleCameraType: function() {
-	if(this._scene.space.cameraType == "ortho")
+	if(this._scene.space.cameraType == "orthographic")
 		this._scene.space.cameraType = "perspective"
 	else
-		this._scene.space.cameraType = "ortho"
+		this._scene.space.cameraType = "orthographic"
 
-	this.repaint()
+	this.repaint();
 },
 
 setCameraPerspective: function() {
 	this._scene.space.cameraType = "perspective";
-	this.repaint()
+	this.repaint();
 },
+
 setCameraOrthographic: function() {
-	this._scene.space.cameraType = "ortho";
-	this.repaint()
+	this._scene.space.cameraType = "orthographic";
+	this.repaint();
 },
+
 getCameraType : function () {
 	return this._scene.space.cameraType;
 },
@@ -3847,13 +3858,14 @@ isTrackballLockEnabled: function() {
 //-----------------------------------------------------------------------------
 toggleSceneLighting : function () {
 	this._scene.space.useLighting = !this._scene.space.useLighting;
-	this.repaint()
+	this.repaint();
 },
 
 setSceneLighting : function (newState) {
 	this._scene.space.useLighting = newState;
-	this.repaint()
+	this.repaint();
 },
+
 getSceneLighting : function () {
 	return this._scene.space.useLighting;
 },
@@ -3870,7 +3882,7 @@ setInstanceLightingByName : function (name, newState, redraw) {
 			instances[name].useLighting = newState;
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 setInstanceLighting : function (tag, newState, redraw) {
@@ -3888,7 +3900,7 @@ setInstanceLighting : function (tag, newState, redraw) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleInstanceLightingByName : function (name, redraw) {
@@ -3903,7 +3915,7 @@ toggleInstanceLightingByName : function (name, redraw) {
 			instances[name].useLighting = !instances[name].useLighting;
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 toggleInstanceLighting : function (tag, redraw) {
@@ -3923,7 +3935,7 @@ toggleInstanceLighting : function (tag, redraw) {
 		}
 	}
 	if(redraw)
-		this.repaint()
+		this.repaint();
 },
 
 isInstanceLightingEnabledByName : function (name) {
