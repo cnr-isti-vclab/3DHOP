@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.1.14";
+const HOP_VERSION             = "4.2";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -1113,8 +1113,8 @@ _pickingRefresh: function(x,y) {
 					if (spots[spt].ID == ID) {
 						this._pickedSpot = spt;
 						if(this._onHover){
-							if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.2;
-							spots[this._pickedSpot].alpha += 0.2;
+							if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
+							spots[this._pickedSpot].alpha += 0.3;
 							cursor = spots[spt].cursor;
 							if(/*!this._movingLight ||*/ !this._isMeasuring){
 								this._lastCursor = document.getElementById(this.ui.canvas.id).style.cursor;
@@ -1133,7 +1133,7 @@ _pickingRefresh: function(x,y) {
 			else{
 				this._pickedSpot = null;
 				if(this._onHover){
-					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.2;
+					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
 					if(/*!this._movingLight ||*/ !this._isMeasuring) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 					if(this._onLeaveSpot && this._lastPickedSpot!=null) this._onLeaveSpot(this._lastPickedSpot);
 					//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
@@ -1892,7 +1892,7 @@ _drawScene : function () {
 	// draw transparent spot geometries
 	for (var spt in spots) {
 		var spot = spots[spt];
-		var mesh     = meshes[spot.mesh];
+		var mesh = meshes[spot.mesh];
 		if (!mesh) continue;
 		var renderable = mesh.renderable;
 		if (!renderable) continue;
