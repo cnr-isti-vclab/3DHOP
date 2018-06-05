@@ -152,10 +152,27 @@ function lightSwitch(on) {
   if(on){
     $('#light').css("visibility", "hidden");
     $('#light_on').css("visibility", "visible");
+    $('#lighting_off').css("visibility", "hidden");	//manage lighting combined interface
+    $('#lighting').css("visibility", "visible");	//manage lighting combined interface
   }
   else{
     $('#light_on').css("visibility", "hidden");
     $('#light').css("visibility", "visible");
+  }
+}
+
+function lightingSwitch(on) {
+  if(on === undefined) on = presenter.isSceneLightingEnabled();
+
+  if(on){
+    $('#lighting_off').css("visibility", "hidden");
+    $('#lighting').css("visibility", "visible");
+  }
+  else{
+    $('#lighting').css("visibility", "hidden");
+    $('#lighting_off').css("visibility", "visible");
+    $('#light_on').css("visibility", "hidden");	//manage light combined interface
+    $('#light').css("visibility", "visible");	//manage light combined interface
   }
 }
 
@@ -222,6 +239,19 @@ function colorSwitch(on) {
   else {
 	$('#color_on').css("visibility", "hidden");
 	$('#color').css("visibility", "visible");
+  }
+}
+
+function cameraSwitch(on) {
+  if(on === undefined) on = $('#perspective').css("visibility")=="visible";
+
+  if(on){
+    $('#perspective').css("visibility", "hidden");
+    $('#orthographic').css("visibility", "visible");
+  }
+  else{
+    $('#orthographic').css("visibility", "hidden");
+    $('#perspective').css("visibility", "visible");
   }
 }
 

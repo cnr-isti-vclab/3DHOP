@@ -330,13 +330,13 @@ Mesh.prototype = {
 		r.onload = function(){
 			switch (this.status){
 				case 0:
-					console.log("0 response: server unreachable.");//returned in chrome for local files
+//					console.log("0 response: server unreachable.");//returned in chrome for local files
 				case 206:
 //					console.log("206 response: partial content loaded.");
 					load.bind(this)();
 					break;
 				case 200:
-					console.log("200 response: server does not support byte range requests.");
+//					console.log("200 response: server does not support byte range requests.");
 			}
 		};
 		r.onerror = error;
@@ -986,8 +986,14 @@ function requestNodeGeometry(context, node) {
 		m.noffsets[n],
 		m.noffsets[n+1],
 		function() { loadNodeGeometry(this, context, node); },
-		function() { console.log("Geometry request error!"); recoverNode(context, node, 0); },
-		function() { console.log("Geometry request abort!"); removeNode(context, node); },
+		function() {
+//			console.log("Geometry request error!"); 
+			recoverNode(context, node, 0);
+		},
+		function() {
+//			console.log("Geometry request abort!"); 
+			removeNode(context, node);
+		},
 		'arraybuffer'
 	);
 }
@@ -1008,8 +1014,14 @@ function requestNodeTexture(context, node) {
 		m.textures[tex],
 		m.textures[tex+1],
 		function() { loadNodeTexture(this, context, node, tex); },
-		function() { console.log("Texture request error!"); recoverNode(context, node, 1); },
-		function() { console.log("Texture request abort!"); removeNode(context, node); },
+		function() { 
+//			console.log("Texture request error!");
+			recoverNode(context, node, 1);
+		},
+		function() { 
+//			console.log("Texture request abort!");
+			removeNode(context, node);
+		},
 		'blob'
 	);
 }

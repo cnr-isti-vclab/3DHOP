@@ -25,15 +25,15 @@
 <body>
 <div id="3dhop" class="tdhop" onmousedown="if (event.preventDefault) event.preventDefault()"><div id="tdhlg"></div>
  <div id="toolbar">
-  <img id="home"        title="Home"                   src="skins/dark/home.png"     /><br/>
-  <img id="zoomin"      title="Zoom In"                src="skins/dark/zoomin.png"   /><br/>
-  <img id="zoomout"     title="Zoom Out"               src="skins/dark/zoomout.png"  /><br/>
-  <img id="ortho"       title="Orthographic view"      src="skins/dark/ortho.png"  /><br/>  
-  <img id="lighting"    title="Disable Lighting"       src="skins/dark/light_off.png" /><br/>
-  <img id="light_on"    title="Disable Light Control"  src="skins/dark/light_on.png"    style="position:absolute; visibility:hidden;"/>
-  <img id="light"       title="Enable Light Control"   src="skins/dark/light.png"    /><br/>
-  <img id="full_on"     title="Exit Full Screen"       src="skins/dark/full_on.png"     style="position:absolute; visibility:hidden;"/>
-  <img id="full"        title="Full Screen"            src="skins/dark/full.png"     />
+  <img id="home"         title="Home"                 src="skins/dark/home.png"         /><br/>
+  <img id="zoomin"       title="Zoom In"              src="skins/dark/zoomin.png"       /><br/>
+  <img id="zoomout"      title="Zoom Out"             src="skins/dark/zoomout.png"      /><br/>
+  <img id="lighting_off" title="Enable Lighting"      src="skins/dark/lighting_off.png" style="position:absolute; visibility:hidden;"/>
+  <img id="lighting"     title="Disable Lighting"     src="skins/dark/lighting.png"     /><br/>
+  <img id="perspective"  title="Perspective Camera"   src="skins/dark/perspective.png"  style="position:absolute; visibility:hidden;"/>
+  <img id="orthographic" title="Orthographic Camera"  src="skins/dark/orthographic.png" /><br/>
+  <img id="full_on"      title="Exit Full Screen"     src="skins/dark/full_on.png"      style="position:absolute; visibility:hidden;"/>
+  <img id="full"         title="Full Screen"          src="skins/dark/full.png"         />
  </div>
  <canvas id="draw-canvas" style="background-image: url(skins/backgrounds/light.jpg)"/>
 </div> 
@@ -75,8 +75,7 @@ function setup3dhop() {
 					scale       : [20.0, 20.0, 20.0]
 				},
 				color           : [ 0.2, 1.0, 0.2 ],
-				useSolidColor   : true,
-				useLighting     : false
+				useSolidColor   : true
 			},
 			"S3" : {
 				mesh : "Sphere",
@@ -118,21 +117,20 @@ function setup3dhop() {
 			centerMode       : "scene",
 			radiusMode       : "scene",
 			cameraFOV        : 60.0,
-			cameraNearFar    : [0.1, 10.0],
+			cameraNearFar    : [0.01, 10.0],
 			cameraType       : "perspective",
 			useLighting      : true
-		},
+		}
 	});
 }
 
 function actionsToolbar(action) {
-	if(action=='home') presenter.resetTrackball(); 
+	if(action=='home') presenter.resetTrackball();
 	else if(action=='zoomin') presenter.zoomIn();
-	else if(action=='zoomout') presenter.zoomOut(); 
-	else if(action=='ortho') {presenter.toggleCameraType();}
-	else if(action=='lighting') {presenter.toggleSceneLighting();}
-	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
-	else if(action=='full' || action=='full_on') fullscreenSwitch(); 
+	else if(action=='zoomout') presenter.zoomOut();
+	else if(action=='lighting' || action=='lighting_off') { presenter.enableSceneLighting(!presenter.isSceneLightingEnabled()); lightingSwitch(); }
+	else if(action=='perspective' || action=='orthographic') { presenter.toggleCameraType(); cameraSwitch(); }
+	else if(action=='full' || action=='full_on') fullscreenSwitch();
 }
 
 $(document).ready(function(){

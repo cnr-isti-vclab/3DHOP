@@ -30,9 +30,13 @@
   <img id="zoomin"      title="Zoom In"                src="skins/dark/zoomin.png"/><br/>
   <img id="zoomout"     title="Zoom Out"               src="skins/dark/zoomout.png"/><br/>
 <!--ZOOM-->
+<!--LIGHTING-->
+  <img id="lighting_off" title="Enable Lighting"       src="skins/dark/lighting_off.png" style="position:absolute; visibility:hidden;"/>
+  <img id="lighting"     title="Disable Lighting"      src="skins/dark/lighting.png"/><br/>
+<!--LIGHTING-->
 <!--LIGHT-->
-  <img id="light_on"    title="Disable Light Control"  src="skins/dark/light_on.png" style="position:absolute; visibility:hidden;"/>
-  <img id="light"       title="Enable Light Control"   src="skins/dark/light.png"/><br/>
+  <img id="light_on"    title="Disable Light Control"  src="skins/dark/lightcontrol_on.png" style="position:absolute; visibility:hidden;"/>
+  <img id="light"       title="Enable Light Control"   src="skins/dark/lightcontrol.png"/><br/>
 <!--LIGHT-->
 <!--MEASURE-->
   <img id="measure_on"  title="Disable Measure Tool"   src="skins/dark/measure_on.png" style="position:absolute; visibility:hidden;"/>
@@ -50,6 +54,10 @@
   <img id="color_on"    title="Disable Solid Color"    src="skins/dark/color_on.png" style="position:absolute; visibility:hidden;"/>
   <img id="color"       title="Enable Solid Color"     src="skins/dark/color.png"/><br/>
 <!--COLOR-->
+<!--CAMERA-->
+  <img id="perspective"  title="Perspective Camera"    src="skins/dark/perspective.png" style="position:absolute; visibility:hidden;"/>
+  <img id="orthographic" title="Orthographic Camera"   src="skins/dark/orthographic.png"/><br/>
+<!--CAMERA-->
 <!--FULLSCREEN-->
   <img id="full_on"     title="Exit Full Screen"       src="skins/dark/full_on.png" style="position:absolute; visibility:hidden;"/>
   <img id="full"        title="Full Screen"            src="skins/dark/full.png"/>
@@ -145,9 +153,15 @@ function actionsToolbar(action) {
 	else if(action=='zoomin') presenter.zoomIn();
 	else if(action=='zoomout') presenter.zoomOut();
 //--ZOOM--
+//--LIGHTING--
+	else if(action=='lighting' || action=='lighting_off') { presenter.enableSceneLighting(!presenter.isSceneLightingEnabled()); lightingSwitch(); }
+//--LIGHTING--
 //--LIGHT--
 	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); }
 //--LIGHT--
+//--CAMERA--
+	else if(action=='perspective' || action=='orthographic') { presenter.toggleCameraType(); cameraSwitch(); }
+//--CAMERA--
 //--COLOR--
 	else if(action=='color' || action=='color_on') { presenter.toggleInstanceSolidColor(HOP_ALL, true); colorSwitch(); }
 //--COLOR--

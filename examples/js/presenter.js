@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.1.14";
+const HOP_VERSION             = "4.2";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -1113,8 +1113,8 @@ _pickingRefresh: function(x,y) {
 					if (spots[spt].ID == ID) {
 						this._pickedSpot = spt;
 						if(this._onHover){
-							if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.2;
-							spots[this._pickedSpot].alpha += 0.2;
+							if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
+							spots[this._pickedSpot].alpha += 0.3;
 							cursor = spots[spt].cursor;
 							if(/*!this._movingLight ||*/ !this._isMeasuring){
 								this._lastCursor = document.getElementById(this.ui.canvas.id).style.cursor;
@@ -1133,7 +1133,7 @@ _pickingRefresh: function(x,y) {
 			else{
 				this._pickedSpot = null;
 				if(this._onHover){
-					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.2;
+					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
 					if(/*!this._movingLight ||*/ !this._isMeasuring) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 					if(this._onLeaveSpot && this._lastPickedSpot!=null) this._onLeaveSpot(this._lastPickedSpot);
 					//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
@@ -1892,7 +1892,7 @@ _drawScene : function () {
 	// draw transparent spot geometries
 	for (var spt in spots) {
 		var spot = spots[spt];
-		var mesh     = meshes[spot.mesh];
+		var mesh = meshes[spot.mesh];
 		if (!mesh) continue;
 		var renderable = mesh.renderable;
 		if (!renderable) continue;
@@ -2836,41 +2836,6 @@ onDraw : function () {
 //----------------------------------------------------------------------------------------
 // EXPOSED FUNCTIONS
 //----------------------------------------------------------------------------------------
-supportsWebGL : function () {
-	return this._supportsWebGL;
-},
-
-toggleDebugMode : function () {
-	this._isDebugging = !this._isDebugging;
-},
-
-setNexusTargetFps: function(fps) {
-	this._nexusTargetFps = fps;
-	Nexus.setTargetFps(this.ui.gl, fps);
-},
-
-getNexusTargetFps: function() {
-	return this._nexusTargetFps;
-},
-
-setNexusTargetError: function(error) {
-	this._nexusTargetError = error;
-	Nexus.setTargetError(this.ui.gl, error);
-},
-
-getNexusTargetError: function() {
-	return this._nexusTargetError;
-},
-
-setNexusCacheSize: function(size) {
-	this._nexusCacheSize = size;
-	Nexus.setMaxCacheSize(this.ui.gl, size);
-},
-
-getNexusCacheSize: function() {
-	return this._nexusCacheSize;
-},
-
 setScene : function (options) {
 	if (!options) return;
 
@@ -2929,14 +2894,14 @@ setScene : function (options) {
 			Nexus.setTargetFps(gl, this._nexusTargetFps);
 			Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
 
-			var instance = new Nexus.Renderer(gl);
-			instance.onLoad = function () { that._onMeshReady(); };
-			instance.onUpdate = this.ui.postDrawEvent;
+			var nexus_instance = new Nexus.Renderer(gl);
+			nexus_instance.onLoad = function () { that._onMeshReady(); };
+			nexus_instance.onUpdate = this.ui.postDrawEvent;
 
-			mesh.renderable = instance;
+			mesh.renderable = nexus_instance;
 			mesh.isNexus = true;
 
-			instance.open(mesh.url);
+			nexus_instance.open(mesh.url);
 		}
 		else {
 			mesh.renderable = null;
@@ -2979,6 +2944,55 @@ setScene : function (options) {
 	this._sceneParsed = true;
 },
 
+get version() {
+	return HOP_VERSION;
+},
+
+supportsWebGL : function () {
+	return this._supportsWebGL;
+},
+
+toggleDebugMode : function () {
+	this._isDebugging = !this._isDebugging;
+},
+
+repaint : function () {
+	this.ui.postDrawEvent();
+},
+
+//-----------------------------------------------------------------------------
+// nexus
+
+setNexusTargetFps: function(fps) {
+	this._nexusTargetFps = fps;
+	Nexus.setTargetFps(this.ui.gl, fps);
+},
+
+getNexusTargetFps: function() {
+	return this._nexusTargetFps;
+},
+
+setNexusTargetError: function(error) {
+	this._nexusTargetError = error;
+	Nexus.setTargetError(this.ui.gl, error);
+},
+
+getNexusTargetError: function() {
+	return this._nexusTargetError;
+},
+
+setNexusCacheSize: function(size) {
+	this._nexusCacheSize = size;
+	Nexus.setMaxCacheSize(this.ui.gl, size);
+},
+
+getNexusCacheSize: function() {
+	return this._nexusCacheSize;
+},
+
+//-----------------------------------------------------------------------------
+// trackball
+
 resetTrackball : function () {
 	this.trackball.reset();
 	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
@@ -2995,6 +3009,9 @@ setTrackballPosition : function (newposition) {
 	this.repaint();
 },
 
+//-----------------------------------------------------------------------------
+// camera animations
+
 animateToTrackballPosition : function (newposition, newtime) {
 	this.ui.animateRate = 30;
 	this.trackball.animateToState(newposition, newtime);
@@ -3008,7 +3025,7 @@ isAnimate : function () {
 },
 
 //-----------------------------------------------------------------------------
-// functions to dynamically change center/radius mode
+// dynamic center/radius mode
 
 setCenterModeFirst : function () {
 	this._scene.space.centerMode = "first";
@@ -3076,6 +3093,7 @@ setRadiusModeExplicit : function (newradius) {
 
 //-----------------------------------------------------------------------------
 // instance solid color
+
 setInstanceSolidColorByName : function (name, newState, redraw, newColor) {
 	var instances = this._scene.modelInstances;
 
@@ -3148,8 +3166,57 @@ toggleInstanceSolidColor : function (tag, redraw) {
 		this.repaint();
 },
 
+isInstanceSolidColorEnabledByName : function (name) {
+	var solidcolor = false;
+	var instances = this._scene.modelInstances;
+
+	if(!name || name==HOP_ALL) {
+		for (var inst in instances) {
+			if(instances[inst].useSolidColor){
+				solidcolor = true;
+				return solidcolor;
+			}
+		}
+	}
+	else {
+		if(instances[name]) { // if an instance with that name exists
+			if(instances[name].useSolidColor){
+				solidcolor = true;
+				return solidcolor;
+			}
+		 }
+	}
+	return solidcolor;
+},
+
+isInstanceSolidColorEnabled : function (tag) {
+	var solidcolor = false;
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(!tag || tag==HOP_ALL){
+			if(instances[inst].useSolidColor){
+				solidcolor = true;
+				return solidcolor;
+			}
+		}
+		else{
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag){
+					if(instances[inst].useSolidColor){
+						solidcolor = true;
+						return solidcolor;
+					}
+				 }
+			}
+		}
+	}
+	return solidcolor;
+},
+
 //-----------------------------------------------------------------------------
 // instance transparency
+
 setInstanceTransparencyByName : function (name, newState, redraw, newAlpha) {
 	var instances = this._scene.modelInstances;
 
@@ -3228,9 +3295,59 @@ toggleInstanceTransparency : function (tag, redraw) {
 		this.repaint();
 },
 
+
+isInstanceTransparencyEnabledByName : function (name) {
+	var transparency = false;
+	var instances = this._scene.modelInstances;
+
+	if(!name || name==HOP_ALL) {
+		for (var inst in instances) {
+			if(instances[inst].useTransparency){
+				transparency = true;
+				return transparency;
+			}
+		}
+	}
+	else {
+		if(instances[name]) { // if an instance with that name exists
+			if(instances[name].useTransparency){
+				transparency = true;
+				return transparency;
+			}
+		 }
+	}
+	return transparency;
+},
+
+isInstanceTransparencyEnabled : function (tag) {
+	var transparency = false;
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(!tag || tag==HOP_ALL){
+			if(instances[inst].useTransparency){
+				transparency = true;
+				return transparency;
+			}
+		}
+		else{
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag){
+					if(instances[inst].useTransparency){
+						transparency = true;
+						return transparency;
+					}
+				 }
+			}
+		}
+	}
+	return transparency;
+},
+
 //-----------------------------------------------------------------------------
 // instance shading
 //----specular
+
 setInstanceSpecularityByName : function (name, color, hardness, redraw) {
 	var instances = this._scene.modelInstances;
 
@@ -3265,6 +3382,7 @@ setInstanceSpecularity : function (tag, color, hardness, redraw) {
 },
 
 //----backface
+
 setInstanceBackfaceByName : function (name, color, mode, redraw) {
 	var instances = this._scene.modelInstances;
 	var modecode = 0.0;
@@ -3308,6 +3426,7 @@ setInstanceBackface : function (tag, color, mode, redraw) {
 
 //-----------------------------------------------------------------------------
 // instance visibility
+
 setInstanceVisibilityByName : function (name, newState, redraw) {
 	var instances = this._scene.modelInstances;
 
@@ -3426,6 +3545,7 @@ isInstanceVisibilityEnabled : function (tag) {
 
 //-----------------------------------------------------------------------------
 // spot visibility
+
 setSpotVisibilityByName : function (name, newState, redraw) {
 	var spots = this._scene.spots;
 
@@ -3543,6 +3663,7 @@ isSpotVisibilityEnabled : function (tag) {
 
 //-----------------------------------------------------------------------------
 // sections
+
 resetClippingXYZ: function() {
 	this._calculateBounding();
 	this._clipAxis = [0.0, 0.0, 0.0];
@@ -3723,6 +3844,7 @@ setClippingPlaneExplicit : function (axis, offset) {
 	this._clipPlane = [axis[0], axis[1], axis[2], offset];
 	this.repaint();
 },
+
 setClippingPlane : function (angleH, angleV, sign, delta, deltaabs) {
 	this._calculateBounding();
 	var axis;
@@ -3749,6 +3871,8 @@ setClippingPlane : function (angleH, angleV, sign, delta, deltaabs) {
 },
 
 //-----------------------------------------------------------------------------
+// zoom
+
 zoomIn: function() {
 	this.onMouseWheel(1);
 },
@@ -3758,6 +3882,8 @@ zoomOut: function() {
 },
 
 //-----------------------------------------------------------------------------
+// light
+
 rotateLight: function(x, y) {
 	x *= 2;
 	y *= 2;
@@ -3774,6 +3900,10 @@ rotateLight: function(x, y) {
 
 enableLightTrackball: function(on) {
 	this._movingLight = on;
+
+	if(on && !this._scene.space.useLighting) this._scene.space.useLighting = on;
+
+	this.repaint();
 },
 
 isLightTrackballEnabled: function() {
@@ -3781,6 +3911,8 @@ isLightTrackballEnabled: function() {
 },
 
 //-----------------------------------------------------------------------------
+// onHover
+
 enableOnHover: function(on) {
 	this._onHover = on;
 },
@@ -3790,6 +3922,8 @@ isOnHoverEnabled: function() {
 },
 
 //-----------------------------------------------------------------------------
+// linear measure
+
 enableMeasurementTool: function(on) {
 	if(on)
 		this._startMeasurement();
@@ -3802,6 +3936,8 @@ isMeasurementToolEnabled: function() {
 },
 
 //-----------------------------------------------------------------------------
+// point measure
+
 enablePickpointMode: function(on) {
 	if(on)
 		this._startPickPoint();
@@ -3814,11 +3950,15 @@ isPickpointModeEnabled: function() {
 },
 
 //-----------------------------------------------------------------------------
+// measurements
+
 isAnyMeasurementEnabled: function() {
 	return this._isMeasuring;
 },
 
 //-----------------------------------------------------------------------------
+// camera type
+
 toggleCameraType: function() {
 	if(this._scene.space.cameraType == "orthographic")
 		this._scene.space.cameraType = "perspective"
@@ -3843,6 +3983,8 @@ getCameraType : function () {
 },
 
 //-----------------------------------------------------------------------------
+// trackball lock
+
 toggleTrackballLock: function() {
 	this._scene.trackball.locked = !this._scene.trackball.locked;
 },
@@ -3856,17 +3998,17 @@ isTrackballLockEnabled: function() {
 },
 
 //-----------------------------------------------------------------------------
-toggleSceneLighting : function () {
-	this._scene.space.useLighting = !this._scene.space.useLighting;
+// lighting
+
+enableSceneLighting: function(on) {
+	this._scene.space.useLighting = on;
+
+	if(!on && this._movingLight) this._movingLight = on;
+
 	this.repaint();
 },
 
-setSceneLighting : function (newState) {
-	this._scene.space.useLighting = newState;
-	this.repaint();
-},
-
-getSceneLighting : function () {
+isSceneLightingEnabled: function() {
 	return this._scene.space.useLighting;
 },
 
@@ -3984,16 +4126,6 @@ isInstanceLightingEnabled : function (tag) {
 		}
 	}
 	return Lighting;
-},
-
-//-----------------------------------------------------------------------------
-repaint : function () {
-	this.ui.postDrawEvent();
-},
-
-//-----------------------------------------------------------------------------
-get version() {
-	return HOP_VERSION;
 }
 
 }; // Presenter.prototype END
