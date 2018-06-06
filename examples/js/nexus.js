@@ -1,7 +1,7 @@
 /*
-3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
-All rights reserved.    
+Nexus
+Copyright (c) 2012-2018, Visual Computing Lab, ISTI - CNR
+All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,1603 +14,1244 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-var Nexus = { };
+Nexus = function() {
 
-Nexus.LITTLE_ENDIAN_DATA = true;
-Nexus.PADDING            = 256;
+/* WORKER INITIALIZED ONCE */
 
-Nexus.Debug = {
-	nodes: false,    //color each node
-	culling: false,  //visibility culling disabled
-	draw: false,     //final rendering call disabled
-	extract: false,  //no extraction
-	request: false,  //no network requests
-	worker: false    //no web workers
+var meco;
+var corto;
+
+var scripts = document.getElementsByTagName('script');
+var i, j, k;
+var path;
+for(i = 0; i < scripts.length; i++) {
+	var attrs = scripts[i].attributes;
+	for(j = 0; j < attrs.length; j++) {
+		var a = attrs[j];
+		if(a.name != 'src') continue;
+		if(!a.value) continue;
+		if(a.value.search('nexus.js') >= 0) {
+			path = a.value;
+			break;
+		}
+	}
+}
+var meco = null;
+function loadMeco() {
+	meco = new Worker(path.replace('nexus.js', 'meco.js'));
+
+	meco.onerror = function(e) { console.log(e); }
+	meco.requests = {};
+	meco.count = 0;
+	meco.postRequest = function(sig, node, patches) {
+		var signature = {
+			texcoords: sig.texcoords ? 1 : 0,
+			colors   : sig.colors    ? 1 : 0,
+			normals  : sig.normals   ? 1 : 0,
+			indices  : sig.indices   ? 1 : 0
+		};
+		meco.postMessage({ 
+			signature:signature,
+			node:{ nface: node.nface, nvert: node.nvert, buffer:node.buffer, request:this.count}, 
+			patches:patches
+		});
+		this.requests[this.count++] = node;
+	};
+	meco.onmessage = function(e) {
+		var node = this.requests[e.data.request];
+		node.buffer = e.data.buffer;
+		readyNode(node);
+	};
 }
 
-Nexus.Attribute = function () {
-	this.size       = 0;
-	this.type       = Nexus.Attribute.NONE;
-	this.glType     = Nexus.Attribute._typeGLMap[this.type];
-	this.normalized = Nexus.Attribute._typeNormalized[this.type];
-	this.stride     = 0;
-	this.offset     = 0;
-};
+var corto = null;
 
-Nexus.Attribute.NONE           = 0;
-Nexus.Attribute.BYTE           = 1;
-Nexus.Attribute.UNSIGNED_BYTE  = 2;
-Nexus.Attribute.SHORT          = 3;
-Nexus.Attribute.UNSIGNED_SHORT = 4;
-Nexus.Attribute.INT            = 5;
-Nexus.Attribute.UNSIGNED_INT   = 6;
-Nexus.Attribute.FLOAT          = 7;
-Nexus.Attribute.DOUBLE         = 8;
-
-Nexus.Attribute._typeSizeMap = { };
-Nexus.Attribute._typeSizeMap[Nexus.Attribute.NONE          ] = 0;
-Nexus.Attribute._typeSizeMap[Nexus.Attribute.BYTE          ] = 1;
-Nexus.Attribute._typeSizeMap[Nexus.Attribute.UNSIGNED_BYTE ] = 1;
-Nexus.Attribute._typeSizeMap[Nexus.Attribute.SHORT         ] = 2;
-Nexus.Attribute._typeSizeMap[Nexus.Attribute.UNSIGNED_SHORT] = 2;
-Nexus.Attribute._typeSizeMap[Nexus.Attribute.INT           ] = 4;
-Nexus.Attribute._typeSizeMap[Nexus.Attribute.UNSIGNED_INT  ] = 4;
-Nexus.Attribute._typeSizeMap[Nexus.Attribute.FLOAT         ] = 4;
-Nexus.Attribute._typeSizeMap[Nexus.Attribute.DOUBLE        ] = 8;
-
-Nexus.Attribute._typeGLMap = { };
-Nexus.Attribute._typeGLMap[Nexus.Attribute.NONE          ] = WebGLRenderingContext.prototype.NONE;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.BYTE          ] = WebGLRenderingContext.prototype.BYTE;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_BYTE ] = WebGLRenderingContext.prototype.UNSIGNED_BYTE;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.SHORT         ] = WebGLRenderingContext.prototype.SHORT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_SHORT] = WebGLRenderingContext.prototype.UNSIGNED_SHORT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.INT           ] = WebGLRenderingContext.prototype.INT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.UNSIGNED_INT  ] = WebGLRenderingContext.prototype.UNSIGNED_INT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.FLOAT         ] = WebGLRenderingContext.prototype.FLOAT;
-Nexus.Attribute._typeGLMap[Nexus.Attribute.DOUBLE        ] = WebGLRenderingContext.prototype.DOUBLE;
-
-Nexus.Attribute._typeNormalized = { };
-Nexus.Attribute._typeNormalized[Nexus.Attribute.NONE          ] = true;
-Nexus.Attribute._typeNormalized[Nexus.Attribute.BYTE          ] = true;
-Nexus.Attribute._typeNormalized[Nexus.Attribute.UNSIGNED_BYTE ] = true;
-Nexus.Attribute._typeNormalized[Nexus.Attribute.SHORT         ] = true;
-Nexus.Attribute._typeNormalized[Nexus.Attribute.UNSIGNED_SHORT] = true;
-Nexus.Attribute._typeNormalized[Nexus.Attribute.INT           ] = true;
-Nexus.Attribute._typeNormalized[Nexus.Attribute.UNSIGNED_INT  ] = true;
-Nexus.Attribute._typeNormalized[Nexus.Attribute.FLOAT         ] = false;
-Nexus.Attribute._typeNormalized[Nexus.Attribute.DOUBLE        ] = false;
-
-Nexus.Attribute.prototype = {
-	get isNull() {
-		return (this.type == Nexus.Attribute.NONE);
-	},
-
-	get byteLength() {
-		return (Nexus.Attribute._typeSizeMap[this.type] * this.size);
-	},
-
-	import : function (view, offset, littleEndian) {
-		var s = 0;
-		this.type = view.getUint8(offset + s, littleEndian); s += Uint8Array.BYTES_PER_ELEMENT;
-		this.size = view.getUint8(offset + s, littleEndian); s += Uint8Array.BYTES_PER_ELEMENT;
-
-		this.glType     = Nexus.Attribute._typeGLMap[this.type];
-		this.normalized = Nexus.Attribute._typeNormalized[this.type];
-		this.stride     = Nexus.Attribute._typeSizeMap[this.type] * this.size;
-		this.offset     = 0;
-
-		return s;
+function loadCorto() {
+	corto = new Worker(path.replace('nexus.js', 'corto.js'));
+	corto.requests = {};
+	corto.count = 0;
+	corto.postRequest = function(node) {
+		corto.postMessage({ buffer: node.buffer, request:this.count, rgba_colors: true, short_normals: true });
+		this.requests[this.count++] = node;
 	}
-};
-
-Nexus.Attribute.SIZEOF = 2 * Uint8Array.BYTES_PER_ELEMENT;
-
-Nexus.Element = function () {
-	this.attributes = new Array(8);
-	for (var i=0; i<8; ++i) {
-		this.attributes[i] = new Nexus.Attribute();
-	}
-	this.lastAttribute = -1;
-};
-
-Nexus.Element.prototype = {
-	get byteLength() {
-		var s = 0;
-		for (var i=0; i<this.attributes.length; ++i) {
-			s += this.attributes[i].byteLength;
-		}
-		return s;
-	},
-
-	import : function (view, offset, littleEndian) {
-		var s = 0;
-		for (var i=0; i<this.attributes.length; ++i) {
-			var attrib = this.attributes[i];
-			s += attrib.import(view, offset + s, littleEndian);
-
-			if (!attrib.isNull) {
-				this.lastAttribute = i;
-			}
-		}
-		return s;
-	}
-};
-
-Nexus.Element.SIZEOF = 8 * Nexus.Attribute.SIZEOF;
-
-Nexus.VertexElement = function () {
-	Nexus.Element.call(this);
-};
-
-Nexus.VertexElement.SIZEOF = Nexus.Element.SIZEOF;
-
-Nexus.VertexElement.POSITION  = 0;
-Nexus.VertexElement.NORMAL    = 1;
-Nexus.VertexElement.COLOR     = 2;
-Nexus.VertexElement.TEXCOORD  = 3;
-Nexus.VertexElement.DATA0     = 4;
-
-Nexus.VertexElement.prototype = {
-	get hasPosition () { return !this.attributes[Nexus.VertexElement.POSITION].isNull; },
-	get hasNormal   () { return !this.attributes[Nexus.VertexElement.NORMAL  ].isNull; },
-	get hasColor    () { return !this.attributes[Nexus.VertexElement.COLOR   ].isNull; },
-	get hasTexCoord () { return !this.attributes[Nexus.VertexElement.TEXCOORD].isNull; },
-
-	hasData : function (i) { return !this.attributes[Nexus.VertexElement.DATA0 + i].isNull; },
-
-	import : function (view, offset, littleEndian) {
-		var r = Nexus.Element.prototype.import.apply(this, arguments);
-		var color = this.attributes[Nexus.VertexElement.COLOR];
-		if (!color.isNull) {
-			if (color.type == Nexus.Attribute.BYTE) {
-				color.type   = Nexus.Attribute.UNSIGNED_BYTE;
-				color.glType = Nexus.Attribute._typeGLMap[color.type];
-			}
-		}
-		return r;
-	}
-};
-
-sglExtend(Nexus.VertexElement, Nexus.Element);
-
-Nexus.FaceElement = function () {
-	Nexus.Element.call(this);
-};
-
-Nexus.FaceElement.SIZEOF = Nexus.Element.SIZEOF;
-
-Nexus.FaceElement.INDEX    = 0;
-Nexus.FaceElement.NORMAL   = 1;
-Nexus.FaceElement.COLOR    = 2;
-Nexus.FaceElement.TEXCOORD = 3;
-Nexus.FaceElement.DATA0    = 4;
-
-Nexus.FaceElement.prototype = {
-	get hasIndex    () { return !this.attributes[Nexus.FaceElement.INDEX   ].isNull; },
-	get hasNormal   () { return !this.attributes[Nexus.FaceElement.NORMAL  ].isNull; },
-	get hasColor    () { return !this.attributes[Nexus.FaceElement.COLOR   ].isNull; },
-	get hasTexCoord () { return !this.attributes[Nexus.FaceElement.TEXCOORD].isNull; },
-
-	hasData : function (i) { return !this.attributes[Nexus.FaceElement.DATA0 + i].isNull; },
-
-	import : function (view, offset, littleEndian) {
-		var r = Nexus.Element.prototype.import.apply(this, arguments);
-		var color = this.attributes[Nexus.FaceElement.COLOR];
-		if (!color.isNull) {
-			if (color.type == Nexus.Attribute.BYTE) {
-				color.type   = Nexus.Attribute.UNSIGNED_BYTE;
-				color.glType = Nexus.Attribute._typeGLMap[color.type];
-			}
-		}
-		return r;
-	}
-};
-
-sglExtend(Nexus.FaceElement, Nexus.Element);
-
-Nexus.Signature = function () {
-	this.vertex = new Nexus.VertexElement();
-	this.face   = new Nexus.FaceElement();
-	this.flags  = Nexus.Signature.UNCOMPRESSED;
-};
-
-Nexus.Signature.SIZEOF = Nexus.VertexElement.SIZEOF + Nexus.FaceElement.SIZEOF + Uint32Array.BYTES_PER_ELEMENT;
-
-Nexus.Signature.PTEXTURE = (1 << 0);
-Nexus.Signature.MECO     = (1 << 1);
-Nexus.Signature.CTM1     = (1 << 2);
-Nexus.Signature.CTM2     = (1 << 3);
-
-Nexus.Signature.prototype = {
-	import : function (view, offset, littleEndian) {
-		var s = 0;
-		s += this.vertex.import(view, offset + s, littleEndian);
-		s += this.face.import(view, offset + s, littleEndian);
-		this.flags = view.getUint32(offset + s, littleEndian); s += Uint32Array.BYTES_PER_ELEMENT;
-		return s;
-	}
-};
-
-Nexus.Sphere3f = function () {
-	this.center = [0.0, 0.0, 0.0];
-	this.radius = 1.0;
-};
-
-Nexus.Sphere3f.SIZEOF = 4 * Float32Array.BYTES_PER_ELEMENT;
-
-Nexus.Sphere3f.prototype = {
-	import : function (view, offset, littleEndian) {
-		var s = 0;
-		for (var i=0; i<3; ++i) {
-			this.center[i] = view.getFloat32(offset + s, littleEndian);
-			s += Float32Array.BYTES_PER_ELEMENT;
-		}
-		this.radius = view.getFloat32(offset + s, littleEndian); s += Float32Array.BYTES_PER_ELEMENT;
-		return s;
-	}
-};
-
-Nexus.Header = function () {
-	this.reset();
-};
-
-Nexus.Header.SIZEOF = 5 * Uint32Array.BYTES_PER_ELEMENT + 2 * 2 * Uint32Array.BYTES_PER_ELEMENT + Nexus.Signature.SIZEOF + Nexus.Sphere3f.SIZEOF;
-Nexus.Header.MAGIC  = 0x4E787320;
-
-Nexus.Header.prototype = {
-	_getUint64 : function (view, offset, littleEndian) {
-		var s = 0;
-		var lo = view.getUint32(offset + s, littleEndian); s += Uint32Array.BYTES_PER_ELEMENT;
-		var hi = view.getUint32(offset + s, littleEndian); s += Uint32Array.BYTES_PER_ELEMENT;
-		return ((hi * (1 << 32)) + lo);
-	},
-
-	get isValid() {
-		return (this.version > 0);
-	},
-
-	reset : function () {
-		this.magic         = 0;
-		this.version       = 0;
-		this.verticesCount = 0;
-		this.facesCount    = 0;
-		this.signature     = new Nexus.Signature();
-		this.nodesCount    = 0;
-		this.patchesCount  = 0;
-		this.texturesCount = 0;
-		this.sphere        = new Nexus.Sphere3f();
-	},
-
-	import : function (view, offset, littleEndian) {
-		this.reset();
-
-		var s = 0;
-
-		this.magic          = view.getUint32(offset + s, littleEndian);               s += Uint32Array.BYTES_PER_ELEMENT;
-		if (this.magic != Nexus.Header.MAGIC) return 0;
-
-		this.version        = view.getUint32(offset + s, littleEndian);               s += Uint32Array.BYTES_PER_ELEMENT;
-		this.verticesCount  = this._getUint64(view, offset + s, littleEndian);        s += Uint32Array.BYTES_PER_ELEMENT * 2;
-		this.facesCount     = this._getUint64(view, offset + s, littleEndian);        s += Uint32Array.BYTES_PER_ELEMENT * 2;
-		s                  += this.signature.import(view, offset + s, littleEndian);
-		this.nodesCount     = view.getUint32(offset + s, littleEndian);               s += Uint32Array.BYTES_PER_ELEMENT;
-		this.patchesCount   = view.getUint32(offset + s, littleEndian);               s += Uint32Array.BYTES_PER_ELEMENT;
-		this.texturesCount  = view.getUint32(offset + s, littleEndian);               s += Uint32Array.BYTES_PER_ELEMENT;
-		s                  += this.sphere.import(view, offset + s, littleEndian);
-
-		return s;
-	}
-};
-
-Nexus.Cone3s = function () {
-	this.n = [0, 0, 0, 0];
-};
-
-Nexus.Cone3s.SIZEOF = 4 * Uint16Array.BYTES_PER_ELEMENT;
-
-Nexus.Cone3s.prototype = {
-	backFace : function (sphere, view) {
-		var n = this.n;
-
-		var norm = [n[0] / 32766.0, n[1] / 32766.0, n[2] / 32766.0];
-		var d = [0.0, 0.0, 0.0];
-		var f = 0.0;
-		var dd = 0.0;
-
-		for (var i=0; i<3; ++i) {
-			d[i] = (sphere.center[i] - norm[i] * sphere.radius) - view[i];
-			norm[i] *= n[3] / 32766.0;
-			f += d[i] * norm[i];
-			dd = d[i] * d[i];
-		}
-
-		return !((f < 0.001) || ((f * f) < dd));
-	},
-
-	frontFace : function (sphere, view) {
-		var n = this.n;
-
-		var norm = [n[0] / 32766.0, n[1] / 32766.0, n[2] / 32766.0];
-		var d = [0.0, 0.0, 0.0];
-		var f = 0.0;
-		var dd = 0.0;
-
-		for (var i=0; i<3; ++i) {
-			d[i] = (sphere.center[i] + norm[i] * sphere.radius) - view[i];
-			norm[i] *= n[3] / 32766.0;
-			f += -d[i] * norm[i];
-			dd = d[i] * d[i];
-		}
-
-		return !((f < 0.001) || ((f * f) < dd));
-	},
-
-	import : function (view, offset, littleEndian) {
-		var s = 0;
-		for (var i=0; i<4; ++i) {
-			this.n[i] = view.getInt16(offset + s, littleEndian);
-			s += Uint16Array.BYTES_PER_ELEMENT;
-		}
-		return s;
-	}
-};
-
-Nexus.Node = function() {
-	this.offset        = 0;
-	this.verticesCount = 0;
-	this.facesCount    = 0;
-	this.error         = 0.0;
-	this.cone          = new Nexus.Cone3s();
-	this.sphere        = new Nexus.Sphere3f();
-	this.tightRadius   = 0.0;
-	this.firstPatch    = 0;
-
-	// computed
-	this.lastPatch     = 0;
-	this.lastByte      = 0;
-};
-
-Nexus.Node.SIZEOF = 2 * Uint32Array.BYTES_PER_ELEMENT + 2 * Uint16Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT + Nexus.Sphere3f.SIZEOF + Nexus.Cone3s.SIZEOF;
-
-Nexus.Node.prototype = {
-	get isEmpty() {
-		return (this.end == this.outBegin);
-	},
-
-	import : function (view, offset, littleEndian) {
-		var s = 0;
-		this.offset         = Nexus.PADDING * view.getUint32(offset + s, littleEndian);  s += Uint32Array.BYTES_PER_ELEMENT;
-		this.verticesCount  = view.getUint16(offset + s, littleEndian);  s += Uint16Array.BYTES_PER_ELEMENT;
-		this.facesCount     = view.getUint16(offset + s, littleEndian);  s += Uint16Array.BYTES_PER_ELEMENT;
-		this.error          = view.getFloat32(offset + s, littleEndian); s += Float32Array.BYTES_PER_ELEMENT;
-		s                  += this.cone.import(view, offset + s, littleEndian);
-		s                  += this.sphere.import(view, offset + s, littleEndian);
-		this.tightRadius    = view.getFloat32(offset + s, littleEndian); s += Float32Array.BYTES_PER_ELEMENT;
-		this.firstPatch     = view.getUint32(offset + s, littleEndian);  s += Uint32Array.BYTES_PER_ELEMENT;
-		return s;
-	}
-};
-
-Nexus.NodeIndex = function() {
-};
-
-Nexus.NodeIndex.prototype = {
-	get length() {
-		return this.items.length;
-	},
-
-	get sink() {
-		return (this.items.length - 1);
-	},
-
-	import : function (nodesCount, view, offset, littleEndian) {
-		this.items = new Array(nodesCount);
-		var s = 0;
-		for (var i=0; i<nodesCount; ++i) {
-			var node = new Nexus.Node();
-			s += node.import(view, offset + s, littleEndian);
-			node.index = i;
-			this.items[i] = node;
-		}
-		for (var i=0; i<(nodesCount-1); ++i) {
-			var currNode = this.items[i];
-			var nextNode = this.items[i+1];
-			currNode.lastPatch = nextNode.firstPatch;
-			currNode.lastByte  = nextNode.offset - 1;
-		}
-		return s;
-	}
-};
-
-Nexus.Patch = function() {
-	this.node         = 0;
-	this.lastTriangle = 0;
-	this.texture      = 0xffffffff;
-};
-
-Nexus.Patch.SIZEOF = 3 * Uint32Array.BYTES_PER_ELEMENT;
-
-Nexus.Patch.prototype = {
-	import : function (view, offset, littleEndian) {
-		var s = 0;
-		this.node           = view.getUint32(offset + s, littleEndian); s += Uint32Array.BYTES_PER_ELEMENT;
-		this.lastTriangle   = view.getUint32(offset + s, littleEndian); s += Uint32Array.BYTES_PER_ELEMENT;
-		this.texture        = view.getUint32(offset + s, littleEndian); s += Uint32Array.BYTES_PER_ELEMENT;
-		return s;
-	}
-};
-
-Nexus.PatchIndex = function() {
-	this.items = [ ];
-};
-
-Nexus.PatchIndex.prototype = {
-	get length() {
-		return this.items.length;
-	},
-
-	import : function (patchesCount, view, offset, littleEndian) {
-		this.items = new Array(patchesCount);
-		var s = 0;
-		for (var i=0; i<patchesCount; ++i) {
-			var patch = new Nexus.Patch();
-			s += patch.import(view, offset + s, littleEndian);
-			this.items[i] = patch;
-		}
-		return s;
-	}
-};
-
-Nexus.Texture = function() {
-	this.offset   = 0;
-	this.matrix   = new Array(16);
-
-	// computed
-	this.lastByte = 0;
-	//cache
-	this.status = 0; //NONE
-	this.tex = null; //gl stuff
-	this.nodes = []; //list of depending nodes
-};
-
-Nexus.Texture.SIZEOF = 1 * Uint32Array.BYTES_PER_ELEMENT + 16 * Float32Array.BYTES_PER_ELEMENT;
-
-Nexus.Texture.prototype = {
-	import : function (view, offset, littleEndian) {
-		var s = 0;
-		this.offset = Nexus.PADDING * view.getUint32(offset + s, littleEndian); s += Uint32Array.BYTES_PER_ELEMENT;
-		for (var i=0; i<16; ++i) {
-			this.matrix[i] = view.getFloat32(offset + s, littleEndian); s += Float32Array.BYTES_PER_ELEMENT;
-		}
-		return s;
-	}
-};
-
-Nexus.TextureIndex = function() {
-	this.items = [ ];
-};
-
-Nexus.TextureIndex.prototype = {
-	get length() {
-		return this.items.length;
-	},
-
-	import : function (texturesCount, view, offset, littleEndian) {
-		this.items = new Array(texturesCount);
-		var s = 0;
-		for (var i=0; i<texturesCount; ++i) {
-			var texture = new Nexus.Texture();
-			s += texture.import(view, offset + s, littleEndian);
-			this.items[i] = texture;
-		}
-		for (var i=0; i<(texturesCount-1); ++i) {
-			var currTex = this.items[i];
-			var nextTex = this.items[i+1];
-			currTex.lastByte = nextTex.offset - 1;
-		}
-		return s;
-	}
-};
-
-// takes an array of objects with {data, priority}
-Nexus.PriorityQueue = function() {
-	this.content = [];
+	corto.onmessage = function(e) {
+		var node = this.requests[e.data.request];
+		node.buffer = e.data.buffer;
+		node.model = e.data.model;
+		readyNode(node);
+	};
 }
 
-Nexus.PriorityQueue.prototype = {
-	push: function(node) {
-		this.bubbleUp(this.content.push(node) -1);
+/* UTILITIES */
+
+function getUint64(view) {
+	var s = 0;
+	var lo = view.getUint32(view.offset, true);
+	var hi = view.getUint32(view.offset + 4, true);
+	view.offset += 8;
+	return ((hi * (1 << 32)) + lo);
+}
+
+function getUint32(view) {
+	var s = view.getUint32(view.offset, true);
+	view.offset += 4;
+	return s;
+}
+
+function getUint16(view) {
+	var s = view.getUint16(view.offset, true);
+	view.offset += 2;
+	return s;
+}
+
+function getFloat32(view) {
+	var s = view.getFloat32(view.offset, true);
+	view.offset += 4;
+	return s;
+}
+
+/* MATRIX STUFF */
+
+function vecMul(m, v, r) {
+	var w = m[3]*v[0] + m[7]*v[1] + m[11]*v[2] + m[15];
+
+	r[0] = (m[0]*v[0]  + m[4]*v[1]  + m[8 ]*v[2] + m[12 ])/w;
+	r[1] = (m[1]*v[0]  + m[5]*v[1]  + m[9 ]*v[2] + m[13 ])/w;
+	r[2] = (m[2]*v[0]  + m[6]*v[1]  + m[10]*v[2] + m[14])/w;
+}
+
+
+function matMul(a, b, r) {
+	r[ 0] = a[0]*b[0] + a[4]*b[1] + a[8]*b[2] + a[12]*b[3];
+	r[ 1] = a[1]*b[0] + a[5]*b[1] + a[9]*b[2] + a[13]*b[3];
+	r[ 2] = a[2]*b[0] + a[6]*b[1] + a[10]*b[2] + a[14]*b[3];
+	r[ 3] = a[3]*b[0] + a[7]*b[1] + a[11]*b[2] + a[15]*b[3];
+
+	r[ 4] = a[0]*b[4] + a[4]*b[5] + a[8]*b[6] + a[12]*b[7];
+	r[ 5] = a[1]*b[4] + a[5]*b[5] + a[9]*b[6] + a[13]*b[7];
+	r[ 6] = a[2]*b[4] + a[6]*b[5] + a[10]*b[6] + a[14]*b[7];
+	r[ 7] = a[3]*b[4] + a[7]*b[5] + a[11]*b[6] + a[15]*b[7];
+
+	r[ 8] = a[0]*b[8] + a[4]*b[9] + a[8]*b[10] + a[12]*b[11];
+	r[ 9] = a[1]*b[8] + a[5]*b[9] + a[9]*b[10] + a[13]*b[11];
+	r[10] = a[2]*b[8] + a[6]*b[9] + a[10]*b[10] + a[14]*b[11];
+	r[11] = a[3]*b[8] + a[7]*b[9] + a[11]*b[10] + a[15]*b[11];
+
+	r[12] = a[0]*b[12] + a[4]*b[13] + a[8]*b[14] + a[12]*b[15];
+	r[13] = a[1]*b[12] + a[5]*b[13] + a[9]*b[14] + a[13]*b[15];
+	r[14] = a[2]*b[12] + a[6]*b[13] + a[10]*b[14] + a[14]*b[15];
+	r[15] = a[3]*b[12] + a[7]*b[13] + a[11]*b[14] + a[15]*b[15];
+}
+
+function matInv(m, t) {
+	var s = 1.0/(
+		m[12]* m[9]*m[6]*m[3]-m[8]*m[13]*m[6]*m[3]-m[12]*m[5]*m[10]*m[3]+m[4]*m[13]*m[10]*m[3]+
+		m[8]*m[5]*m[14]*m[3]-m[4]*m[9]*m[14]*m[3]-m[12]*m[9]*m[2]*m[7]+m[8]*m[13]*m[2]*m[7]+
+		m[12]*m[1]*m[10]*m[7]-m[0]*m[13]*m[10]*m[7]-m[8]*m[1]*m[14]*m[7]+m[0]*m[9]*m[14]*m[7]+
+		m[12]*m[5]*m[2]*m[11]-m[4]*m[13]*m[2]*m[11]-m[12]*m[1]*m[6]*m[11]+m[0]*m[13]*m[6]*m[11]+
+		m[4]*m[1]*m[14]*m[11]-m[0]*m[5]*m[14]*m[11]-m[8]*m[5]*m[2]*m[15]+m[4]*m[9]*m[2]*m[15]+
+		m[8]*m[1]*m[6]*m[15]-m[0]*m[9]*m[6]*m[15]-m[4]*m[1]*m[10]*m[15]+m[0]*m[5]*m[10]*m[15]
+	);
+
+	t[ 0] = (m[9]*m[14]*m[7]-m[13]*m[10]*m[7]+m[13]*m[6]*m[11]-m[5]*m[14]*m[11]-m[9]*m[6]*m[15]+m[5]*m[10]*m[15])*s;
+	t[ 1] = (m[13]*m[10]*m[3]-m[9]*m[14]*m[3]-m[13]*m[2]*m[11]+m[1]*m[14]*m[11]+m[9]*m[2]*m[15]-m[1]*m[10]*m[15])*s;
+	t[ 2] = (m[5]*m[14]*m[3]-m[13]*m[6]*m[3]+m[13]*m[2]*m[7]-m[1]*m[14]*m[7]-m[5]*m[2]*m[15]+m[1]*m[6]*m[15])*s;
+	t[ 3] = (m[9]*m[6]*m[3]-m[5]*m[10]*m[3]-m[9]*m[2]*m[7]+m[1]*m[10]*m[7]+m[5]*m[2]*m[11]-m[1]*m[6]*m[11])*s;
+
+	t[ 4] = (m[12]*m[10]*m[7]-m[8]*m[14]*m[7]-m[12]*m[6]*m[11]+m[4]*m[14]*m[11]+m[8]*m[6]*m[15]-m[4]*m[10]*m[15])*s;
+	t[ 5] = (m[8]*m[14]*m[3]-m[12]*m[10]*m[3]+m[12]*m[2]*m[11]-m[0]*m[14]*m[11]-m[8]*m[2]*m[15]+m[0]*m[10]*m[15])*s;
+	t[ 6] = (m[12]*m[6]*m[3]-m[4]*m[14]*m[3]-m[12]*m[2]*m[7]+m[0]*m[14]*m[7]+m[4]*m[2]*m[15]-m[0]*m[6]*m[15])*s;
+	t[ 7] = (m[4]*m[10]*m[3]-m[8]*m[6]*m[3]+m[8]*m[2]*m[7]-m[0]*m[10]*m[7]-m[4]*m[2]*m[11]+m[0]*m[6]*m[11])*s;
+
+	t[ 8] = (m[8]*m[13]*m[7]-m[12]*m[9]*m[7]+m[12]*m[5]*m[11]-m[4]*m[13]*m[11]-m[8]*m[5]*m[15]+m[4]*m[9]*m[15])*s;
+	t[ 9] = (m[12]*m[9]*m[3]-m[8]*m[13]*m[3]-m[12]*m[1]*m[11]+m[0]*m[13]*m[11]+m[8]*m[1]*m[15]-m[0]*m[9]*m[15])*s;
+	t[10] = (m[4]*m[13]*m[3]-m[12]*m[5]*m[3]+m[12]*m[1]*m[7]-m[0]*m[13]*m[7]-m[4]*m[1]*m[15]+m[0]*m[5]*m[15])*s;
+	t[11] = (m[8]*m[5]*m[3]-m[4]*m[9]*m[3]-m[8]*m[1]*m[7]+m[0]*m[9]*m[7]+m[4]*m[1]*m[11]-m[0]*m[5]*m[11])*s;
+
+	t[12] = (m[12]*m[9]*m[6]-m[8]*m[13]*m[6]-m[12]*m[5]*m[10]+m[4]*m[13]*m[10]+m[8]*m[5]*m[14]-m[4]*m[9]*m[14])*s;
+	t[13] = (m[8]*m[13]*m[2]-m[12]*m[9]*m[2]+m[12]*m[1]*m[10]-m[0]*m[13]*m[10]-m[8]*m[1]*m[14]+m[0]*m[9]*m[14])*s;
+	t[14] = (m[12]*m[5]*m[2]-m[4]*m[13]*m[2]-m[12]*m[1]*m[6]+m[0]*m[13]*m[6]+m[4]*m[1]*m[14]-m[0]*m[5]*m[14])*s;
+	t[15] = (m[4]*m[9]*m[2]-m[8]*m[5]*m[2]+m[8]*m[1]*m[6]-m[0]*m[9]*m[6]-m[4]*m[1]*m[10]+m[0]*m[5]*m[10])*s;
+}
+
+/* PRIORITY QUEUE */
+
+PriorityQueue = function(max_length) {
+	this.error = new Float32Array(max_length);
+	this.data = new Int32Array(max_length);
+	this.size = 0;
+}
+
+PriorityQueue.prototype = {
+	push: function(data, error) {
+		this.data[this.size] = data;
+		this.error[this.size] = error;
+		this.bubbleUp(this.size);
+		this.size++;
 	},
+
 	pop: function() {
-		var result = this.content[0];    
-		var end = this.content.pop();
-		if (this.content.length > 0) {
-			this.content[0] = end;
+		var result = this.data[0];
+		this.size--;
+		if(this.size > 0) {
+			this.data[0] = this.data[this.size];
+			this.error[0] = this.error[this.size];
 			this.sinkDown(0);
 		}
 		return result;
 	},
-	size: function() { return this.content.length; },
+
 	bubbleUp: function(n) {
-		var element = this.content[n];
+		var data = this.data[n];
+		var error = this.error[n];
 		while (n > 0) {
-			var parentN = ((n+1)>>1) -1; 
-			var parent = this.content[parentN];
-			if(parent.node.renderError > element.node.renderError)
+			var pN = ((n+1)>>1) -1; 
+			var pError = this.error[pN];
+			if(pError > error)
 				break;
-			this.content[parentN] = element;
-			this.content[n] = parent;
-			n = parentN;
+			//swap
+			this.data[n] = this.data[pN];
+			this.error[n] = pError;
+			this.data[pN] = data;
+			this.error[pN] = error;
+			n = pN;
 		}
 	},
 
 	sinkDown: function(n) {
-		var length = this.content.length;
-		var element = this.content[n]
+		var data = this.data[n];
+		var error = this.error[n];
 
 		while(true) {
 			var child2N = (n + 1) * 2;
 			var child1N = child2N - 1;
-			var swap = null;
-      		if (child1N < length) {
-				var child1 = this.content[child1N];
-				if(child1.node.renderError > element.node.renderError)
+			var swap = -1;
+			if (child1N < this.size) {
+				var child1Error = this.error[child1N];
+				if(child1Error > error)
 					swap = child1N;
 			}
-			if (child2N < length) {
-				var child2 = this.content[child2N];
-				if (child2.node.renderError > (swap == null ? element.node.renderError : child1.node.renderError))
+			if (child2N < this.size) {
+				var child2Error = this.error[child2N];
+				if (child2Error > (swap == -1 ? error : child1Error))
 					swap = child2N;
 			}
 
-			if (swap == null) break;
+			if (swap == -1) break;
 
-			this.content[n] = this.content[swap];
-			this.content[swap] = element;
+			this.data[n] = this.data[swap];
+			this.error[n] = this.error[swap];
+			this.data[swap] = data;
+			this.error[swap] = error;
 			n = swap;
 		}
 	}
 };
 
-Nexus.Plane3f = function (p0, p1, p2) {
-	this._normal = SglVec3.normalize(SglVec3.cross(SglVec3.sub(p1, p0), SglVec3.sub(p2, p0)));
-	this._offset = SglVec3.dot(p0, this._normal);
+
+/* HEADER AND PARSING */
+
+var padding = 256;
+var Debug = { 
+	nodes   : false,  //color each node
+	culling : false,  //visibility culling disabled
+	draw    : false,  //final rendering call disabled
+	extract : false,  //no extraction
+	request : false,  //no network requests
+	worker  : false   //no web workers
 };
 
-Nexus.Plane3f.prototype = {
-	get normal() {
-		return this._normal.slice();
+
+var glP = WebGLRenderingContext.prototype;
+var attrGlMap = [glP.NONE, glP.BYTE, glP.UNSIGNED_BYTE, glP.SHORT, glP.UNSIGNED_SHORT, glP.INT, glP.UNSIGNED_INT, glP.FLOAT, glP.DOUBLE];
+var attrSizeMap = [0, 1, 1, 2, 2, 4, 4, 4, 8];
+
+
+var targetError   = 2.0;
+var targetFps     = 15;
+var maxPending    = 3;
+var maxBlocked    = 3;
+var maxReqAttempt = 2;
+var maxCacheSize  = 512*(1<<20); //TODO DEBUG
+var drawBudget    = 5*(1<<20);
+
+
+/* MESH DEFINITION */
+
+Mesh = function() {
+	var t = this;
+	t.onLoad = null;
+	t.reqAttempt = 0;
+}
+
+Mesh.prototype = {
+	open: function(url) {
+		var mesh = this;
+		mesh.url = url;
+		mesh.httpRequest(
+			0,
+			88,
+			function() {
+//				console.log("Loading header for " + mesh.url);
+				var view = new DataView(this.response);
+				view.offset = 0;
+				mesh.reqAttempt++;
+				var header = mesh.importHeader(view);
+				if(!header) { 
+					console.log("Empty header!");
+					if(mesh.reqAttempt < maxReqAttempt) mesh.open(mesh.url + '?' + Math.random()); // BLINK ENGINE CACHE BUG PATCH
+					return null;
+				}
+				mesh.reqAttempt = 0;
+				for(i in header)
+					mesh[i] = header[i];
+				mesh.vertex = mesh.signature.vertex;
+				mesh.face = mesh.signature.face;
+				mesh.renderMode = mesh.face.index?["FILL", "POINT"]:["POINT"];
+				mesh.compressed = (mesh.signature.flags & (2 | 4)); //meco or corto
+				mesh.meco = (mesh.signature.flags & 2);
+				mesh.corto = (mesh.signature.flags & 4);
+				mesh.requestIndex();
+			},
+			function() { console.log("Open request error!");},
+			function() { console.log("Open request abort!");}
+		);
 	},
 
-	get offset() {
-		return this._offset;
+	httpRequest: function(start, end, load, error, abort, type) {
+		if(!type) type = 'arraybuffer';
+		var r = new XMLHttpRequest();
+		r.open('GET', this.url, true);
+		r.responseType = type;
+		r.setRequestHeader("Range", "bytes=" + start + "-" + (end -1));
+		r.onload = function(){
+			switch (this.status){
+				case 0:
+//					console.log("0 response: server unreachable.");//returned in chrome for local files
+				case 206:
+//					console.log("206 response: partial content loaded.");
+					load.bind(this)();
+					break;
+				case 200:
+//					console.log("200 response: server does not support byte range requests.");
+			}
+		};
+		r.onerror = error;
+		r.onabort = abort;
+		r.send();
+		return r;
 	},
 
-	signedDistanceToPoint : function (p) {
-		return (SglVec3.dot(this._normal, p) - this._offset);
-	}
-};
+	requestIndex: function() {
+		var mesh = this;
+		var end = 88 + mesh.nodesCount*44 + mesh.patchesCount*12 + mesh.texturesCount*68;
+		mesh.httpRequest(
+			88,
+			end,
+			function() { mesh.handleIndex(this.response); },
+			function() { console.log("Index request error!");},
+			function() { console.log("Index request abort!");}
+		);
+	},
 
-Nexus.Renderer = function (gl) {
-	this._gl = gl;
-
-	this.targetError        = Nexus.Renderer.DEFAULT_TARGET_ERROR;
-	this._targetFps          = null; //Nexus.Renderer.DEFAULT_TARGET_FPS;
-	this._maxPendingRequests = Nexus.Renderer.DEFAULT_MAX_PENDING_REQUESTS;
-	this._maxCacheSize       = Nexus.Renderer.DEFAULT_CACHE_SIZE;
-	this.drawBudget         = Nexus.Renderer.DEFAULT_DRAW_BUDGET;
-	this._minDrawBudget      = Nexus.Renderer.DEFAULT_DRAW_BUDGET / 4;
-	this._onUpdate           = null;
-	this._onSceneReady       = null;
-
-	this._mmat = SglMat4.identity();
-	this._vmat = SglMat4.identity();
-	this._pmat = SglMat4.identity();
-	this._vp   = [ 0.0, 0.0, 1.0, 1.0 ];
-
-	this._mode = 0;
-
-	this._reset();
-
-	this._updateView();
-};
-
-Nexus.Renderer.STATUS_NONE    = 0;
-Nexus.Renderer.STATUS_OPENING = 1;
-Nexus.Renderer.STATUS_OPEN    = 2;
-
-Nexus.Renderer.DEFAULT_TARGET_ERROR         = 1.0;
-Nexus.Renderer.DEFAULT_TARGET_FPS           = 20;
-Nexus.Renderer.DEFAULT_MAX_PENDING_REQUESTS = 3; // 3 is good for uncompressed online work
-Nexus.Renderer.DEFAULT_CACHE_SIZE           = 256 * 1024 * 1024;
-Nexus.Renderer.DEFAULT_DRAW_BUDGET          = 2.0 * 1024 * 1024;
-
-Nexus.Renderer._NODE_NONE    = 0;
-Nexus.Renderer._NODE_PENDING = 1;
-Nexus.Renderer._NODE_READY   = 2;
-
-Nexus.Renderer._sortPatchesFunction = function (a, b) {
-	return ((a.frame != b.frame) ? (b.frame - a.frame) : (b.error - a.error));
-};
-
-Nexus.Renderer._sortNodesFunction = function (a, b) {
-	return a.node.renderError - b.node.renderError;
-};
-
-Nexus.Renderer._sortNodeCacheFunction = function (a, b) {
-	return ((a.renderFrame != b.renderFrame) ? (b.renderFrame - a.renderFrame) : (b.renderError - a.renderError));
-	//return b.renderError - a.renderError;
-};
-
-Nexus.Renderer.prototype = {
-	_reset : function () {
-		this._status  = Nexus.Renderer.STATUS_NONE;
-
-		this._inBegin = false;
-
-		this._url     = null;
-
-		this._header   = null;
-		this._nodes    = null;
-		this._patches  = null;
-		this._textures = null;
-
-		this._visitedNodes    = null;
-		this._blockedNodes    = null;
-		this._selectedNodes   = null;
-		this._drawSize        = 0; //number of triangle to be rendered
-		this._rendered        = 0; //currently rendered triangles
-		this._estimatedTpS    = 200000; //in million triangles
-		this._cacheSize       = 0;
-		this._cachedNodes     = null;
-		this._readyNodes      = null;
-		this._frame           = 0;
-
-		this._pendingRequests = 0;
-		this._candidateNodes  = null;
-		this._redrawOnNewNodes = true;
-
+	handleIndex: function(buffer) {
 		var t = this;
-		var path;
-		$('script').each(function(a) { var str = $(this).attr('src'); if(!str) return; if(str.search('nexus.js') >= 0) path = str; });
-		path = path.replace('nexus.js', 'meshcoder_worker.js');
-		this._worker = new Worker(path);
-		this._worker.onmessage = function(e) { t._workerFinished(e); };
+		var view = new DataView(buffer);
+		view.offset = 0;
 
-		/**Safari PATCH**/
-		/**/(sayswho()[0]==='Safari' && sayswho()[1]<9) ? (this._cachePatch = true) : (this._cachePatch = false);
-		/**Safari PATCH**/
-	},
+		var n = t.nodesCount;
 
-	_requestHeader : function () {
-		var offset = 0;
-		var size   = Nexus.Header.SIZEOF;
+		t.noffsets  = new Uint32Array(n);
+		t.nvertices = new Uint32Array(n);
+		t.nfaces    = new Uint32Array(n);
+		t.nerrors   = new Float32Array(n);
+		t.nspheres  = new Float32Array(n*5);
+		t.nsize     = new Float32Array(n);
+		t.nfirstpatch = new Uint32Array(n);
 
-		var that = this;
-		var r = new XMLHttpRequest();
-		r.open('GET', this.url(), true);
-		r.responseType = 'arraybuffer';
-		r.setRequestHeader("Range", "bytes=" + offset + "-" + (offset + size -1));
-		r.onload = function () {
-			that._handleHeader(r.response);
-			that._requestIndex();
+		for(i = 0; i < n; i++) {
+			t.noffsets[i] = padding*getUint32(view); //offset
+			t.nvertices[i] = getUint16(view);        //verticesCount
+			t.nfaces[i] = getUint16(view);           //facesCount
+			t.nerrors[i] = getFloat32(view);
+			view.offset += 8;                        //skip cone
+			for(k = 0; k < 5; k++)
+				t.nspheres[i*5+k] = getFloat32(view);       //sphere + tight
+			t.nfirstpatch[i] = getUint32(view);          //first patch
 		}
-		r.send();
-	},
+		t.sink = n -1;
 
-	_handleHeader : function (buffer) {
-		var view         = new DataView(buffer);
-		var offset       = 0;
-		var littleEndian = Nexus.LITTLE_ENDIAN_DATA;
-
-		var header = new Nexus.Header();
-		header.import(view, offset, littleEndian);
-		this._header = header;
-	},
-
-	_requestIndex : function () {
-		var header = this._header;
-		var offset = Nexus.Header.SIZEOF;
-		var size   = header.nodesCount * Nexus.Node.SIZEOF + header.patchesCount * Nexus.Patch.SIZEOF + header.texturesCount * Nexus.Texture.SIZEOF;
-
-		var that = this;
-		var r = new XMLHttpRequest();
-		r.open('GET', this.url(), true);
-		r.responseType = 'arraybuffer';
-		r.setRequestHeader("Range", "bytes=" + offset + "-" + (offset + size -1));
-		r.onload = function () {
-			that._handleIndex(r.response);
-			that._openReady();
-		}
-		r.send();
-	},
-
-	_handleIndex : function (buffer) {
-		var header       = this._header;
-		var view         = new DataView(buffer);
-		var offset       = 0;
-		var littleEndian = Nexus.LITTLE_ENDIAN_DATA;
-
-		var offset = 0;
-
-		this._nodes = new Nexus.NodeIndex();
-		offset += this._nodes.import(header.nodesCount, view, offset, littleEndian);
-
-		this._patches = new Nexus.PatchIndex();
-		offset += this._patches.import(header.patchesCount, view, offset, littleEndian);
-
-		this._textures = new Nexus.TextureIndex();
-		offset += this._textures.import(header.texturesCount, view, offset, littleEndian);
-
-		this.renderMode = ["POINT"];
-		if (header.signature.face.hasIndex) this.renderMode.unshift("FILL");
-
-		this.setPrimitiveMode(this.renderMode[0]);
-
-		this.hasPosition = header.signature.vertex.hasPosition; 
-		this.hasNormal   = header.signature.vertex.hasNormal; 
-		this.hasColor    = header.signature.vertex.hasColor; 
-		this.hasTexture  = header.signature.vertex.hasTexCoord; 
-	},
-
-	_openReady : function() {
-		var nodesCount = this._nodes.length;
-		var nodes      = this._nodes.items;
-		for (var i=0; i<nodesCount; ++i) {
-			var node = nodes[i];
-			node.status      = Nexus.Renderer._NODE_NONE;
-			node.request     = null;
-			node.vbo         = null;
-			node.ibo         = null;
-			node.color       = [sglRandom01(), sglRandom01(), sglRandom01(), 1.0];
-			node.renderError = 0.0;
-			node.renderFrame = 0;
-		}
-
-		this._cachedNodes    = [];
-		this._readyNodes     = [];
-//		this._pendingNodes   = []; not used
-
-		var nodesCount = this._header.nodesCount;
-		this._visitedNodes  = new Uint8Array(nodesCount);  //Nexus.BoolArray(nodesCount);
-		this._blockedNodes  = new Uint8Array(nodesCount);  //new Nexus.BoolArray(nodesCount);
-		this._selectedNodes = new Uint8Array(nodesCount);  //new Nexus.BoolArray(nodesCount);
-
-		this._status = Nexus.Renderer.STATUS_OPEN;
-
-		if (this._onSceneReady) {
-			this._onSceneReady();
-		}
-	},
-
-	_signalUpdate : function () {
-		var upd = this._onUpdate;
-		if (upd) {
-			upd();
-		}
-	},
-
-	url: function() {
-		var url = this._url;
-		/**Safari PATCH**/
-		/**/if (this._cachePatch) url = this._url + '?' + Math.random();
-		/**Safari PATCH**/
-		return url;
-	},
-
-	get isValid() {
-		return !!this._gl;
-	},
-
-	get onSceneReady() {
-		return this._onSceneReady;
-	},
-
-	set onSceneReady(f) {
-		this._onSceneReady = f;
-	},
-
-	get onUpdate() {
-		return this._onUpdate;
-	},
-
-	set onUpdate(f) {
-		this._onUpdate = f;
-	},
-
-	get isClosed() {
-		return (this._status == Nexus.Renderer.STATUS_NONE);
-	},
-
-	get isOpening() {
-		return (this._status == Nexus.Renderer.STATUS_OPENING);
-	},
-
-	get isOpen() {
-		return (this._status == Nexus.Renderer.STATUS_OPEN);
-	},
-
-	get isReady() {
-		return this.isOpen;
-	},
-
-	get datasetCenter() {
-		if (!this.isReady) return [0, 0, 0];
-		return this._header.sphere.center.slice(0, 3);
-	},
-
-	get datasetRadius() {
-		if (!this.isReady) return 1.0;
-		return this._header.sphere.radius;
-	},
-
-	get inBegin() {
-		return this._inBegin;
-	},
-
-	get maxPendingRequests() {
-		return this._maxPendingRequests;
-	},
-
-	set maxPendingRequests(r) {
-		this._maxPendingRequests = r;
-	},
-
-	get modelMatrix() {
-		return this._mmat.slice(0, 16);
-	},
-
-	set modelMatrix(m) {
-		if (this.inBegin) return;
-		this._mmat = m.slice(0, 16);
-	},
-
-	get viewMatrix() {
-		return this._vmat.slice(0, 16);
-	},
-
-	set viewMatrix(m) {
-		if (this.inBegin) return;
-		this._vmat = m.slice(0, 16);
-	},
-
-	get projectionMatrix() {
-		return this._pmat.slice(0, 16);
-	},
-
-	set projectionMatrix(m) {
-		if (this.inBegin) return;
-		this._pmat = m.slice(0, 16);
-	},
-
-	get viewport() {
-		return this._vp.slice(0, 4);
-	},
-
-	set viewport(v) {
-		if (this.inBegin) return;
-		this._vp = v.slice(0, 4);
-	},
-
-	destroy : function () {
-		this.close();
-	},
-
-	open : function (url) {
-		if (!this.isValid) return;
-		this.close();
-		this._status = Nexus.Renderer.STATUS_OPENING;
-		this._url    = url;
-		this._requestHeader();
-	},
-
-	close : function () {
-		if (this.isClosed) return;
-
-		if (this.isOpening) {
-		}
-		else if (this.isOpen) {
-		}
-
-		this._reset();
-	},
-
-	_updateCache : function () {
-		var readyNodes = this._readyNodes;
-		if (readyNodes.length <= 0) return;
-
-		var cachedNodes = this._cachedNodes;
-
-		//console.log(readyNodes);
-
-		var newCache = cachedNodes.concat(readyNodes);
-		newCache.sort(Nexus.Renderer._sortNodeCacheFunction);
-
-		var maxSize = this._maxCacheSize;
-		var size    = 0;
-
-		var firstVictim = -1;
-		var newNodes  = [ ];
-
-		for (var i=0, n=newCache.length; i<n; ++i) {
-			var node  = newCache[i];
-			var nsize = node.lastByte - node.offset + 1;
-			if ((size + nsize) > maxSize) {
-				firstVictim = i;
-				break;
+		t.patches = new Uint32Array(view.buffer, view.offset, t.patchesCount*3); //noded, lastTriangle, texture
+		t.nroots = t.nodesCount;
+		for(j = 0; j < t.nroots; j++) {
+			for(i = t.nfirstpatch[j]; i < t.nfirstpatch[j+1]; i++) {
+				if(t.patches[i*3] < t.nroots)
+					t.nroots = t.patches[i*3];
 			}
-			if (node.request) {
-				newNodes.push(node);
+		}
+
+		view.offset += t.patchesCount*12;
+
+		t.textures = new Uint32Array(t.texturesCount);
+		t.texref = new Uint32Array(t.texturesCount);
+		for(i = 0; i < t.texturesCount; i++) {
+			t.textures[i] = padding*getUint32(view);
+			view.offset += 16*4; //skip proj matrix
+		}
+
+		t.vsize = 12 + (t.vertex.normal?6:0) + (t.vertex.color?4:0) + (t.vertex.texCoord?8:0);
+		t.fsize = 6;
+		//problem: I have no idea how much space a texture is needed in GPU. 10x factor assumed.
+
+		var tmptexsize = new Uint32Array(n-1);
+		var tmptexcount = new Uint32Array(n-1);
+		for(var i = 0; i < n-1; i++) {
+			for(var p = t.nfirstpatch[i]; p != t.nfirstpatch[i+1]; p++) {
+				var tex = t.patches[p*3+2];
+				tmptexsize[i] += t.textures[tex+1] - t.textures[tex];
+				tmptexcount[i]++;
 			}
+			t.nsize[i] = t.vsize*t.nvertices[i] + t.fsize*t.nfaces[i];
+		}
+		for(var i = 0; i < n-1; i++) {
+			t.nsize[i] += 10*tmptexsize[i]/tmptexcount[i];
+		}
+
+		t.status = new Uint8Array(n); //0 for none, 1 for ready, 2+ for waiting data
+		t.frames = new Uint32Array(n);
+		t.errors = new Float32Array(n); //biggest error of instances
+		t.ibo    = new Array(n);
+		t.vbo    = new Array(n);
+		t.texids = new Array(n);
+
+		t.isReady = true;
+		if(t.onLoad) t.onLoad();
+	},
+
+	importAttribute: function(view) {
+		var a = {};
+		a.type = view.getUint8(view.offset++, true);
+		a.size = view.getUint8(view.offset++, true);
+		a.glType = attrGlMap[a.type];
+		a.normalized = a.type < 7;
+		a.stride = attrSizeMap[a.type]*a.size;
+		if(a.size == 0) return null;
+		return a;
+	},
+
+	importElement: function(view) {
+		var e = [];
+		for(i = 0; i < 8; i++)
+			e[i] = this.importAttribute(view);
+		return e;
+	},
+
+	importVertex: function(view) {	//enum POSITION, NORMAL, COLOR, TEXCOORD, DATA0
+		var e = this.importElement(view);
+		var color = e[2]; 
+		if(color) {
+			color.type = 2; //unsigned byte
+			color.glType = attrGlMap[2];
+		}
+		return { position: e[0], normal: e[1], color: e[2], texCoord: e[3], data: e[4] };
+	},
+
+	//enum INDEX, NORMAL, COLOR, TEXCOORD, DATA0
+	importFace: function(view) {
+		var e = this.importElement(view);
+		var color = e[2];
+		if(color) {
+			color.type = 2; //unsigned byte
+			color.glType = attrGlMap[2];
+		}
+		return { index: e[0], normal: e[1], color: e[2], texCoord: e[3], data: e[4] };
+	},
+
+	importSignature: function(view) {
+		var s = {};
+		s.vertex = this.importVertex(view);
+		s.face = this.importFace(view);
+		s.flags = getUint32(view);
+		return s;
+	},
+
+	importHeader: function(view) {
+		var magic = getUint32(view);
+		if(magic != 0x4E787320) return null;
+		var h = {};
+		h.version = getUint32(view);
+		h.verticesCount = getUint64(view);
+		h.facesCount = getUint64(view);
+		h.signature = this.importSignature(view);
+		h.nodesCount = getUint32(view);
+		h.patchesCount = getUint32(view);
+		h.texturesCount = getUint32(view);
+		h.sphere = { 
+			center: [getFloat32(view), getFloat32(view), getFloat32(view)],
+			radius: getFloat32(view)
+		};
+		return h;
+	}
+}; 
+
+Instance = function(gl) {
+	this.gl = gl;
+	this.onLoad = function() {};
+	this.onUpdate = function() {};
+	this.drawBudget = drawBudget;
+	this.attributes = { 'position':0, 'normal':1, 'color':2, 'uv':3 };
+}
+
+Instance.prototype = {
+	open: function(url) {
+		var t = this;
+		t.context = getContext(t.gl);
+
+		t.modelMatrix      = new Float32Array(16);
+		t.viewMatrix       = new Float32Array(16);
+		t.projectionMatrix = new Float32Array(16);
+		t.modelView        = new Float32Array(16);
+		t.modelViewInv     = new Float32Array(16);
+		t.modelViewProj    = new Float32Array(16);
+		t.modelViewProjInv = new Float32Array(16);
+		t.planes           = new Float32Array(24);
+		t.viewport         = new Float32Array(4);
+		t.viewpoint        = new Float32Array(4);
+
+		t.context.meshes.forEach(function(m) {
+			if(m.url == url){
+				t.mesh = m;
+				t.renderMode = t.mesh.renderMode;
+				t.mode = t.renderMode[0];
+				t.onLoad();
+			}
+		});
+
+		if(!t.mesh) {
+			t.mesh = new Mesh();
+			t.mesh.onLoad = function() { t.renderMode = t.mesh.renderMode; t.mode = t.renderMode[0]; t.onLoad(); }
+			t.mesh.open(url);
+			t.context.meshes.push(t.mesh);
+		}
+	},
+
+	close: function() {
+		//remove instance from mesh.
+	},
+
+	get isReady() { return this.mesh.isReady; },
+	setPrimitiveMode : function (mode) { this.mode = mode; },
+	get datasetRadius() { if(!this.isReady) return 1.0;       return this.mesh.sphere.radius; },
+	get datasetCenter() { if(!this.isReady) return [0, 0, 0]; return this.mesh.sphere.center; },
+
+	updateView: function(viewport, projection, modelView) {
+		var t = this;
+
+		for(var i = 0; i < 16; i++) {
+			t.projectionMatrix[i] = projection[i];
+			t.modelView[i] = modelView[i];
+		}
+		for(var i = 0; i < 4; i++)
+			t.viewport[i] = viewport[i];
+
+		matMul(t.projectionMatrix, t.modelView, t.modelViewProj);
+		matInv(t.modelViewProj, t.modelViewProjInv);
+
+		matInv(t.modelView, t.modelViewInv);
+		t.viewpoint[0] = t.modelViewInv[12]; 
+		t.viewpoint[1] = t.modelViewInv[13];
+		t.viewpoint[2] = t.modelViewInv[14]; 
+		t.viewpoint[3] = 1.0;
+
+
+		var m = t.modelViewProj;
+		var mi = t.modelViewProjInv;
+		var p = t.planes;
+
+		//left, right, bottom, top as Ax + By + Cz + D = 0;
+		p[0]  =  m[0] + m[3]; p[1]  =  m[4] + m[7]; p[2]  =  m[8] + m[11]; p[3]  =  m[12] + m[15];
+		p[4]  = -m[0] + m[3]; p[5]  = -m[4] + m[7]; p[6]  = -m[8] + m[11]; p[7]  = -m[12] + m[15];
+		p[8]  =  m[1] + m[3]; p[9]  =  m[5] + m[7]; p[10] =  m[9] + m[11]; p[11] =  m[13] + m[15];
+		p[12] = -m[1] + m[3]; p[13] = -m[5] + m[7]; p[14] = -m[9] + m[11]; p[15] = -m[13] + m[15];
+		p[16] = -m[2] + m[3]; p[17] = -m[6] + m[7]; p[18] = -m[10] + m[11]; p[19] = -m[14] + m[15];
+		p[20] = -m[2] + m[3]; p[21] = -m[6] + m[7]; p[22] = -m[10] + m[11]; p[23] = -m[14] + m[15];
+
+		for(var i = 0; i < 16; i+= 4) {
+			var l = Math.sqrt(p[i]*p[i] + p[i+1]*p[i+1] + p[i+2]*p[i+2]);
+			p[i] /= l; p[i+1] /= l; p[i+2] /= l; p[i+3] /= l;
+		}
+		//side is M'(1,0,0,1) - M'(-1,0,0,1) and they lie on the planes
+		var r3 = mi[3] + mi[15];
+		var r0 = (mi[0]  + mi[12 ])/r3;
+		var r1 = (mi[1]  + mi[13 ])/r3;
+		var r2 = (mi[2]  + mi[14 ])/r3;
+ 
+		var l3 = -mi[3] + mi[15];
+		var l0 = (-mi[0]  + mi[12 ])/l3 - r0;
+		var l1 = (-mi[1]  + mi[13 ])/l3 - r1;
+		var l2 = (-mi[2]  + mi[14 ])/l3 - r2;
+		
+		var side = Math.sqrt(l0*l0 + l1*l1 + l2*l2);
+
+		//center of the scene is M'*(0, 0, 0, 1)
+		var c0 = mi[12]/mi[15] - t.viewpoint[0];
+		var c1 = mi[13]/mi[15] - t.viewpoint[1];
+		var c2 = mi[14]/mi[15] - t.viewpoint[2];
+		var dist = Math.sqrt(c0*c0 + c1*c1 + c2*c2);
+
+		t.resolution = (2*side/dist)/ t.viewport[2];
+	},
+
+	traversal : function () {
+		var t = this;
+		if(Debug.extract == true)
+			return;
+
+		if(!t.isReady) return;
+
+		var n = t.mesh.nodesCount;
+		t.visited  = new Uint8Array(n);
+		t.blocked  = new Uint8Array(n);
+		t.selected = new Uint8Array(n);
+
+		t.visitQueue = new PriorityQueue(n);
+		for(var i = 0; i < t.mesh.nroots; i++)
+			t.insertNode(i);
+
+		var candidatesCount = 0;
+		t.targetError = t.context.currentError;
+		t.currentError = 1e20;
+		t.drawSize = 0;
+
+		var nblocked = 0;
+		var requested = 0;
+		while(t.visitQueue.size && nblocked < maxBlocked) {
+			var error = t.visitQueue.error[0];
+			var node = t.visitQueue.pop();
+			if ((requested < maxPending) && (t.mesh.status[node] == 0)) {
+				t.context.candidates.push({id: node, instance:t, mesh:t.mesh, frame:t.context.frame, error:error});
+				requested++;
+			}
+
+			var blocked = t.blocked[node] || !t.expandNode(node, error);
+			if (blocked) 
+				nblocked++;
 			else {
-				size += nsize
+				t.selected[node] = 1;
+				t.currentError = error;
 			}
+			t.insertChildren(node, blocked);
 		}
-
-		if (firstVictim >= 0) {
-			for (var i=firstVictim, n=newCache.length; i<n; ++i) {
-				var node = newCache[i];
-				if (node.vbo) {
-					node.vbo.destroy();
-					node.vbo = null;
-				}
-				if (node.ibo) {
-					node.ibo.destroy();
-					node.ibo = null;
-				}
-				node.request = null;
-				node.buffer = null;
-				node.status  = Nexus.Renderer._NODE_NONE;
-			}
-			newCache = newCache.slice(0, firstVictim);
-		}
-
-		var vertexStride = this._header.signature.vertex.byteLength;
-		var faceStride   = this._header.signature.face.byteLength;
-		var littleEndian = Nexus.LITTLE_ENDIAN_DATA;
-		var gl           = this._gl;
-
-		for (var i = 0, n = newNodes.length; i < n; ++i) {
-			var node    = newNodes[i];
-			//console.log("loading node: " + node.index);
-			var compressed = Nexus.Signature.MECO + Nexus.Signature.CTM1 + Nexus.Signature.CTM2;
-
-			if(Nexus.Debug.worker && this._header.signature.flags & compressed) {
-				var request = node.request;
-				var buffer = request.response;
-				var sig = {
-					texcoords: this._header.signature.vertex.hasTexCoord,
-					normals: this._header.signature.vertex.hasNormal,
-					colors:  this._header.signature.vertex.hasColor,
-					indices: this._header.signature.face.hasIndex
-				};
-				var _node = {
-					nvert: node.verticesCount,
-					nface: node.facesCount,
-					firstPatch: 0, 
-					lastPatch: node.lastPatch - node.firstPatch,
-					buffer: node.request.response
-				};
-				var p = [];
-				for(var k = node.firstPatch; k < node.lastPatch; k++)
-					p.push(this._patches.items[k].lastTriangle);
-
-				if(this._header.signature.flags & Nexus.Signature.MECO) {
-					var now = window.performance.now();
-					var coder = new MeshCoder(sig, _node, p);
-					node.buffer = coder.decode(buffer);
-					var elapsed = window.performance.now() - now;
-
-					//console.log("Z Time: " + elapsed + " Size: " + size + " KT/s: " + (node.facesCount/(elapsed)) + " Mbps " + (8*1000*node.buffer.byteLength/elapsed)/(1<<20));
-	
-				} else {
-					node.buffer = ctmDecode(sig, _node, p);
-				}
-			}
-
-			var nv = node.verticesCount;
-			var nf = node.facesCount;
-
-			var vertexOffset = 0;
-			var vertexSize   = nv * vertexStride;
-			var faceOffset   = vertexOffset + vertexSize;
-			var faceSize     = nf * faceStride;
-
-			var vertices = new Uint8Array(node.buffer, vertexOffset, vertexSize);
-			var indices  = new Uint8Array(node.buffer, faceOffset,   faceSize);
-
-			node.vbo = new SglVertexBuffer (gl, {data : vertices});
-			if (this._header.signature.face.hasIndex)
-				node.ibo = new SglIndexBuffer  (gl, {data : indices });
-
-			node.request = null;
-			//STEP 1: if textures not ready this will be delayed
-			var isReady = true;	
-			var patches      = this._patches.items;
-			for(var k = node.firstPatch; k < node.lastPatch; ++k) {
-				var patch = this._patches.items[k];
-				if(patch.texture == 0xffffffff) continue;
-				if(this._textures.items[patch.texture].status != Nexus.Renderer._NODE_READY)
-					isReady = false;
-			}
-			if(isReady)
-				node.status  = Nexus.Renderer._NODE_READY;
-
-			var nsize = node.lastByte - node.offset + 1;
-			size += nsize;
-		}
-
-		this._readyNodes  = [ ];
-		this._cachedNodes = newCache;
-		this._cacheSize   = size;
 	},
 
-	_hierarchyVisit_isVisible : function (center, radius) {
-		if (Nexus.Debug.culling) return true;
-		var planes = this._planes;
-		for (var i = 0; i < 4; ++i) {
-			var plane = planes[i];
-			var n = plane._normal;
-			var dot = n[0]*center[0] + n[1]*center[1] + n[2]*center[2];
-			if(dot - plane._offset + radius < 0.0)
+	insertNode: function (node) {
+		var t = this;
+		t.visited[node] = 1;
+
+		var error = t.nodeError(node);
+		if(node > 0 && error < t.targetError) return;  //2% speed TODO check if needed
+
+		var errors = t.mesh.errors;
+		var frames = t.mesh.frames;
+		if(frames[node] != t.context.frame || errors[node] < error) {
+			errors[node] = error;
+			frames[node] = t.context.frame;
+		}
+		t.visitQueue.push(node, error);
+	},
+
+	insertChildren : function (node, block) {
+		var t = this;
+		for(var i = t.mesh.nfirstpatch[node]; i < t.mesh.nfirstpatch[node+1]; ++i) {
+			var child = t.mesh.patches[i*3];
+			if (child == t.mesh.sink) return;
+			if (block) t.blocked[child] = 1;
+			if (!t.visited[child])
+				t.insertNode(child);
+		}
+	},
+
+	expandNode : function (node, error) {
+		var t = this;
+		if(node > 0 && error < t.targetError) {
+//			console.log("Reached error", error, t.targetError);
+			return false;
+		}
+
+		if(t.drawSize > t.drawBudget) {
+//			console.log("Reached drawsize", t.drawSize, t.drawBudget);
+			return false;
+		}
+
+		if(t.mesh.status[node] != 1) { //not ready
+//			console.log("Node " + node + " still not loaded (cache?)");
+			return false;
+		}
+
+		var sp = t.mesh.nspheres;
+		var off = node*5;
+		if(t.isVisible(sp[off], sp[off+1], sp[off+2], sp[off+3])) //expanded radius
+			t.drawSize += t.mesh.nvertices[node]*0.8; 
+			//we are adding half of the new faces. (but we are using the vertices so *2)
+
+		return true; 
+	},
+
+	nodeError : function (n, tight) {
+		var t = this;
+		var spheres = t.mesh.nspheres;
+		var b = t.viewpoint;
+		var off = n*5;
+		var cx = spheres[off+0];
+		var cy = spheres[off+1];
+		var cz = spheres[off+2];
+		var r  = spheres[off+3];
+		if(tight)
+			r = spheres[off+4];
+		var d0 = b[0] - cx;
+		var d1 = b[1] - cy;
+		var d2 = b[2] - cz;
+		var dist = Math.sqrt(d0*d0 + d1*d1 + d2*d2) - r;
+		if (dist < 0.1)
+			dist = 0.1;
+
+		//resolution is how long is a pixel at distance 1.
+		var error = t.mesh.nerrors[n]/(t.resolution*dist); //in pixels
+
+		if (!t.isVisible(cx, cy. cz, spheres[off+4]))
+			error /= 1000.0;
+		return error;
+	},
+
+	isVisible : function (x, y, z, r) {
+		var p = this.planes;
+		for (i = 0; i < 24; i +=4) {
+			if(p[i]*x + p[i+1]*y + p[i+2]*z +p[i+3] + r < 0) //ax+by+cz+w = 0;
 				return false;
 		}
 		return true;
 	},
 
-	_hierarchyVisit_nodeError : function (n) {
-		var node   = this._nodes.items[n];
-		var sphere = node.sphere;
-// inline distance computation
-		var a = sphere.center;
-		var b = this._viewPoint;
-		var d0 = a[0] - b[0];
-		var d1 = a[1] - b[1];
-		var d2 = a[2] - b[2];
-		var dist = Math.sqrt(d0*d0 + d1*d1 + d2*d2) - sphere.radius;
-// end inline
-		if (dist < 0.1) dist = 0.1;
+	renderNodes: function() {
+		var t = this;
+		var m = t.mesh;
+		var gl = t.gl;
+		var attr = t.attributes;
 
-		var res   = this._resolution * dist;
-		var error = node.error / res;
+		var vertexEnabled = gl.getVertexAttrib(attr.position, gl.VERTEX_ATTRIB_ARRAY_ENABLED);
+		var normalEnabled = gl.getVertexAttrib(attr.normal, gl.VERTEX_ATTRIB_ARRAY_ENABLED);
+		var colorEnabled = attr.color >= 0? gl.getVertexAttrib(attr.color, gl.VERTEX_ATTRIB_ARRAY_ENABLED): false;
+		var uvEnabled = attr.uv >= 0? gl.getVertexAttrib(attr.uv, gl.VERTEX_ATTRIB_ARRAY_ENABLED): false;
 
-		if (!this._hierarchyVisit_isVisible(sphere.center, sphere.radius)) {
-			error /= 1000.0;
+		gl.enableVertexAttribArray(attr.position);
+		if(m.vertex.texCoord && attr.uv >= 0) gl.enableVertexAttribArray(attr.uv);
+		if(m.vertex.normal && attr.normal >= 0) gl.enableVertexAttribArray(attr.normal);
+		if(m.vertex.color && attr.color >= 0) gl.enableVertexAttribArray(attr.color);
+		gl.vertexAttrib4fv(2, [0.8, 0.8, 0.8, 1.0]);
+
+		if(Debug.nodes) {
+			gl.disableVertexAttribArray(2);
+			gl.disableVertexAttribArray(3);
 		}
 
-		return error;
-	},
-
-	_hierarchyVisit_insertNode : function (n, visitQueue) {
-		if (n == this._nodes.sink) return;
-
-		if (this._visitedNodes[n]) return;
-		this._visitedNodes[n] = 1;
-
-		var error = this._hierarchyVisit_nodeError(n);
-		if(error < this.targetError*0.8) return;  //2% speed TODO check if needed
-
-		var node  = this._nodes.items[n];
-		node.renderError = error;
-		node.renderFrame = this._frame;
-
-		var nodeData = {
-			node  : node,
-			index : n
-		};
-		visitQueue.push(nodeData);
-	},
-
-	_hierarchyVisit_expandNode : function (nodeData) {
-
-		var node  = nodeData.node;
-		if(node.renderError < this.targetError) {
-//			console.log("Stop becaouse of error: " + node.renderError + " < " + this.targetError);
-			return false;
-		}
-		if(this._drawSize > this.drawBudget) {
-//			console.log("Stop because of draw budget: " + this._drawSize  + " > " + this.drawBudget);
-			return false;
-		}
-
-
-		var sphere = node.sphere
-		if(this._hierarchyVisit_isVisible(sphere.center, node.tightRadius))
-			this._drawSize += node.verticesCount*0.8; 
-			//we are adding half of the new faces. (but we are using the vertices so *2)
-
-		if(node.status != Nexus.Renderer._NODE_READY) {
-//			console.log("Stop because node not ready:" + node.status);
-//			here: mark a redraw when new nodes available.
-			this._redrawOnNewNodes = true;
-			return false;
-		}
-		return true;
-	},
-
-	_hierarchyVisit_insertChildren : function (n, visitQueue, block) {
-		var nodes        = this._nodes.items;
-		var node         = nodes[n];
-		var patches      = this._patches.items;
-		var blockedNodes = this._blockedNodes;
-		for(var i = node.firstPatch; i < node.lastPatch; ++i) {
-			var patch = patches[i];
-			var child = patch.node;
-			if (block) blockedNodes[child] = 1;
-			this._hierarchyVisit_insertNode(child, visitQueue);
-		}
-	},
-
-	_hierarchyVisit : function () {
-        if(Nexus.Debug.extract == true)
-			return;
-		this._redrawOnNewNodes = false;
-
-		var visitQueue    = new Nexus.PriorityQueue();
-
-		var nodesCount = this._nodes.length;
-		for(var i = 0; i < nodesCount; i++) {
-			this._visitedNodes[i] = 0; 
-			this._blockedNodes[i] = 0;
-			this._selectedNodes[i] = 0;
-		}
-		this._hierarchyVisit_insertNode(0, visitQueue);
-
-		var nodes = this._nodes.items;
-
-		var candidatesCount = 0;
-		this._candidateNodes = [ ];
-		var candidateNodes = this._candidateNodes;
-
-		this.currentError = 1e20;
-		this._drawSize = 0;
-		var count = 0;
-		while (visitQueue.size() && (count < this._maxPendingRequests)) {
-			var nodeData = visitQueue.pop();
-			var n        = nodeData.index;
-			var node     = nodeData.node;
-			if ((candidatesCount < this._maxPendingRequests) && (node.status == Nexus.Renderer._NODE_NONE)) {
-				candidatesCount++;
-				candidateNodes.push(node);
-			}
-			var blocked = this._blockedNodes[n] || !this._hierarchyVisit_expandNode(nodeData);
-			if (blocked) {
-				count++;
-			}
-			else {
-				this._selectedNodes[n] = 1;
-				this.currentError = nodeData.node.renderError; 
-			}
-			
-			this._hierarchyVisit_insertChildren(n, visitQueue, blocked);
-		}
-	},
-
-	_createNodeHandler : function (node) {
-		//compressed use worker:
-		var that = this;
-		return function () {
-//			console.log("received node: " + node.index);
-			node.request.buffer = node.request.response;
-
-			var compressed = Nexus.Signature.MECO + Nexus.Signature.CTM1 + Nexus.Signature.CTM2;
-			if(!Nexus.Debug.worker && that._header.signature.flags & compressed) {
-				var sig = {
-					texcoords: that._header.signature.vertex.hasTexCoord,
-					normals: that._header.signature.vertex.hasNormal,
-					colors:  that._header.signature.vertex.hasColor,
-					indices: that._header.signature.face.hasIndex
-				};
-				var _node = {
-					index: node.index,
-					nvert: node.verticesCount,
-					nface: node.facesCount,
-					firstPatch: 0, 
-					lastPatch: node.lastPatch - node.firstPatch,
-					buffer: node.request.response
-				};
-				var p = [];
-				for(var k = node.firstPatch; k < node.lastPatch; k++)
-					p.push(that._patches.items[k].lastTriangle);
-				if(that._header.signature.flags & Nexus.Signature.MECO)
-					that._worker.postMessage({signature:sig, node:_node, patches:p });
-			} else {
-				that._workerFinished({data: {index:node.index, buffer:node.request.response}});
-			}
-		}
-	},
-
-	_workerFinished: function(_node) {
-		var node = this._nodes.items[_node.data.index];
-		node.buffer = _node.data.buffer;
-		this._readyNodes.push(node);
-		if(this._redrawOnNewNodes) { //redraw only if new nodes might improve rendering
-			this._signalUpdate();
-		}
-	},
-
-	_createTextureHandler : function (tex) {
-		var that = this;
-
-		return function () {
-			//TODO USE REF COUNTER INSTEAD OF LIST BOTH FOR NODES AND FOR TEXTURES
-			var blob = tex.request.response; 
-			var urlCreator = window.URL || window.webkitURL;
-			tex.img = document.createElement('img');
-			tex.img.onerror = function(e) { console.log("Failed loading texture."); };
-			tex.img.src = urlCreator.createObjectURL(blob);
-
-			tex.img.onload = function() { 
-				urlCreator.revokeObjectURL(tex.img.src); 
-
-				var gl = that._gl;
-				tex.texture = gl.createTexture();
-				gl.bindTexture(gl.TEXTURE_2D, tex.texture);
-		    	var s = gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tex.img);
-		    	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		    	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-				gl.bindTexture(gl.TEXTURE_2D, null);
-
-				tex.status = Nexus.Renderer._NODE_READY;
-				//find all nodes pending
-				for(var i = 0; i < tex.nodes.length; i++) {
-					var node = tex.nodes[i];
-					if(node.vbo === null) continue; //not loaded still
-					var isReady = true;
-					for(var k = node.firstPatch; k < node.lastPatch; ++k) {
-						var patch = that._patches.items[k];
-						if(patch.texture == 0xffffffff) continue;
-						var t = that._textures.items[patch.texture];
-						if(t.status != Nexus.Renderer._NODE_READY) {
-							isReady = false;
-							break;
-						}
-					} 
-					if(isReady) {
-						node.status = Nexus.Renderer._NODE_READY;
-						//WAKEUP CALL DRAFT
-						that._signalUpdate();
-					}
-				}
-			};
-		}
-	},
-
-	_requestNodes : function () {
-		if(Nexus.Debug.request) {
-			this._candidateNodes = [];
-			return;
-		}
-		var candidateNodes = this._candidateNodes;
-		if (candidateNodes.length <= 0) return;
-
-		var cachedNodes = this._cachedNodes.slice();
-		cachedNodes.sort(Nexus.Renderer._sortNodeCacheFunction);
-
-		var nodesToRequest = 0;
-		var cacheSize = this._cacheSize;
-		for (var i=0, n=candidateNodes.length; i<n; ++i) {
-			var c = candidateNodes[i];
-			var s = this._maxCacheSize - cacheSize;
-			var freed = 0;
-			var csize = c.lastByte - c.offset + 1;
-			var k = cachedNodes.length;
-			if (s < csize) {
-				for (var j=cachedNodes.length-1; j>=0; --j) {
-					var p = cachedNodes[j];
-					var psize = p.lastByte - p.offset + 1;
-					k = j;
-					if (Nexus.Renderer._sortNodeCacheFunction(c, p) >= 0) break;
-					s += psize;
-					freed += psize;
-					if (s >= csize) break;
-				}
-			}
-
-			if (s >= csize) {
-				nodesToRequest++;
-				cachedNodes = cachedNodes.slice(0, k);
-				cachedNodes.push(c);
-				cacheSize -= freed;
-				cacheSize += csize;
-			}
-			else {
-				break;
-			}
-		}
-
-		var that = this;
-		var url = this.url();
-		for (var i=0; i<nodesToRequest; ++i) {
-			var node   = candidateNodes[i];
-			node.status  = Nexus.Renderer._NODE_PENDING;
-			node.request = new XMLHttpRequest();
-			node.request.open('GET', url, true);
-			node.request.responseType = 'arraybuffer';
-			node.request.setRequestHeader("Range", "bytes=" + node.offset + "-" + node.lastByte);
-			node.request.onload = this._createNodeHandler(node);
-			node.request.onerror= function () { //NODES RECOVERY DRAFT
-				for (var j=0, n=candidateNodes.length; j<n; ++j) 
-					if(candidateNodes[j].requestError) return;
-//				that._updateView();
-//				that._updateCache();
-//				that._hierarchyVisit();
-				that._candidateNodes = candidateNodes;
-				for (var j=0, n=candidateNodes.length; j<n; ++j) 
-					candidateNodes[j].requestError = true;
-				that._requestNodes();
-			}
-			node.request.onabort= function () { //NODES RECOVERY DRAFT
-				for (var j=0, n=candidateNodes.length; j<n; ++j) 
-					if(candidateNodes[j].requestCancel) return;
-//				that._updateView();
-//				that._updateCache();
-//				that._hierarchyVisit();
-				that._candidateNodes = candidateNodes;
-				for (var j=0, n=candidateNodes.length; j<n; ++j) 
-					candidateNodes[j].requestCancel = true;
-				that._requestNodes();
-			}
-			node.request.send();
-
-			//check for textures
-			var patches      = this._patches.items;
-			for(var i = node.firstPatch; i < node.lastPatch; ++i) {
-				var patch = patches[i];
-				if(patch.texture == 0xffffffff) continue;
-				var tex = this._textures.items[patch.texture];
-				tex.nodes.push(node);
-				var that = this;
-				if(tex.status == Nexus.Renderer._NODE_NONE) {
-					tex.img = new Image;
-					tex.status = Nexus.Renderer._NODE_PENDING;
-					tex.request = new XMLHttpRequest();
-					tex.request.open('GET', url, true);
-					tex.request.responseType = 'blob';
-					tex.request.setRequestHeader("Range", "bytes=" + tex.offset + "-" + tex.lastByte);
-					tex.request.onload = this._createTextureHandler(tex);
-					tex.request.send();
-				}
-			}
-		}
-		this._candidateNodes = [];
-	},
-
-	_unproject : function (p) {
-		var a = [
-			((p[0] - this._vp[0]) / (this._vp[2] / 2.0) - 1.0),
-			((p[1] - this._vp[1]) / (this._vp[3] / 2.0) - 1.0),
-			(2.0 * p[2] - 1.0),
-			1.0
-		];
-
-		a = SglMat4.mul4(this._mvpmati, a);
-		a = SglVec3.divs(SglVec4.to3(a), a[3]);
-
-		return a;
-	},
-
-	_updateView : function () {
-		this._mvmat      = SglMat4.mul(this._vmat, this._mmat);
-		this._mvpmat     = SglMat4.mul(this._pmat, this._mvmat);
-		this._mvpmati    = SglMat4.inverse(this._mvpmat);
-		this._viewPoint  = SglVec4.to3(SglMat4.col(SglMat4.inverse(this._mvmat), 3));
-
-		var l = this._vp[0];
-		var r = this._vp[0] + this._vp[2];
-		var b = this._vp[1];
-		var t = this._vp[1] + this._vp[3];
-  
-		var nsw = this._unproject([l, b, 0.0]);
-		var nse = this._unproject([r, b, 0.0]);
-		var nnw = this._unproject([l, t, 0.0]);
-		var nne = this._unproject([r, t, 0.0]);
-		var fsw = this._unproject([l, b, 1.0]);
-		var fse = this._unproject([r, b, 1.0]);
-		var fnw = this._unproject([l, t, 1.0]);
-		var fne = this._unproject([r, t, 1.0]);
-
-		var planes = new Array(6);
-		this._planes = planes;
-
-		planes[0] = new Nexus.Plane3f(nnw, nsw, fnw); // +X (points toward left)
-		planes[1] = new Nexus.Plane3f(nse, nne, fse); // -X (points toward rigth)
-		planes[2] = new Nexus.Plane3f(nsw, nse, fsw); // +Y (points toward top)
-		planes[3] = new Nexus.Plane3f(nne, nnw, fne); // -Y (points toward bottom)
-		planes[4] = new Nexus.Plane3f(fsw, fse, fnw); // +Z (points toward far)
-		planes[5] = new Nexus.Plane3f(nse, nsw, nne); // -Z (points toward near)
-
-		this._resolution = SglVec3.length(SglVec3.sub(SglVec3.divs(SglVec3.add(nse, fse), 2.0), SglVec3.divs(SglVec3.add(nsw, fsw), 2.0))) / (this._vp[2] * SglVec3.length(SglVec3.sub(SglVec3.divs(SglVec3.add(nse, SglVec3.add(fse, SglVec3.add(nsw, fsw))), 4.0), this._viewPoint)));
-	},
-
-	_prepare : function () {
-		this._updateView();
-		this._updateCache();
-		this._hierarchyVisit();
-		this._requestNodes();
-	},
-
-	_beginRender : function () {
-	},
-
-	_endRender : function () {
-	},
-
-	_render : function () {
-		var order = [0, 3, 1, 2, 4];
-
-		var gl = this._gl;
-		gl.glDrawElements = gl._spidergl.wn._ext.glFunctions.drawElements;
-
-		var vertexStride       = this._header.signature.vertex.byteLength;
-		var vertexAttributes   = this._header.signature.vertex.attributes;
-		var vertexAttribsCount = this._header.signature.vertex.lastAttribute + 1;
-
-		for (var i=0; i<4; ++i) {
-			if (vertexAttributes[order[i]].isNull) continue;
-			gl.enableVertexAttribArray(order[i]);
-		}
-
-		gl.vertexAttrib4fv(Nexus.VertexElement.COLOR, [0.8, 0.8, 0.8, 1.0]);
-
-		if (Nexus.Debug.nodes) {
-			if (!vertexAttributes[Nexus.VertexElement.COLOR].isNull) 
-				gl.disableVertexAttribArray(Nexus.VertexElement.COLOR);
-			if (!vertexAttributes[Nexus.VertexElement.TEXCOORD].isNull) 
-				gl.disableVertexAttribArray(Nexus.VertexElement.TEXCOORD);
-		}
-
-		var nodes = this._nodes.items;
-		var patches = this._patches.items;
-		var selectedNodes = this._selectedNodes;
-		var nodesCount = nodes.length;
-		this._rendered = 0;
-
+		var rendered = 0;
 		var last_texture = -1;
-		for (var i=0; i<nodesCount; ++i) {
-			if (!selectedNodes[i]) continue;
+		for(var n = 0; n < m.nodesCount; n++) {
+			if(!t.selected[n]) continue;
 
-			var node    = nodes[i];
-			if(this._mode != 0) {
-				var skipped = true;
-				for (var p = node.firstPatch; p < node.lastPatch; ++p) {
-					var patch = patches[p];
-					if (!selectedNodes[patch.node]) {
-						skipped = false;
+			if(t.mode != "POINT") {
+				var skip = true;
+				for(var p = m.nfirstpatch[n]; p < m.nfirstpatch[n+1]; p++) {
+					var child = m.patches[p*3];
+					if(!t.selected[child]) {
+						skip = false;
 						break;
 					}
 				}
-				if (skipped) continue;
+				if(skip) continue;
 			}
 
-			if(!this._hierarchyVisit_isVisible(node.sphere.center, node.tightRadius)) 
+
+			var sp = t.mesh.nspheres;
+			var off = n*5;
+			if(!t.isVisible(sp[off], sp[off+1], sp[off+2], sp[off+4])) //tight radius
 				continue;
 
-			node.vbo.bind();
-			if(node.ibo) {
-				node.ibo.bind();
+			gl.bindBuffer(gl.ARRAY_BUFFER, m.vbo[n]);
+			if(t.mode != "POINT")
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ibo[n]);
+
+			var nv = m.nvertices[n];
+
+			gl.vertexAttribPointer(attr.position, 3, gl.FLOAT, false, 12, 0);
+			var offset = nv*12;
+			if(m.vertex.texCoord && attr.uv >= 0)
+				gl.vertexAttribPointer(attr.uv, 2, gl.FLOAT, false, 8, offset), offset += nv*8;
+			if(m.vertex.normal && attr.normal >= 0)
+				gl.vertexAttribPointer(attr.normal, 3, gl.SHORT, true, 6, offset), offset += nv*6;
+			if(m.vertex.color && attr.color >= 0)
+				gl.vertexAttribPointer(attr.color, 4, gl.UNSIGNED_BYTE, true, 4, offset);
+
+			if (Debug.nodes) {
+				var error = t.nodeError(n, true);
+				var palette = { 
+					1: [1, 1, 1, 1],
+					2: [0.5, 1, 1, 1],
+					4: [0, 1, 1, 1],
+					8: [0, 1, 0.5, 1],
+					12: [0, 1, 0, 1],
+					16: [0, 1, 0, 1],
+					20: [1, 1, 0, 1],
+					30: [1, 0.5, 0, 1],
+					1e20: [1, 0, 0, 1] };
+
+				for(i in palette)
+					if(i > error) {
+						gl.vertexAttrib4fv(attr.color, palette[i]);
+						break;
+					}
+//				gl.vertexAttrib4fv(2, [(n*200 %255)/255.0, (n*140 %255)/255.0,(n*90 %255)/255.0, 1]);
 			}
 
-			var attribOffset = 0;
-			//order is needed because attributes are oredere by vertex normal colors tex, while data inverts tex and normal for alignment
-			for (var j=0; j<4; ++j) { //vertexAttribsCount; ++j) {
-				var attrib = vertexAttributes[order[j]];
-				if (attrib.isNull) continue;
-				gl.vertexAttribPointer(order[j], attrib.size, attrib.glType, attrib.normalized, attrib.stride, attrib.offset + attribOffset);
-				attribOffset += attrib.offset + attrib.stride * node.verticesCount;
-			}
+			if (Debug.draw) continue;
 
-			if (Nexus.Debug.nodes) {
-				gl.vertexAttrib4fv(Nexus.VertexElement.COLOR, node.color);
-			}
-			if(this._mode == 0) {
-                var pointsize = Math.floor(0.30*node.renderError);
-                if(pointsize > 1) pointsize = 1;
-				gl.vertexAttrib1fv(Nexus.VertexElement.DATA0, [pointsize]);
-			}
-			if (Nexus.Debug.draw) continue;
+			if(t.mode == "POINT") {
+				var pointsize = Math.ceil(0.30*t.currentError);
+				if(pointsize > 2) pointsize = 2;
+				gl.vertexAttrib1fv(4, [pointsize]);
 
-			//point cloud do not need patches
-			if(this._mode == 0) {
-				var fraction = (node.renderError/this.currentError - 1);
+				var error = t.nodeError(n);
+				var fraction = (error/t.currentError - 1);
 				if(fraction > 1) fraction = 1;
 
-				var count = fraction * (node.verticesCount);
-				if(count!=0) {
+				var count = fraction * nv;
+				if(count != 0) {
+					if(m.vertex.texCoord) {
+						var texid = m.patches[m.nfirstpatch[n]*3+2];
+						if(texid != -1 && texid != last_texture) { //bind texture
+							var tex = m.texids[texid];
+							gl.activeTexture(gl.TEXTURE0);
+							gl.bindTexture(gl.TEXTURE_2D, tex);
+						}
+					}
 					gl.drawArrays(gl.POINTS, 0, count);
-					this._rendered += count;
+					rendered += count;
 				}
 				continue;
 			}
 
 			//concatenate renderings to remove useless calls. except we have textures.
-			var first = 0;
-			var last = 0;
-			for (var p = node.firstPatch; p < node.lastPatch; ++p) {
-				var patch = patches[p];
+			var offset = 0;
+			var end = 0;
+			var last = m.nfirstpatch[n+1]-1;
+			for (var p = m.nfirstpatch[n]; p < m.nfirstpatch[n+1]; ++p) {
+				var child = m.patches[p*3];
 
-				if(!selectedNodes[patch.node]) { //skip this patch
-					last = patch.lastTriangle;
-					if(p < node.lastPatch-1) //if textures we do not join. TODO: should actually check for same texture of last one. 
+				if(!t.selected[child]) { 
+					end = m.patches[p*3+1];
+					if(p < last) //if textures we do not join. TODO: should actually check for same texture of last one. 
 						continue;
 				} 
-				if(last > first) {
-					//here either we skip or is the last node
-					
-					if(patch.texture != 0xffffffff && patch.texture != last_texture) { //bind texture
-						var tex = this._textures.items[patch.texture].texture;
-						gl.activeTexture(gl.TEXTURE0);
-						gl.bindTexture(gl.TEXTURE_2D, tex);
-						var error = gl.getError(); 
+				if(end > offset) {
+					if(m.vertex.texCoord) {
+						var texid = m.patches[p*3+2];
+						if(texid != -1 && texid != last_texture) { //bind texture
+							var tex = m.texids[texid];
+							gl.activeTexture(gl.TEXTURE0);
+							gl.bindTexture(gl.TEXTURE_2D, tex);
+							last_texture = texid;
+						}
 					}
-					gl.glDrawElements(gl.TRIANGLES, (last - first) * 3, gl.UNSIGNED_SHORT, first * 3 * Uint16Array.BYTES_PER_ELEMENT);
-					this._rendered += last - first;
+					gl.drawElements(gl.TRIANGLES, (end - offset) * 3, gl.UNSIGNED_SHORT, offset * 6);
+					rendered += end - offset;
 				}
-				first = patch.lastTriangle;
+				offset = m.patches[p*3+1];
 			}
 		} 
 
-		for (var i = 0; i < 4; ++i) {
-			if (vertexAttributes[order[i]].isNull) continue;
-			gl.disableVertexAttribArray(order[i]);
-		}
+		t.context.rendered += rendered;
+		if(!vertexEnabled) gl.disableVertexAttribArray(attr.position);
+		if(!normalEnabled && attr.normal >= 0) gl.disableVertexAttribArray(attr.normal);
+		if(!colorEnabled && attr.color >= 0) gl.disableVertexAttribArray(attr.color);
+		if(!uvEnabled && attr.uv >= 0) gl.disableVertexAttribArray(attr.uv);
 
-		SglVertexBuffer.unbind(gl);
-		SglIndexBuffer.unbind(gl);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+		if(t.mode != "POINT")
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	},
 
-	begin : function () {
-		if (!this.isOpen) return;
-		if (this.inBegin) return;
-		this._inBegin = true;
-		if (this._header.nodesCount <= 0) return;
-		this._prepare();
-	},
-
-	end : function () {
-		if (!this.inBegin) return;
-		this._frame++;
-		this._inBegin = false;
-	},
-
-	render : function () {
-		if (!this.inBegin) return;
-		this._beginRender();
-		this._render();
-		this._endRender();
-	},
-
-	setPrimitiveMode : function (mode) {
-		switch(mode) {
-			case "POINT":
-				this._mode = 0;
-				break;
-			case "FILL":
-				this._mode = 4;
-				break;
-			default:
-				this._mode = 0;
-		}
+	render: function() {
+		this.traversal();
+		this.renderNodes();
 	}
 };
 
-sayswho = function() {
-	var ua= navigator.userAgent, tem, 
-	M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
-	if(/trident/i.test(M[1])){
-		tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
-		return 'IE '+(tem[1] || '');
+
+//keep track of meshes and which GL they belong to. (no sharing between contexts)
+var contexts = [];
+
+function getContext(gl) {
+	var c = null;
+	if(!gl.isTexture) throw "Something wrong";
+	contexts.forEach(function(g) { 
+		if(g.gl == gl) c = g;
+	});
+	if(c) return c;
+	c = { gl:gl, meshes:[], frame:0, cacheSize:0, candidates:[], pending:0, 
+		targetFps: targetFps, targetError: targetError, currentError: targetError };
+	contexts.push(c);
+	return c;
+}
+
+
+
+function beginFrame(gl, fps) { //each context has a separate frame count.
+	var c = getContext(gl);
+
+	c.frame++;
+	c.candidates = [];
+	if(fps && c.targetFps) {
+		var r = c.targetFps/fps;
+		if(r > 1.1)
+			c.currentError *= 1.05;
+		if(r < 0.9)
+			c.currentError *= 0.95;
+	
+		if(c.currentError < c.targetError)
+			c.currentError = c.targetError;
+		if(c.currentError > 10) c.currentError = 10;
 	}
-	if(M[1]=== 'Chrome'){
-		tem= ua.match(/\b(OPR|Edge)\/(\d+)/);
-		if(tem!= null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+//	console.log("current", c.currentError, "fps", fps, "targetFps", c.targetFps, "rendered", c.rendered);
+	c.rendered = 0;
+}
+
+function endFrame(gl) {
+	updateCache(gl);
+}
+
+function removeNode(context, node) {
+	var n = node.id;
+	var m = node.mesh;
+	if(m.status[n] == 0) return;
+
+//	console.log("Removing " + m.url + " node: " + n);
+	m.status[n] = 0;
+
+	if (m.georeq.readyState != 4) m.georeq.abort();
+	if (m.texreq.readyState != 4) m.texreq.abort();
+
+	context.cacheSize -= m.nsize[n];
+	context.gl.deleteBuffer(m.vbo[n]);
+	context.gl.deleteBuffer(m.ibo[n]);
+	m.vbo[n] = m.ibo[n] = null;
+
+	if(!m.vertex.texCoord) return;
+	var tex = m.patches[m.nfirstpatch[n]*3+2]; //TODO assuming one texture per node
+	m.texref[tex]--;
+
+	if(m.texref[tex] == 0 && m.texids[tex]) {
+		context.gl.deleteTexture(m.texids[tex]);
+		m.texids[tex] = null;
 	}
-	M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
-	if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
-	return M;
-};
+}
+
+function requestNode(context, node) {
+	var n = node.id;
+	var m = node.mesh;
+
+	m.status[n] = 2; //pending
+
+	context.pending++;
+	context.cacheSize += m.nsize[n];
+
+	node.reqAttempt = 0;
+	node.context = context;
+	node.nvert = m.nvertices[n];
+	node.nface = m.nfaces[n];
+
+//	console.log("Requesting " + m.url + " node: " + n);
+	requestNodeGeometry(context, node);
+	requestNodeTexture(context, node);
+}
+
+function requestNodeGeometry(context, node) {
+	var n = node.id;
+	var m = node.mesh;
+
+	m.status[n]++; //pending
+	m.georeq = m.httpRequest(
+		m.noffsets[n],
+		m.noffsets[n+1],
+		function() { loadNodeGeometry(this, context, node); },
+		function() {
+//			console.log("Geometry request error!"); 
+			recoverNode(context, node, 0);
+		},
+		function() {
+//			console.log("Geometry request abort!"); 
+			removeNode(context, node);
+		},
+		'arraybuffer'
+	);
+}
+
+function requestNodeTexture(context, node) {
+	var n = node.id;
+	var m = node.mesh;
+
+	if(!m.vertex.texCoord) return;
+
+	var tex = m.patches[m.nfirstpatch[n]*3+2];
+	m.texref[tex]++;
+	if(m.texids[tex])
+		return;
+
+	m.status[n]++; //pending
+	m.texreq = m.httpRequest(
+		m.textures[tex],
+		m.textures[tex+1],
+		function() { loadNodeTexture(this, context, node, tex); },
+		function() { 
+//			console.log("Texture request error!");
+			recoverNode(context, node, 1);
+		},
+		function() { 
+//			console.log("Texture request abort!");
+			removeNode(context, node);
+		},
+		'blob'
+	);
+}
+
+function recoverNode(context, node, id) {
+	var n = node.id;
+	var m = node.mesh;
+	if(m.status[n] == 0) return;
+
+	m.status[n]--;
+
+	if(node.reqAttempt > maxReqAttempt) {
+//		console.log("Max request limit for " + m.url + " node: " + n);
+		removeNode(context, node);
+		return;
+	}
+
+	node.reqAttempt++;
+
+	switch (id){ 
+		case 0:
+			requestNodeGeometry(context, node); 
+			console.log("Recovering geometry for " + m.url + " node: " + n);
+			break;
+		case 1:
+			requestNodeTexture(context, node); 
+			console.log("Recovering texture for " + m.url + " node: " + n);
+			break;
+	}
+}
+
+function loadNodeGeometry(request, context, node) {
+	var n = node.id;
+	var m = node.mesh;
+	if(m.status[n] == 0) return;
+
+	node.buffer = request.response;
+
+	if(!m.compressed)
+		readyNode(node);
+	else if(m.meco) {
+		var sig = { texcoords: m.vertex.texCoord, normals:m.vertex.normal, colors:m.vertex.color, indices: m.face.index }
+		var patches = [];
+		for(var k = m.nfirstpatch[n]; k < m.nfirstpatch[n+1]; k++)
+			patches.push(m.patches[k*3+1]);
+		if(!meco) loadMeco();
+		meco.postRequest(sig, node, patches);
+	} else {
+		if(!corto) loadCorto();
+		corto.postRequest(node);
+	}
+}
+
+function loadNodeTexture(request, context, node, texid) {
+	var n = node.id;
+	var m = node.mesh;
+	if(m.status[n] == 0) return;
+
+	var blob = request.response;
+
+	var urlCreator = window.URL || window.webkitURL;
+	var img = document.createElement('img');
+	img.onerror = function(e) { console.log("Texture loading error!"); };
+	img.src = urlCreator.createObjectURL(blob);
+
+	var gl = context.gl;
+	img.onload = function() { 
+		urlCreator.revokeObjectURL(img.src); 
+
+		var flip = gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+		var tex = m.texids[texid] = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, tex);
+		var s = gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flip);
+
+		m.status[n]--;
+
+		if(m.status[n] == 2) {
+			m.status[n]--; //ready
+			node.reqAttempt = 0;
+			node.context.pending--;
+			node.instance.onUpdate();
+			updateCache(gl);
+		}
+	}
+}
+
+function scramble(n, coords, normals, colors) {
+	while (n > 0) {
+		var i = Math.floor(Math.random() * n);
+		n--;
+		for(var k =0; k < 3; k++) {
+			var v = coords[n*3+k];
+			coords[n*3+k] = coords[i*3+k];
+			coords[i*3+k] = v;
+
+			if(normals) {
+				var v = normals[n*3+k];
+				normals[n*3+k] = normals[i*3+k];
+				normals[i*3+k] = v;
+			}
+			if(colors) {
+				var v = colors[n*4+k];
+				colors[n*4+k] = colors[i*4+k];
+				colors[i*4+k] = v;
+			}
+		}
+	}
+}
+
+function readyNode(node) {
+	var m = node.mesh;
+	var n = node.id;
+	var nv = m.nvertices[n];
+	var nf = m.nfaces[n];
+	var model = node.model;
+
+	var vertices;
+	var indices;
+
+	if(!m.corto) {
+		vertices = new Uint8Array(node.buffer, 0, nv*m.vsize);
+		//dangerous alignment 16 bits if we had 1b attribute
+		indices  = new Uint8Array(node.buffer, nv*m.vsize,  nf*m.fsize);
+		if(nf == 0) {
+			var off = nv*12;
+			var v = new Float32Array(node.buffer, 0, nv*3);
+			if(m.vertex.normal) {
+				var no = new Int16Array(node.buffer, off, nv*3); off += nv*6;
+			}
+			if(m.vertex.color) {
+				var co = new Uint8Array(node.buffer, off, nv*4);
+			}
+			scramble(nv, v, no, co);
+		}
+	} else {
+		indices = node.model.index;
+		vertices = new ArrayBuffer(nv*m.vsize);
+		var v = new Float32Array(vertices, 0, nv*3);
+		v.set(model.position, 0, nv*3);
+		var off = nv*12;
+		if(model.uv) {
+			var uv = new Float32Array(vertices, off, nv*2);
+			uv.set(model.uv); off += nv*8;
+		}
+		if(model.normal) {
+			var no = new Int16Array(vertices, off, nv*3);
+			no.set(model.normal); off += nv*6; 
+		}
+		if(model.color) {
+			var co = new Uint8Array(vertices, off, nv*4);
+			co.set(model.color); off += nv*4;  
+		}
+		if(nf == 0)
+			scramble(nv, v, no, co);
+	}
+
+	var gl = node.context.gl;
+	var vbo = m.vbo[n] = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+	var ibo = m.ibo[n] = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+	m.status[n]--;
+
+	if(m.status[n] == 2) {
+		m.status[n]--; //ready
+		node.reqAttempt = 0;
+		node.context.pending--;
+		node.instance.onUpdate();
+		updateCache(gl);
+	}
+}
+
+function updateCache(gl) {
+	var context = getContext(gl);
+
+	var best = null;
+	context.candidates.forEach(function(e) {
+		if(e.mesh.status[e.id] == 0 && (!best || e.error > best.error)) best = e;
+	});
+	context.candidates = [];
+	if(!best) return;
+
+	while(context.cacheSize > maxCacheSize) {
+		var worst = null;
+		//find worst in cache
+		context.meshes.forEach(function(m) {
+			var n = m.nodesCount;
+			for(i = 0; i < n; i++)
+				if(!worst || (m.status[i] == 1 && m.errors[i] < worst.error))
+					worst = {error: m.errors[i], frame: m.frames[i], mesh:m, id:i};
+		});
+
+		if(!worst || (worst.error >= best.error && worst.frame == best.frame))
+			return;
+		removeNode(context, worst);
+	}
+
+	requestNode(context, best);
+
+	if(context.pending < maxPending)
+		updateCache(gl);
+}
+
+//nodes are loaded asincronously, just update mesh content (VBO) cache size is kept globally.
+//but this could be messy.
+
+function setTargetError(gl, error) {
+	var context = getContext(gl);
+	context.targetError = error;
+}
+function setTargetFps(gl, fps) {
+	var context = getContext(gl);
+	context.targetFps = fps;
+}
+function setMaxCacheSize(gl, size) {
+	var context = getContext(gl);
+	context.maxCacheSize = size;
+}
+
+return { Mesh: Mesh, Renderer: Instance, Renderable: Instance, Instance:Instance,
+	Debug: Debug, contexts: contexts, beginFrame:beginFrame, endFrame:endFrame, 
+	setTargetError:setTargetError, setTargetFps:setTargetFps, setMaxCacheSize:setMaxCacheSize };
+
+}();

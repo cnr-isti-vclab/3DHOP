@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -22,12 +22,8 @@ SpiderGL.openNamespace();
 //----------------------------------------------------------------------------------------
 // CONSTANTS
 //----------------------------------------------------------------------------------------
-// sgltrackball
-const SGL_TRACKBALL_NO_ACTION = 0;
-const SGL_TRACKBALL_ROTATE    = 1;
-const SGL_TRACKBALL_PAN       = 2;
-const SGL_TRACKBALL_DOLLY     = 3;
-const SGL_TRACKBALL_SCALE     = 4;
+// version
+const HOP_VERSION             = "4.2";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -36,9 +32,16 @@ const HOP_DEBUGMODE           = false;
 const HOP_DEFAULTLIGHT        = [0, 0, -1];
 // default points size
 const HOP_DEFAULTPOINTSIZE    = 1.0;
+// sgltrackball
+const SGL_TRACKBALL_NO_ACTION = 0;
+const SGL_TRACKBALL_ROTATE    = 1;
+const SGL_TRACKBALL_PAN       = 2;
+const SGL_TRACKBALL_DOLLY     = 3;
+const SGL_TRACKBALL_SCALE     = 4;
 
 Presenter = function (canvas) {
-	this._supportsWebGL = sglHandleCanvas(canvas, this);
+	this._supportsWebGL = sglHandleCanvas(canvas, this, { stencil: true });
+	console.log("3DHOP version: " + this.version);
 };
 
 Presenter.prototype = {
@@ -113,8 +116,11 @@ _parseModelInstance : function (options) {
 		rendermode      : null,
 		color           : [ 1.0, 1.0, 1.0 ],
 		useSolidColor   : false,
+		specularColor   : [ 0.0, 0.0, 0.0, 32.0 ],
+		backfaceColor   : [ 0.7, 0.4, 0.4, 0.0 ],
 		alpha           : 0.5,
 		useTransparency : false,
+		useLighting     : true,
 		cursor          : "default",
 		ID              : 0,
 		transform       : null,
@@ -124,7 +130,11 @@ _parseModelInstance : function (options) {
 	}, options);
 	r.transform = this._parseTransform(r.transform);
 	r.ID = this._instancesProgressiveID;
-	if (r.color[3]) r.alpha = r.color[3];
+	if (r.color[3]) //3DHOP 2.0 backward compatibility
+	{
+		r.alpha = r.color[3];
+		r.color = [r.color[0], r.color[1], r.color[2]]
+	}
 	this._instancesProgressiveID += 1;
 	return r;
 },
@@ -145,6 +155,7 @@ _parseSpot : function (options) {
 		useSolidColor   : true,
 		alpha           : 0.5,
 		useTransparency : true,
+		useStencil      : false,
 		cursor          : "pointer",
 		ID              : 0,
 		transform       : null,
@@ -153,7 +164,11 @@ _parseSpot : function (options) {
 	}, options);
 	r.transform = this._parseTransform(r.transform);
 	r.ID = this._spotsProgressiveID;
-	if (r.color[3]) r.alpha = r.color[3]; //3DHOP 2.0 backward compatibility
+	if (r.color[3]) //3DHOP 2.0 backward compatibility
+	{
+		r.alpha = r.color[3];
+		r.color = [r.color[0], r.color[1], r.color[2]]
+	}
 	this._spotsProgressiveID += 1;
 	return r;
 },
@@ -161,7 +176,8 @@ _parseSpot : function (options) {
 _parseTrackball : function (options) {
 	var r = sglGetDefaultObject({
 		type         : TurnTableTrackball,
-		trackOptions : {}
+		trackOptions : {},
+		locked       : false
 	}, options);
 	return r;
 },
@@ -177,13 +193,14 @@ _parseSpace : function (options) {
 		explicitRadius   : 1.0,
 		transform        : null,
 		cameraFOV        : 60.0,
-		cameraNearFar    : [0.1, 10.0],
+		cameraNearFar    : [0.01, 10.0],
 		cameraType       : "perspective",
+		sceneLighting      : true,
 	}, options);
 	r.transform = this._parseTransform(r.transform);
-	if(r.cameraFOV < 2.0) r.cameraFOV=2.0;
-	if(r.cameraFOV > 88.0) r.cameraFOV=88.0;
-	if((r.cameraType != "perspective") && (r.cameraType != "ortho"))
+	if(r.cameraFOV < 2.0)  r.cameraFOV = 2.0;
+	if(r.cameraFOV > 88.0) r.cameraFOV = 88.0;
+	if((r.cameraType != "perspective") && (r.cameraType != "orthographic"))
 		r.cameraType = "perspective";
 	return r;
 },
@@ -224,8 +241,8 @@ _parseTransform : function (options) {
 	if((r.rotation[0] != 0.0)||(r.rotation[1] != 0.0)||(r.rotation[2] != 0.0))
 	{
 		var mrX = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[0]), [1.0, 0.0, 0.0]);
-		var mrY = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[1]), [0.0, 1.0, 0.0])
-		var mrZ = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[2]), [0.0, 0.0, 1.0])
+		var mrY = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[1]), [0.0, 1.0, 0.0]);
+		var mrZ = SglMat4.rotationAngleAxis(sglDegToRad(r.rotation[2]), [0.0, 0.0, 1.0]);
 		matrixR = SglMat4.mul(SglMat4.mul(mrZ, mrY), mrX);
 		overwrite = true;
 	}
@@ -247,90 +264,111 @@ _parseTransform : function (options) {
 _createStandardPointNXSProgram : function () {
 	var gl = this.ui.gl;
 	var nxsVertexShader = new SglVertexShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
-		uniform   mat3 uViewSpaceNormalMatrix;                                \n\
-		uniform   mat4 uModelMatrix;                                          \n\
-		uniform   float uPointSize;                                           \n\
-																			  \n\
-		attribute vec3 aPosition;                                             \n\
-		attribute vec3 aNormal;                                               \n\
-		attribute vec4 aColor;                                                \n\
-		attribute float aPointSize;                                           \n\
-																			  \n\
-		varying   vec3 vNormal;                                               \n\
-		varying   vec4 vColor;                                                \n\
-		varying   vec4 vModelPos;                                             \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			vNormal     = uViewSpaceNormalMatrix * aNormal;                   \n\
-			vColor      = aColor;                                             \n\
-			vModelPos   = uModelMatrix * vec4(aPosition, 1.0);                \n\
-																			  \n\
-			gl_Position  = uWorldViewProjectionMatrix * vec4(aPosition, 1.0); \n\
-			gl_PointSize = uPointSize * aPointSize;							  \n\
-		}                                                                     \n\
+		precision highp float;													\n\
+																				\n\
+		uniform   mat4 uWorldViewProjectionMatrix;								\n\
+		uniform   mat3 uViewSpaceNormalMatrix;									\n\
+		uniform   mat4 uWorldViewMatrix;										\n\
+		uniform   mat4 uModelMatrix;											\n\
+		uniform   float uPointSize;												\n\
+																				\n\
+		attribute vec3 aPosition;												\n\
+		attribute vec3 aNormal;													\n\
+		attribute vec4 aColor;													\n\
+		attribute float aPointSize;												\n\
+																				\n\
+		varying   vec3 vNormal;													\n\
+		varying   vec4 vColor;													\n\
+		varying   vec4 vModelPos;												\n\
+		varying   vec4 vModelViewPos;											\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			vNormal       = normalize(uViewSpaceNormalMatrix * aNormal);		\n\
+			vColor        = aColor;												\n\
+			vModelPos     = uModelMatrix * vec4(aPosition, 1.0);				\n\
+			vModelViewPos = uWorldViewMatrix * vec4(aPosition, 1.0);			\n\
+																				\n\
+			gl_Position  = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);	\n\
+			gl_PointSize = uPointSize * aPointSize;								\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("STD POINT Vertex Shader Log:\n" + nxsVertexShader.log);
 
 	var nxsFragmentShader = new SglFragmentShader(gl, "\
-		#extension GL_EXT_frag_depth : enable								  \n\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   vec3 uViewSpaceLightDirection;                              \n\
-		uniform   float uAlpha;                                               \n\
-		uniform   bool uUseSolidColor;                                        \n\
-		uniform   vec3 uSolidColor;                                           \n\
-		uniform   vec3 uClipPoint;                                            \n\
-		uniform   vec3 uClipAxis;                                             \n\
-		uniform   vec3 uClipColor;                                            \n\
-		uniform   float uClipColorSize;                                       \n\
-																			  \n\
-		varying   vec3 vNormal;                                               \n\
-		varying   vec4 vColor;                                                \n\
-		varying   vec4 vModelPos;                                             \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;        \n\
-			else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
-			if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;        \n\
-			else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
-			if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;        \n\
-			else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
-																			  \n\
-			float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);				  \n\
-			float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);				  \n\
-			float c = 1.0 - (a + b);										  \n\
-			if(c < 0.0) { discard; }										  \n\
-																			  \n\
-			vec3  diffuse = vColor.rgb;                                       \n\
-																			  \n\
-			if(uUseSolidColor) {                                              \n\
-			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
-				diffuse = vColor.aaa;                                         \n\
-			  else                                                            \n\
-				diffuse = uSolidColor;                                        \n\
-			}                                                                 \n\
-																			  \n\
-			if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
-			  vec3  normal  = normalize(vNormal);                             \n\
-			  float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
-			  diffuse = diffuse * max(0.0, nDotL);                            \n\
-			}                                                                 \n\
-																			  \n\
-			if((uClipAxis[0] == 1.0)&&((uClipPoint[0]-vModelPos[0])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[0] == -1.0)&&((vModelPos[0]-uClipPoint[0])<uClipColorSize)) diffuse = uClipColor; \n\
-			if((uClipAxis[1] == 1.0)&&((uClipPoint[1]-vModelPos[1])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[1] == -1.0)&&((vModelPos[1]-uClipPoint[1])<uClipColorSize)) diffuse = uClipColor; \n\
-			if((uClipAxis[2] == 1.0)&&((uClipPoint[2]-vModelPos[2])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[2] == -1.0)&&((vModelPos[2]-uClipPoint[2])<uClipColorSize)) diffuse = uClipColor; \n\
-																			  \n\			gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
-			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));      \n\
-		}                                                                     \n\
+		#extension GL_EXT_frag_depth : enable									\n\
+		precision highp float;													\n\
+																				\n\
+		uniform   vec3 uViewSpaceLightDirection;								\n\
+		uniform   float uAlpha;													\n\
+		uniform   bool uUseSolidColor;											\n\
+		uniform   bool uUseLighting;											\n\
+		uniform   vec3 uSolidColor;												\n\
+		uniform   vec4 uSpecularColor;											\n\
+		uniform   vec3 uClipPoint;												\n\
+		uniform   vec3 uClipAxis;												\n\
+		uniform   vec4 uClipPlane;												\n\
+		uniform   vec3 uClipColor;												\n\
+		uniform   float uClipColorSize;											\n\
+																				\n\
+		varying   vec3 vNormal;													\n\
+		varying   vec4 vColor;													\n\
+		varying   vec4 vModelPos;												\n\
+		varying   vec4 vModelViewPos;											\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			if(length(uClipPlane.xyz) > 0.0)									\n\
+				if( dot(vModelPos, uClipPlane) > 0.0) discard;					\n\
+			if(length(uClipAxis) > 0.0)											\n\
+			{																	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+			}																	\n\
+																				\n\
+			float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);					\n\
+			float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);					\n\
+			float c = 1.0 - (a + b);											\n\
+			if(c < 0.0) { discard; }											\n\
+																				\n\
+			vec3  renderColor = vec3(1.0, 1.0, 1.0);							\n\
+			vec3  diffuse = vColor.rgb;											\n\
+			float lambert = 1.0;												\n\
+			vec3  specular = vec3(0.0, 0.0, 0.0);								\n\
+																				\n\
+			if(uUseSolidColor) {												\n\
+			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)			\n\
+				diffuse = vColor.aaa;											\n\
+			  else																\n\
+				diffuse = uSolidColor;											\n\
+			}																	\n\
+																				\n\
+			if((uUseLighting)&&(length(vNormal) > 0.0))							\n\
+			{																	\n\
+			  float nDotL   = dot(vNormal, -uViewSpaceLightDirection);			\n\
+			  lambert = max(0.0, nDotL);										\n\
+																				\n\
+              vec3 halfV = normalize(-uViewSpaceLightDirection -vModelViewPos.xyz);\n\
+              float spc = pow(max(dot(vNormal, halfV),0.0), uSpecularColor.a);	\n\
+              specular = spc * uSpecularColor.rgb;								\n\
+			}																	\n\
+																				\n\
+			renderColor = (diffuse * lambert) + specular;						\n\
+																				\n\
+			if((length(uClipPlane.xyz) > 0.0)&&(uClipColorSize>0.0))			\n\
+				if( dot(vModelPos, uClipPlane) > -uClipColorSize) renderColor = uClipColor;	\n\
+			if((length(uClipAxis) > 0.0)&&(uClipColorSize>0.0))					\n\
+			{																	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0] + (uClipAxis[0]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1] + (uClipAxis[1]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + (uClipAxis[2]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+			}																	\n\
+																				\n\
+			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
+			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));		\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("STD POINT Fragment Shader Log:\n" + nxsFragmentShader.log);
@@ -349,14 +387,18 @@ _createStandardPointNXSProgram : function () {
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
 			"uViewSpaceNormalMatrix"     : SglMat3.identity(),
-			"uModelMatrix" 				 : SglMat4.identity(),
+			"uWorldViewMatrix"           : SglMat4.identity(),
+			"uModelMatrix"               : SglMat4.identity(),
 			"uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 			"uPointSize"                 : 1.0,
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : false,
+			"uUseLighting"               : true,
 			"uSolidColor"                : [1.0, 1.0, 1.0],
+			"uSpecularColor"             : [0.0, 0.0, 0.0, 32.0],
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uClipColor"				 : [1.0, 1.0, 1.0],
 			"uClipColorSize"			 : 0.5
 		}
@@ -370,94 +412,118 @@ _createStandardPointNXSProgram : function () {
 _createStandardFaceNXSProgram : function () {
 	var gl = this.ui.gl;
 	var nxsVertexShader = new SglVertexShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
-		uniform   mat3 uViewSpaceNormalMatrix;                                \n\
-		uniform   mat4 uModelMatrix;                                          \n\
-																			  \n\
-		attribute vec3 aPosition;                                             \n\
-		attribute vec3 aNormal;                                               \n\
-		attribute vec4 aColor;                                                \n\
-		attribute vec2 aTextureCoord;                                         \n\
-																			  \n\
-		varying   vec3 vNormal;                                               \n\
-		varying   vec4 vColor;                                                \n\
-		varying   vec4 vModelPos;                                             \n\
-		varying   vec2 vTextureCoord;                            			  \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			vNormal       = uViewSpaceNormalMatrix * aNormal;                 \n\
-			vColor        = aColor;                                           \n\
-			vModelPos     = uModelMatrix * vec4(aPosition, 1.0);              \n\
-			vTextureCoord = aTextureCoord;                       			  \n\
-																			  \n\
-			gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-		}                                                                     \n\
+		precision highp float;													\n\
+																				\n\
+		uniform   mat4 uWorldViewProjectionMatrix;								\n\
+		uniform   mat3 uViewSpaceNormalMatrix;									\n\
+		uniform   mat4 uWorldViewMatrix;										\n\
+		uniform   mat4 uModelMatrix;											\n\
+																				\n\
+		attribute vec3 aPosition;												\n\
+		attribute vec3 aNormal;													\n\
+		attribute vec4 aColor;													\n\
+		attribute vec2 aTextureCoord;											\n\
+																				\n\
+		varying   vec3 vNormal;													\n\
+		varying   vec4 vColor;													\n\
+		varying   vec4 vModelPos;												\n\
+		varying   vec4 vModelViewPos;											\n\
+		varying   vec2 vTextureCoord;											\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			vNormal       = normalize(uViewSpaceNormalMatrix * aNormal);		\n\
+			vColor        = aColor;												\n\
+			vModelPos     = uModelMatrix * vec4(aPosition, 1.0);				\n\
+			vModelViewPos = uWorldViewMatrix * vec4(aPosition, 1.0);			\n\
+			vTextureCoord = aTextureCoord;										\n\
+																				\n\
+			gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);	\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("STD FACE Vertex Shader Log:\n" + nxsVertexShader.log);
 
 	var nxsFragmentShader = new SglFragmentShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   vec3 uViewSpaceLightDirection;                              \n\
-		uniform   float uAlpha;                                               \n\
-		uniform   bool uUseSolidColor;                                        \n\
-		uniform   vec3 uSolidColor;                                           \n\
-		uniform   vec3 uClipPoint;                                            \n\
-		uniform   vec3 uClipAxis;                                             \n\
-		uniform   vec3 uClipColor;                                            \n\
-		uniform   float uClipColorSize;                                       \n\
-		uniform   sampler2D uSampler;                                         \n\
-																			  \n\
-		varying   vec3 vNormal;                                               \n\
-		varying   vec4 vColor;                                                \n\
-		varying   vec4 vModelPos;                                             \n\
-		varying   vec2 vTextureCoord;                                         \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;       \n\
-			else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard; \n\
-			if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;       \n\
-			else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard; \n\
-			if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;       \n\
-			else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard; \n\
-																			  \n\
-			vec3  diffuse = vColor.rgb;                                       \n\
-																			  \n\
-			if(vTextureCoord.x != 0.0)                                        \n\
-			  diffuse = texture2D(uSampler, vTextureCoord).xyz;               \n\
-																			  \n\
-			if(uUseSolidColor) {                                              \n\
-			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)       \n\
-				diffuse = vColor.aaa;                                         \n\
-			  else                                                            \n\
-				diffuse = uSolidColor;                                        \n\
-			}                                                                 \n\
-																			  \n\
-			if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
-			  vec3  normal  = normalize(vNormal);                             \n\
-			  float nDotL   = dot(normal, -uViewSpaceLightDirection);         \n\
-				if(gl_FrontFacing)                                            \n\
-					diffuse = diffuse * max(0.0, nDotL);                      \n\
-				else                                                          \n\
-					diffuse = diffuse * vec3(0.4, 0.3, 0.3) * abs(nDotL);     \n\
-			}                                                                 \n\
-			else if(!gl_FrontFacing)                                          \n\
-				diffuse = diffuse * vec3(0.4, 0.3, 0.3);                      \n\
-																			  \n\
-			if((uClipAxis[0] == 1.0)&&((uClipPoint[0]-vModelPos[0])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[0] == -1.0)&&((vModelPos[0]-uClipPoint[0])<uClipColorSize)) diffuse = uClipColor; \n\
-			if((uClipAxis[1] == 1.0)&&((uClipPoint[1]-vModelPos[1])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[1] == -1.0)&&((vModelPos[1]-uClipPoint[1])<uClipColorSize)) diffuse = uClipColor; \n\
-			if((uClipAxis[2] == 1.0)&&((uClipPoint[2]-vModelPos[2])<uClipColorSize)) diffuse = uClipColor;       \n\
-			else if((uClipAxis[2] == -1.0)&&((vModelPos[2]-uClipPoint[2])<uClipColorSize)) diffuse = uClipColor; \n\
-																			  \n\
-			gl_FragColor  = vec4(diffuse, uAlpha);                            \n\
-		}                                                                     \n\
+		precision highp float;													\n\
+																				\n\
+		uniform   vec3 uViewSpaceLightDirection;								\n\
+		uniform   float uAlpha;													\n\
+		uniform   bool uUseSolidColor;											\n\
+		uniform   bool uUseLighting;											\n\
+		uniform   vec4 uBackFaceColor;											\n\
+		uniform   vec3 uSolidColor;												\n\
+		uniform   vec4 uSpecularColor;											\n\
+		uniform   vec3 uClipPoint;												\n\
+		uniform   vec3 uClipAxis;												\n\
+		uniform   vec4 uClipPlane;												\n\
+		uniform   vec3 uClipColor;												\n\
+		uniform   float uClipColorSize;											\n\
+		uniform   sampler2D uSampler;											\n\
+																				\n\
+		varying   vec3 vNormal;													\n\
+		varying   vec4 vColor;													\n\
+		varying   vec4 vModelPos;												\n\
+		varying   vec4 vModelViewPos;											\n\
+		varying   vec2 vTextureCoord;											\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			if(length(uClipPlane.xyz) > 0.0)									\n\
+				if( dot(vModelPos, uClipPlane) > 0.0) discard;					\n\
+			if(length(uClipAxis) > 0.0)											\n\
+			{																	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+			}																	\n\
+																				\n\
+			vec3  renderColor = vec3(1.0, 1.0, 1.0);							\n\
+			vec3  diffuse = vColor.rgb;											\n\
+			float lambert = 1.0;												\n\
+			vec3  specular = vec3(0.0, 0.0, 0.0);								\n\
+																				\n\
+			if(vTextureCoord.x != 0.0)											\n\
+			  diffuse = texture2D(uSampler, vTextureCoord).xyz;					\n\
+																				\n\
+			if(uUseSolidColor) {												\n\
+			  if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -3.0)			\n\
+				diffuse = vColor.aaa;											\n\
+			  else if(uSolidColor.r + uSolidColor.g + uSolidColor.b == -6.0)	\n\
+				diffuse = vColor.rgb;											\n\
+			  else																\n\
+				diffuse = uSolidColor;											\n\
+			}																	\n\
+																				\n\
+			if((uUseLighting)&&(length(vNormal) > 0.0))							\n\
+			{																	\n\
+			  float nDotL   = dot(vNormal, -uViewSpaceLightDirection);			\n\
+			  lambert = max(0.0, gl_FrontFacing? nDotL : -nDotL);				\n\
+																				\n\
+              vec3 halfV = normalize(-uViewSpaceLightDirection -vModelViewPos.xyz);\n\
+              float spc = pow(max(dot(vNormal, halfV),0.0), uSpecularColor.a);	\n\
+              specular = spc * uSpecularColor.rgb;								\n\
+			}																	\n\
+																				\n\
+			renderColor = (diffuse * lambert) + specular;						\n\
+			if(!gl_FrontFacing)													\n\
+			{																	\n\
+				if(uBackFaceColor[3]==0.0) renderColor = renderColor * uBackFaceColor.rgb;	\n\
+				else if(uBackFaceColor[3]==1.0) renderColor = uBackFaceColor.rgb;			\n\
+				else if(uBackFaceColor[3]==2.0) discard;									\n\
+			}																	\n\
+																				\n\
+			if((length(uClipPlane.xyz) > 0.0)&&(uClipColorSize>0.0))			\n\
+				if( dot(vModelPos, uClipPlane) > -uClipColorSize) renderColor = uClipColor;	\n\
+			if((length(uClipAxis) > 0.0)&&(uClipColorSize>0.0))					\n\
+			{																	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0] + (uClipAxis[0]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1] + (uClipAxis[1]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + (uClipAxis[2]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
+			}																	\n\
+																				\n\
+			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("STD FACE Fragment Shader Log:\n" + nxsFragmentShader.log);
@@ -476,13 +542,18 @@ _createStandardFaceNXSProgram : function () {
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
 			"uViewSpaceNormalMatrix"     : SglMat3.identity(),
+			"uWorldViewMatrix"           : SglMat4.identity(),
 			"uModelMatrix"               : SglMat4.identity(),
 			"uViewSpaceLightDirection"   : [0.0, 0.0, -1.0],
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : false,
+			"uUseLighting"               : true,
+			"uBackFaceColor"             : [0.4, 0.3, 0.3, 0.0],
 			"uSolidColor"                : [1.0, 1.0, 1.0],
+			"uSpecularColor"             : [0.0, 0.0, 0.0, 32.0],
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uClipColor"                 : [1.0, 1.0, 1.0],
 			"uClipColorSize"             : 0.5,
 			"uSampler"                   : 0
@@ -522,35 +593,40 @@ _createXYZNXSProgram : function () {
 		console.log("XYZ Vertex Shader Log:\n" + nxsVertexShader.log);
 
 	var nxsFragmentShader = new SglFragmentShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   vec3 uClipPoint;                                            \n\
-		uniform   vec3 uClipAxis;                                             \n\
-																			  \n\
-		varying   vec4 vModelPos;                                             \n\
-																			  \n\
-		vec4 pack_depth(const in float depth)                                         \n\
-		{                                                                             \n\
-			const vec4 bit_shift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);  \n\
-			const vec4 bit_mask  = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);        \n\
-			vec4 res = fract(depth * bit_shift);                                      \n\
-			res -= res.xxyz * bit_mask;                                               \n\
-			return res;                                                               \n\
-		}                                                                             \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			if((uClipAxis[0] == 1.0)&&(vModelPos[0] > uClipPoint[0])) discard;        \n\
-			else if((uClipAxis[0] == -1.0)&&(vModelPos[0] < uClipPoint[0])) discard;  \n\
-			if((uClipAxis[1] == 1.0)&&(vModelPos[1] > uClipPoint[1])) discard;        \n\
-			else if((uClipAxis[1] == -1.0)&&(vModelPos[1] < uClipPoint[1])) discard;  \n\
-			if((uClipAxis[2] == 1.0)&&(vModelPos[2] > uClipPoint[2])) discard;        \n\
-			else if((uClipAxis[2] == -1.0)&&(vModelPos[2] < uClipPoint[2])) discard;  \n\
-																			  \n\
-			vec4 myColor;                                                     \n\
-			myColor = pack_depth(gl_FragCoord.z);                             \n\
-			gl_FragColor  = myColor;                                          \n\
-		}                                                                     \n\
+		precision highp float;													\n\
+																				\n\
+		uniform   vec3 uClipPoint;												\n\
+		uniform   vec3 uClipAxis;												\n\
+		uniform   vec4 uClipPlane;												\n\
+		uniform   vec4 uBackFaceColor;											\n\
+																				\n\
+		varying   vec4 vModelPos;												\n\
+																				\n\
+		vec4 pack_depth(const in float depth)											\n\
+		{																				\n\
+			const vec4 bit_shift = vec4(255.0*255.0*255.0, 255.0*255.0, 255.0, 1.0);	\n\
+			const vec4 bit_mask  = vec4(0.0, 1.0/255.0, 1.0/255.0, 1.0/255.0);			\n\
+			vec4 res = fract(depth * bit_shift);										\n\
+			res -= res.xxyz * bit_mask;													\n\
+			return res;																	\n\
+		}																				\n\
+																				\n\
+		void main(void)															\n\
+		{																		\n\
+			if(length(uClipPlane.xyz) > 0.0)									\n\
+				if( dot(vModelPos, uClipPlane) > 0.0) discard;					\n\
+			if(length(uClipAxis) > 0.0)											\n\
+			{																	\n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+			}																	\n\
+			if((!gl_FrontFacing) &&	(uBackFaceColor[3]==2.0)) discard;			\n\
+																				\n\
+			vec4 myColor;														\n\
+			myColor = pack_depth(gl_FragCoord.z);								\n\
+			gl_FragColor  = myColor;											\n\
+		}																		\n\
 	");
 	if(this._isDebugging)
 		console.log("XYZ Fragment Shader Log:\n" + nxsFragmentShader.log);
@@ -571,6 +647,8 @@ _createXYZNXSProgram : function () {
 			"uModelMatrix" 				 : SglMat4.identity(),
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
+			"uBackFaceColor"             : [0.4, 0.3, 0.3, 0.0],
 			"uPointSize"                 : 1.0
 		}
 	});
@@ -587,6 +665,7 @@ _createColorCodedIDNXSProgram : function () {
 		precision highp float;                                                \n\
 																			  \n\
 		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+		uniform   mat4 uModelMatrix;                                          \n\
 		uniform   float uPointSize;                                           \n\
 																			  \n\
 		attribute vec3 aPosition;                                             \n\
@@ -594,8 +673,11 @@ _createColorCodedIDNXSProgram : function () {
 		attribute vec3 aColor;                                                \n\
 		attribute float aPointSize;                                           \n\
 																			  \n\
+		varying   vec4 vModelPos;                                             \n\
+																			  \n\
 		void main(void)                                                       \n\
 		{                                                                     \n\
+			vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
 			gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
 			gl_PointSize = uPointSize * aPointSize;							  \n\
 		}                                                                     \n\
@@ -607,9 +689,23 @@ _createColorCodedIDNXSProgram : function () {
 		precision highp float;                                                \n\
 																			  \n\
 		uniform   vec4 uColorID;                                              \n\
-																			  \n\
+		uniform   vec3 uClipPoint;                                            \n\
+		uniform   vec3 uClipAxis;                                             \n\
+		uniform   vec4 uClipPlane;                                            \n\
+                                                                              \n\
+		varying   vec4 vModelPos;                                             \n\
+                                                                              \n\
 		void main(void)                                                       \n\
 		{                                                                     \n\
+			if(length(uClipPlane.xyz) > 0.0)                                  \n\
+				if( dot(vModelPos, uClipPlane) > 0.0) discard;                \n\
+			if(length(uClipAxis) > 0.0)                                       \n\
+			{                                                                 \n\
+				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
+				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
+				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
+			}                                                                 \n\
+                                                                              \n\
 			gl_FragColor  = uColorID;                                         \n\
 		}                                                                     \n\
 	");
@@ -629,6 +725,10 @@ _createColorCodedIDNXSProgram : function () {
 		},
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
+			"uModelMatrix" 				 : SglMat4.identity(),
+			"uClipPoint"                 : [0.0, 0.0, 0.0],
+			"uClipAxis"                  : [0.0, 0.0, 0.0],
+			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
 			"uPointSize"                 : 1.0
 		}
@@ -728,14 +828,19 @@ _createStandardPointPLYtechnique : function () {
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
+			"uWorldViewMatrix"           : { semantic : "uWorldViewMatrix",           value : SglMat4.identity() },
 			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
 			"uAlpha"                     : { semantic : "uAlpha",                     value : 1.0 },
 			"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : false },
+			"uUseLighting"               : { semantic : "uUseLighting",               value : true },
 			"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
+			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
+			"uSpecularColor"             : { semantic : "uSpecularColor",             value : [0.5, 0.2, 0.8, 32.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
 			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 }
 		}
@@ -755,13 +860,18 @@ _createStandardFacePLYtechnique : function () {
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uViewSpaceNormalMatrix"     : { semantic : "uViewSpaceNormalMatrix",     value : SglMat3.identity() },
+			"uWorldViewMatrix"           : { semantic : "uWorldViewMatrix",           value : SglMat4.identity() },
 			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uViewSpaceLightDirection"   : { semantic : "uViewSpaceLightDirection",   value : [ 0.0, 0.0, -1.0 ] },
 			"uAlpha"                     : { semantic : "uAlpha",                     value : 1.0 },
 			"uUseSolidColor"             : { semantic : "uUseSolidColor",             value : false },
+			"uUseLighting"               : { semantic : "uUseLighting",               value : true },
 			"uSolidColor"                : { semantic : "uSolidColor",                value : [ 1.0, 1.0, 1.0 ] },
+			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
+			"uSpecularColor"             : { semantic : "uSpecularColor",             value : [0.5, 0.2, 0.8, 32.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uClipColor"                 : { semantic : "uClipColor",                 value : [ 1.0, 1.0, 1.0 ]},
 			"uClipColorSize"             : { semantic : "uClipColorSize",             value : 0.5 },
 			"uSampler"                   : { semantic : "uSampler",                   value : 0 }
@@ -779,14 +889,16 @@ _createXYZPLYtechnique : function () {
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
-			"aPointSize" : 1.0
+			"aPointSize" : 1.0,
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
+			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
-			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] }
+			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] }
 		}
 	});
 
@@ -801,12 +913,16 @@ _createColorCodedIDPLYtechnique : function () {
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
-			"aPointSize" : 1.0
+			"aPointSize" : 1.0,
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
+			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
-			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 }
+			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
+			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
+			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] }
 		}
 	});
 
@@ -956,7 +1072,7 @@ _testReady : function () {
 
 	this._sceneReady = this._scenePrepare();
 
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 _scenePrepare : function () {
@@ -997,8 +1113,8 @@ _pickingRefresh: function(x,y) {
 					if (spots[spt].ID == ID) {
 						this._pickedSpot = spt;
 						if(this._onHover){
-							if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.2;
-							spots[this._pickedSpot].alpha += 0.2;
+							if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
+							spots[this._pickedSpot].alpha += 0.3;
 							cursor = spots[spt].cursor;
 							if(/*!this._movingLight ||*/ !this._isMeasuring){
 								this._lastCursor = document.getElementById(this.ui.canvas.id).style.cursor;
@@ -1006,7 +1122,7 @@ _pickingRefresh: function(x,y) {
 							}
 							if(this._onLeaveSpot && this._lastPickedSpot!=null)  this._onLeaveSpot(this._lastPickedSpot);
 							if(this._onEnterSpot && this._pickedSpot!=null) this._onEnterSpot(this._pickedSpot);
-							this.ui.postDrawEvent();
+							this.repaint();
 						}
 						this._lastPickedSpot = spt;
 						break;
@@ -1017,12 +1133,12 @@ _pickingRefresh: function(x,y) {
 			else{
 				this._pickedSpot = null;
 				if(this._onHover){
-					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha  -= 0.2;
+					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
 					if(/*!this._movingLight ||*/ !this._isMeasuring) document.getElementById(this.ui.canvas.id).style.cursor = "default";
-					if(this._onLeaveSpot && this._lastPickedSpot!=null)  this._onLeaveSpot(this._lastPickedSpot);
+					if(this._onLeaveSpot && this._lastPickedSpot!=null) this._onLeaveSpot(this._lastPickedSpot);
 					//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
 					this._lastPickedSpot = null;
-					this.ui.postDrawEvent();
+					this.repaint();
 				}
 				this._lastSpotID = ID;
 			}
@@ -1043,7 +1159,7 @@ _pickingRefresh: function(x,y) {
 						if(/*!this._movingLight ||*/ !this._isMeasuring){
 							this._lastCursor = cursor;
 							if(this._pickedSpot==null)document.getElementById(this.ui.canvas.id).style.cursor = cursor;
-							this.ui.postDrawEvent();
+							this.repaint();
 						}
 						if(this._onLeaveInstance && this._lastPickedInstance!=null)  this._onLeaveInstance(this._lastPickedInstance);
 						if(this._onEnterInstance && this._pickedInstance!=null) this._onEnterInstance(this._pickedInstance);
@@ -1060,7 +1176,7 @@ _pickingRefresh: function(x,y) {
 				if((/*!this._movingLight ||*/ !this._isMeasuring) && this._pickedSpot==null) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 				if(this._onLeaveInstance && this._lastPickedInstance!=null)  this._onLeaveInstance(this._lastPickedInstance);
 				//if(this._onEnterInstance) this._onEnterInstance(this._pickedInstance);
-				this.ui.postDrawEvent();
+				this.repaint();
 			}
 			this._lastPickedInstance = null;
 		}
@@ -1069,8 +1185,7 @@ _pickingRefresh: function(x,y) {
 },
 
 _measureRefresh : function (button, x, y, e) {
-//		if(e.target.id!=this.ui.gl.canvas.id) return;
-
+//	if(e.target.id!=this.ui.gl.canvas.id) return;
 	if(this._isMeasuringDistance){
 		this._pickpoint[0] = x;
 		this._pickpoint[1] = y;
@@ -1078,14 +1193,15 @@ _measureRefresh : function (button, x, y, e) {
 		if ((ppoint!=null)&&(this._measurementStage != 2)) {
 			this._pointA = ppoint;
 			this._measurementStage=2;
-			this.ui.postDrawEvent();
+			this.repaint();
 		}
 		else if ((ppoint!=null)&&(this._measurementStage == 2)) {
 			this._pointB = ppoint;
 			this.measurement = SglVec3.length(SglVec3.sub(this._pointA, this._pointB));
 			this._measurementStage=3;
-			this.ui.postDrawEvent();
-			if(this._onEndMeasurement) this._onEndMeasurement(this.measurement, this._pointA, this._pointB);
+			this.repaint();
+			if(this._onEndMeasurement)
+				this._onEndMeasurement(this.measurement, [this._pointA[0], this._pointA[1], this._pointA[2]], [this._pointB[0], this._pointB[1], this._pointB[2]]);
 		}
 	}
 },
@@ -1097,7 +1213,7 @@ _startMeasurement  : function () {
 	this._pointA = [0.0, 0.0, 0.0];
 	this._pointB = [0.0, 0.0, 0.0];
 	this.measurement = 0.0;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 _stopMeasurement  : function () {
@@ -1107,11 +1223,11 @@ _stopMeasurement  : function () {
 	this._pointA = [0.0, 0.0, 0.0];
 	this._pointB = [0.0, 0.0, 0.0];
 	this.measurement = 0.0;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 _pickpointRefresh : function (button, x, y, e) {
-//		if(e.target.id!=this.ui.gl.canvas.id) return;
+//	if(e.target.id!=this.ui.gl.canvas.id) return;
 	if(this._isMeasuringPickpoint){
 		this._pickpoint[0] = x;
 		this._pickpoint[1] = y;
@@ -1120,8 +1236,8 @@ _pickpointRefresh : function (button, x, y, e) {
 		{
 			this._pickedPoint = ppoint;
 			this._pickValid = true;
-			if(this._onEndPickingPoint) this._onEndPickingPoint(this._pickedPoint);
-			this.ui.postDrawEvent();
+			if(this._onEndPickingPoint) this._onEndPickingPoint([this._pickedPoint[0], this._pickedPoint[1], this._pickedPoint[2]]);
+			this.repaint();
 		}
 	}
 },
@@ -1131,7 +1247,7 @@ _startPickPoint : function () {
 	this._isMeasuring = this._isMeasuringPickpoint = true;
 	this._pickValid = false;
 	this._pickedPoint = [0.0, 0.0, 0.0];
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 _stopPickPoint : function () {
@@ -1139,7 +1255,7 @@ _stopPickPoint : function () {
 	if (!this._isMeasuringDistance) this._isMeasuring = this._isMeasuringPickpoint;
 	this._pickValid = false;
 	this._pickedPoint = [0.0, 0.0, 0.0];
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 //----------------------------------------------------------------------------------------
@@ -1374,9 +1490,9 @@ _setupDraw : function () {
 
 	xform.projection.loadIdentity();
 
-	if(space.cameraType == "ortho")
+	if(space.cameraType == "orthographic")
 	{
-		//default camera distance in ortho view is "as large as scene size"
+		//default camera distance in orthographic view is "as large as scene size"
 		// then, if the trackball is able to provide a better value, we use it
 		var cDistance = 1.0;
 		if(typeof this.trackball.distance != "undefined")
@@ -1401,6 +1517,8 @@ _setupDraw : function () {
 	// scale to unit box + recenter
 	xform.model.scale([this.sceneRadiusInv, this.sceneRadiusInv, this.sceneRadiusInv]);
 	xform.model.translate(SglVec3.neg(this.sceneCenter));
+
+	Nexus.beginFrame(this.ui.gl, this.ui.framesPerSecond);
 },
 
 _ID2Color : function (ID) {
@@ -1487,6 +1605,7 @@ _drawScene : function () {
 	// clear buffer
 	gl.clearColor(bkg[0], bkg[1], bkg[2], bkg[3]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	gl.enable(gl.DEPTH_TEST);
 
 	// draw non-transparent geometries
 	for (var inst in instances) {
@@ -1499,8 +1618,6 @@ _drawScene : function () {
 		if (instance.useTransparency) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
@@ -1511,19 +1628,25 @@ _drawScene : function () {
 		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
 		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
 		var thisClipBordersize = config.showClippingBorder?config.clippingBorderSize:0.0;
 
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 			"uModelMatrix"               : modelMatrix,
+			"uWorldViewMatrix"           : xform.modelViewMatrix,
 			"uViewSpaceLightDirection"   : this._lightDirection,
 			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : instance.useSolidColor,
-			"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
+			"uUseLighting"               : space.sceneLighting && instance.useLighting,
+			"uBackFaceColor"             : instance.backfaceColor,
+			"uSpecularColor"             : instance.specularColor,
+			"uSolidColor"                : instance.color,
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
+			"uClipPlane"                 : thisClipPlane,
 			"uClipColor"                 : config.clippingBorderColor,
 			"uClipColorSize"             : thisClipBordersize
 		};
@@ -1532,19 +1655,7 @@ _drawScene : function () {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
-			var fps = this.ui.framesPerSecond;			
-			if(nexus._targetFps && fps) {
-				var newBudget = (nexus.drawBudget * fps) / nexus._targetFps;
-				if(newBudget < nexus._minDrawBudget)
-					newBudget = nexus._minDrawBudget;
-				// logic: increase budget only if we stop rendering because of it (instead of just waiting for download.
-				if(newBudget < nexus.drawBudget || nexus._drawSize > nexus.drawBudget)
-					nexus.drawBudget = 0.9 * nexus.drawBudget + 0.1*newBudget;
-			}
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			var program;
 			if(instance.rendermode=="FILL")
@@ -1553,10 +1664,8 @@ _drawScene : function () {
 				program = CurrPointProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 		}
 		else { //drawing ply
@@ -1577,8 +1686,6 @@ _drawScene : function () {
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-
 		xform.model.pop();
 	}
 
@@ -1593,7 +1700,6 @@ _drawScene : function () {
 		if (!instance.useTransparency) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthMask(false);
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -1608,20 +1714,26 @@ _drawScene : function () {
 		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
 		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
 		var thisClipBordersize = config.showClippingBorder?config.clippingBorderSize:0.0;
 
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 			"uModelMatrix"               : modelMatrix,
+			"uWorldViewMatrix"           : xform.modelViewMatrix,
 			"uViewSpaceLightDirection"   : this._lightDirection,
 			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : instance.alpha,
 			"uUseSolidColor"             : instance.useSolidColor,
-			"uSolidColor"                : [instance.color[0], instance.color[1], instance.color[2]],
+			"uUseLighting"               : space.sceneLighting && instance.useLighting,
+			"uBackFaceColor"             : instance.backfaceColor,
+			"uSpecularColor"             : instance.specularColor,
+			"uSolidColor"                : instance.color,
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
+			"uClipPlane"                 : thisClipPlane,
 			"uClipColor"                 : config.clippingBorderColor,
 			"uClipColorSize"             : thisClipBordersize
 		};
@@ -1630,19 +1742,7 @@ _drawScene : function () {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
-			var fps = this.ui.framesPerSecond;			
-			if(nexus._targetFps && fps) {
-				var newBudget = (nexus.drawBudget * fps) / nexus._targetFps;
-				if(newBudget < nexus._minDrawBudget)
-					newBudget = nexus._minDrawBudget;
-				// logic: increase budget only if we stop rendering because of it (instead of just waiting for download.
-				if(newBudget < nexus.drawBudget || nexus._drawSize > nexus.drawBudget)
-					nexus.drawBudget = 0.9 * nexus.drawBudget + 0.1*newBudget;
-			}
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			var program;
 			if(instance.rendermode=="FILL")
@@ -1651,10 +1751,8 @@ _drawScene : function () {
 				program = CurrPointProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 		}
 		else { //drawing ply
@@ -1677,7 +1775,6 @@ _drawScene : function () {
 		// GLstate cleanup
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
-		gl.disable(gl.DEPTH_TEST);
 
 		xform.model.pop();
 	}
@@ -1685,9 +1782,7 @@ _drawScene : function () {
 	// draw picked point (if valid)
 	if (this._pickValid) {
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
-
 		xform.model.push();
 
 		var lineUniforms = {
@@ -1733,17 +1828,13 @@ _drawScene : function () {
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
 		gl.depthFunc(gl.LESS);
-		gl.disable(gl.DEPTH_TEST);
-
 		xform.model.pop();
 	}
 
 	// draw measurement line (if any)
 	if (this._measurementStage >= 2) {// 0=inactive 1=picking pointA 2=picking pointB 3=measurement ready
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
-
 		xform.model.push();
 
 		var lineUniforms = {
@@ -1795,22 +1886,19 @@ _drawScene : function () {
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
 		gl.depthFunc(gl.LESS);
-		gl.disable(gl.DEPTH_TEST);
-
 		xform.model.pop();
 	}
 
 	// draw transparent spot geometries
 	for (var spt in spots) {
 		var spot = spots[spt];
-		var mesh     = meshes[spot.mesh];
+		var mesh = meshes[spot.mesh];
 		if (!mesh) continue;
 		var renderable = mesh.renderable;
 		if (!renderable) continue;
 		if (!spot.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthMask(false);
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -1831,18 +1919,13 @@ _drawScene : function () {
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			var program = CCProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(spot.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 		}
 		else { //drawing ply
@@ -1852,27 +1935,86 @@ _drawScene : function () {
 				renderer.setPrimitiveMode(spot.rendermode);
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
-				renderer.renderModel();
+				if(spot.useStencil)
+				{
+					gl.clear(gl.STENCIL_BUFFER_BIT); //reset stencil
+					//first pass
+					gl.colorMask(false, false, false, false);
+					gl.enable(gl.STENCIL_TEST);
+					gl.stencilFunc(gl.ALWAYS, 0, 255);
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
+
+					renderer.renderModel();
+
+					//second pass
+					gl.colorMask(true, true, true, true);
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); // Don't change the stencil buffer...
+					gl.stencilFunc(gl.EQUAL, 1, 0x01); // The stencil buffer contains the shadow values...
+
+					renderer.renderModel();
+
+					gl.disable(gl.STENCIL_TEST);
+				}
+				else
+				{
+					renderer.renderModel();
+				}
 			renderer.end();
 		}
 
 		// GLstate cleanup
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
-		gl.disable(gl.DEPTH_TEST);
-
-		xform.model.pop();	}
+		xform.model.pop();
+	}
 
 	// draw clipping plane (if any)
 	if(config.showClippingPlanes)
 	{
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
 		gl.depthMask(false);
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
-		if(this._clipAxis[0] != 0.0) {	
+		if(SglVec3.length([this._clipPlane[0], this._clipPlane[1], this._clipPlane[2]]) > 0.0) {
+			var planepoint = [0.0, 0.0, 0.0];
+
+			var k = SglVec3.dot(this._sceneBboxCenter, [this._clipPlane[0], this._clipPlane[1], this._clipPlane[2]]) + this._clipPlane[3];
+			planepoint[0] = this._sceneBboxCenter[0] - (this._clipPlane[0] * k);
+			planepoint[1] = this._sceneBboxCenter[1] - (this._clipPlane[1] * k);
+			planepoint[2] = this._sceneBboxCenter[2] - (this._clipPlane[2] * k);
+
+			var rotm = SglMat4.identity();
+			rotm = SglMat4.mul(rotm, SglMat4.rotationAngleAxis(sglDegToRad(this._clipPlaneAH), [0.0, -1.0, 0.0]));
+			rotm = SglMat4.mul(rotm, SglMat4.rotationAngleAxis(sglDegToRad(this._clipPlaneAV), [0.0, 0.0, 1.0]));
+
+			var psize = this._sceneBboxDiag;
+
+			xform.model.push();
+			xform.model.translate(planepoint);
+			xform.model.multiply(rotm);
+			xform.model.scale([psize, psize, psize ]);
+
+			var QuadUniforms = {
+				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
+				"uViewSpaceLightDirection"   : this._lightDirection,
+				"uColorID"                   : [1.0, 0.0, 1.0, 0.25]
+			};
+
+			renderer.begin();
+				renderer.setTechnique(CCTechnique);
+				renderer.setDefaultGlobals();
+				renderer.setPrimitiveMode("FILL");
+				renderer.setGlobals(QuadUniforms);
+				renderer.setModel(this.simpleQuadXModel);
+				renderer.renderModel();
+			renderer.end();
+
+			xform.model.pop();
+		}
+
+		if(this._clipAxis[0] != 0.0) {
 			xform.model.push();
 			xform.model.translate([this._clipPoint[0], this._sceneBboxCenter[1], this._sceneBboxCenter[2]]);
 			xform.model.scale([(this._sceneBboxMax[0] - this._sceneBboxMin[0]),
@@ -1936,7 +2078,8 @@ _drawScene : function () {
 				"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 				"uViewSpaceLightDirection"   : this._lightDirection,
 				"uColorID"                   : [0.0, 0.0, 1.0, 0.25]
-			};
+			};
+
 
 			renderer.begin();
 				renderer.setTechnique(CCTechnique);
@@ -1953,8 +2096,8 @@ _drawScene : function () {
 		// GLstate cleanup
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
-		gl.disable(gl.DEPTH_TEST);
 	}
+	Nexus.endFrame(this.ui.gl);
 },
 
 _drawScenePickingXYZ : function () {
@@ -1980,6 +2123,7 @@ _drawScenePickingXYZ : function () {
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	gl.enable(gl.DEPTH_TEST);
 	this.pickFramebuffer.unbind();
 
 	for (var inst in instances) {
@@ -1991,8 +2135,6 @@ _drawScenePickingXYZ : function () {
 		if (!instance.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
@@ -2003,32 +2145,30 @@ _drawScenePickingXYZ : function () {
 		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
 		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
 		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
 
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uModelMatrix"               : modelMatrix,
+			"uBackFaceColor"             : instance.backfaceColor,
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
+			"uClipPlane"                 : thisClipPlane,
 			"uPointSize"                 : this._scene.config.pointSize
 		};
 
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
@@ -2042,12 +2182,11 @@ _drawScenePickingXYZ : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
+				renderer.setFramebuffer(null);
 			renderer.end();
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-		// undo transform
 		xform.model.pop();
 	}
 
@@ -2064,7 +2203,7 @@ _drawScenePickingXYZ : function () {
 	var gg = pixel[1] / 255.0;
 	var bb = pixel[2] / 255.0;
 	var aa = pixel[3] / 255.0;
-	var depth = aa  + ( bb / (256.0)) + ( gg / (256.0*256.0)) + ( rr / (256.0*256.0*256.0));
+	var depth = aa  + ( bb / (255.0)) + ( gg / (255.0*255.0)) + ( rr / (255.0*255.0*255.0));
 
 	var ppointc;
 
@@ -2099,6 +2238,7 @@ _drawScenePickingInstances : function () {
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	gl.enable(gl.DEPTH_TEST);
 	this.pickFramebuffer.unbind();
 
 	for (var inst in instances) {
@@ -2110,16 +2250,25 @@ _drawScenePickingInstances : function () {
 		if (!instance.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
 		xform.model.multiply(mesh.transform.matrix);
 
+		var modelMatrix = SglMat4.identity();
+		modelMatrix = SglMat4.mul(modelMatrix, space.transform.matrix);
+		modelMatrix = SglMat4.mul(modelMatrix, instance.transform.matrix);
+		modelMatrix = SglMat4.mul(modelMatrix, mesh.transform.matrix);
+		var thisClipAxis = instance.clippable?this._clipAxis:[0.0, 0.0, 0.0];
+		var thisClipPlane = instance.clippable?this._clipPlane:[0.0, 0.0, 0.0, 0.0];
+
 		var colorID = this._ID2Color(instance.ID);
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+			"uModelMatrix"               : modelMatrix,
+			"uClipPoint"                 : this._clipPoint,
+			"uClipAxis"                  : thisClipAxis,
+			"uClipPlane"                 : thisClipPlane,
 			"uPointSize"                 : this._scene.config.pointSize,
 			"uColorID"                   : colorID
 		};
@@ -2127,20 +2276,15 @@ _drawScenePickingInstances : function () {
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
@@ -2154,12 +2298,11 @@ _drawScenePickingInstances : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
+				renderer.setFramebuffer(null);
 			renderer.end();
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-		// undo transform
 		xform.model.pop();
 	}
 
@@ -2199,6 +2342,7 @@ _drawScenePickingSpots : function () {
 	this.pickFramebuffer.bind();
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	gl.enable(gl.DEPTH_TEST);
 	this.pickFramebuffer.unbind();
 
 	// first pass, draw invisible instances, for occlusion
@@ -2211,8 +2355,6 @@ _drawScenePickingSpots : function () {
 		if (!instance.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
@@ -2227,20 +2369,15 @@ _drawScenePickingSpots : function () {
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
@@ -2254,12 +2391,11 @@ _drawScenePickingSpots : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
+				renderer.setFramebuffer(null);
 			renderer.end();
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-		// undo transform
 		xform.model.pop();
 	}
 
@@ -2273,8 +2409,6 @@ _drawScenePickingSpots : function () {
 		if (!spot.visible) continue;
 
 		// GLstate setup
-		gl.enable(gl.DEPTH_TEST);
-
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(spot.transform.matrix);
@@ -2290,20 +2424,15 @@ _drawScenePickingSpots : function () {
 		if(mesh.isNexus) {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
-			nexus.modelMatrix      = xform.modelMatrix;
-			nexus.viewMatrix       = xform.viewMatrix;
-			nexus.projectionMatrix = xform.projectionMatrix;
-			nexus.viewport         = [0, 0, width, height];
+			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
 			program.bind();
 			program.setUniforms(uniforms);
-				nexus.begin();
 				nexus.setPrimitiveMode(spot.rendermode);
 				nexus.render();
-				nexus.end();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
@@ -2317,13 +2446,13 @@ _drawScenePickingSpots : function () {
 				renderer.setGlobals(uniforms);
 				renderer.setModel(renderable);
 				renderer.renderModel();
+				renderer.setFramebuffer(null);
 			renderer.end();
 		}
 
 		// GLstate cleanup
-		gl.disable(gl.DEPTH_TEST);
-		// undo transform
 		xform.model.pop();
+		gl.depthMask(true);
 	}
 
 	this.pickFramebuffer.readPixels(pixel, {
@@ -2429,6 +2558,8 @@ onInitialize : function () {
 
 	gl.getExtension('EXT_frag_depth');
 	gl.clearColor(0.5, 0.5, 0.5, 1.0);
+	gl.clearStencil(0);
+	gl.depthFunc(gl.LESS);
 
 	// scene rendering support data
 	this.renderer   = new SglModelRenderer(gl);
@@ -2436,10 +2567,10 @@ onInitialize : function () {
 	this.viewMatrix = SglMat4.identity();
 
 	// nexus parameters
-	this._nexusTargetFps = 15.0;
+	this._nexusTargetFps   = 15.0;
 	this._nexusTargetError = 1.0;
-	this._nexusCacheSize = 50000000;	
-	
+	this._nexusCacheSize   = 50000000;
+
 	// shaders
 	this.faceNXSProgram = this._createStandardFaceNXSProgram();
 	this.pointNXSProgram = this._createStandardPointNXSProgram();
@@ -2495,6 +2626,8 @@ onInitialize : function () {
 	this._animating      = false;
 	this._movingLight    = false;
 
+	this._resizable      = true;
+
 	this._clickable      = false;
 	this._onHover        = false;
 
@@ -2525,13 +2658,17 @@ onInitialize : function () {
 	// plane section
 	this._clipPoint = [0.0, 0.0, 0.0];
 	this._clipAxis  = [0.0, 0.0, 0.0];
+	this._clipPlane = [0.0, 0.0, 0.0, 0.0];
 	this._sceneBboxMin = [0.0, 0.0, 0.0]
 	this._sceneBboxMax = [0.0, 0.0, 0.0];
 	this._sceneBboxCenter = [0.0, 0.0, 0.0];
+	this._sceneBboxDiag = 0.0;
 },
 
 onDrag : function (button, x, y, e) {
 	var ui = this.ui;
+
+	if(this._clickable) this._clickable = false;
 
 	if(this._movingLight && ui.isMouseButtonDown(0)){
 		var dxl = (x / (ui.width  - 1)) * 2.0 - 1.0;
@@ -2540,6 +2677,9 @@ onDrag : function (button, x, y, e) {
 		return;
 	}
 
+	// if locked trackball, just return. we check AFTER the light-trackball test
+	if (this._scene.trackball.locked) return;
+	
 	if(ui.dragDeltaX(button) != 0) this.x += (ui.cursorDeltaX/500);
 	if(ui.dragDeltaY(button) != 0) this.y += (ui.cursorDeltaY/500);
 
@@ -2565,20 +2705,45 @@ onDrag : function (button, x, y, e) {
 
 onMouseMove : function (x, y, e) {
 	if(e.target.id!=this.ui.gl.canvas.id) return;
-	if(this._onHover && !this.ui.isDragging(0) && !this.isAnimate()) this._pickingRefresh(x, y);
+	if(this._onHover)
+		if (!this.ui.isDragging(0) && !this.ui.isDragging(1) && !this.ui.isDragging(2)) this._pickingRefresh(x, y);
 },
 
-onMouseOut : function (x, y) {
-	if(this._onHover && !this.ui.isDragging(0)) this._pickingRefresh();
+onMouseOut : function (x, y, e) {
+	if(this._onHover) this._pickingRefresh(-1,-1);
+	this._clickable = false;
 },
 
 onMouseButtonDown : function (button, x, y, e) {
-	this._clickable = true;
+	if(this._onHover) this._pickingRefresh(x,y);
+	if(button==0) this._clickable = true;
 },
 
-onMouseButtonUp : function (button, x, y, e) {
-	if(this._clickable && button==0 && !(this.ui.isDragging(0) && (Math.abs(this.ui.dragDeltaX(0))>=3 || Math.abs(this.ui.dragDeltaY(0)>=3))) && e.detail!=-1) {
+onClick : function (button, x, y, e) {
+	var xy = this.ui._getMouseClientPos(e);
+
+	this.ui._clickPrevPos = this.ui._clickPos;
+	this.ui._clickPos = xy;
+
+	var clickDeltaPos = [this.ui._clickPos[0] - this.ui._clickPrevPos[0], this.ui._clickPos[1] - this.ui._clickPrevPos[1]];
+	var clickDeltaTime = this.ui._clickPos[3] - this.ui._clickPrevPos[3];
+
+	var clickDeltaDist = SpiderGL.Math.Vec2.length(clickDeltaPos);
+
+	if (this._clickable) {
 		this._pickingRefresh(x, y);
+
+		if(clickDeltaDist <= 30 && clickDeltaTime <= 250) {
+			if(this.trackball.recenter){
+				var ppoint = this._drawScenePickingXYZ();
+				if (ppoint!=null) {
+					this.ui.animateRate = 30;
+					this.trackball.recenter(ppoint);
+					this.repaint();
+				}
+			}
+		}
+
 		if(this._onPickedSpot && this._pickedSpot!=null) this._onPickedSpot(this._pickedSpot);
 		if(this._onPickedInstance && this._pickedInstance!=null) this._onPickedInstance(this._pickedInstance);
 		if(this._isMeasuringPickpoint) this._pickpointRefresh(0, x, y, e);
@@ -2587,32 +2752,18 @@ onMouseButtonUp : function (button, x, y, e) {
 	this._clickable = false;
 },
 
-onDoubleClick : function (button, x, y, e) {
-	//only if trackball does support recentering, we do it
-	if(this.trackball.recenter){
-		this._pickpoint[0] = x;
-		this._pickpoint[1] = y;
-		var ppoint = this._drawScenePickingXYZ();
-		if (ppoint!=null)
-		{
-			this.ui.animateRate = 30;
-			this.trackball.recenter(ppoint);
-			this.ui.postDrawEvent();
-		}
-	}
-},
-
 onKeyPress : function (key, e) {
 	if(this._isDebugging) { // DEBUGGING-AUTHORING keys
-		if((e.charCode == '80') || (e.charCode == '112')) // key "P" to print trackball
-			console.log(this.trackball.getState());
 		if (e.charCode == '49') { // key "1" to show nexus patches
-			Nexus.Debug.nodes=!Nexus.Debug.nodes;
-			this.ui.postDrawEvent();
+			Nexus.Debug.nodes =! Nexus.Debug.nodes;
+			this.repaint();
 		}
-		if (e.charCode == '50') { // key "2" to toggle camera perspective/ortho
+		else if (e.charCode == '50') { // key "2" to toggle camera perspective/orthographic
 			this.toggleCameraType();
+			this.repaint();
 		}
+		else if((e.charCode == '80') || (e.charCode == '112')) // key "P" to print trackball
+			console.log(this.trackball.getState());
 	}
 },
 
@@ -2641,7 +2792,11 @@ onMouseWheel: function (wheelDelta, x, y, e) {
 		}
 	}
 	else {
+		// if locked trackball, just return.
+		if (this._scene.trackball.locked) return;
+		
 		var action = SGL_TRACKBALL_SCALE;
+
 		var factor = wheelDelta > 0.0 ? (0.90) : (1.10);
 
 		var testMatrix = this.trackball._matrix.slice();
@@ -2655,18 +2810,18 @@ onMouseWheel: function (wheelDelta, x, y, e) {
 		}
 	}
 
-	if(diff) this.ui.postDrawEvent();
+	if(diff) this.repaint();
 },
 
 onAnimate : function (dt) {
 	if (this._isSceneReady()) {
 		// animate trackball
 		if(this.trackball.tick(dt)) {
-			this.ui.postDrawEvent();
+			this.repaint();
 		}
 		else {
 			this.ui.animateRate = 0;
-			if(this._onHover && !this.ui.isDragging(0)) this._pickingRefresh(this.ui.cursorX, this.ui.cursorY);
+			if(this._onHover && !this.ui._cursorPos[2]) this._pickingRefresh(this.ui._cursorPos[0], this.ui._cursorPos[1]);
 		}
 	}
 },
@@ -2681,58 +2836,6 @@ onDraw : function () {
 //----------------------------------------------------------------------------------------
 // EXPOSED FUNCTIONS
 //----------------------------------------------------------------------------------------
-supportsWebGL : function() {
-	return this._supportsWebGL;
-},
-
-toggleDebugMode : function () {
-	this._isDebugging = !this._isDebugging;
-},
-
-setNexusTargetFps: function(fps) {
-	this._nexusTargetFps = fps;
-	var scene = this._scene;
-	if(!scene) return;
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
-		if(!mesh.isNexus) continue;
-		mesh.renderable._targetFps = fps;
-	}
-},
-
-getNexusTargetFps: function() {
-	return this._nexusTargetFps;
-},
-setNexusTargetError: function(error) {
-	this._nexusTargetError = error;
-	var scene = this._scene;
-	if(!scene) return;
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
-		if(!mesh.isNexus) continue;
-		mesh.renderable._targetError = error;
-	}
-},
-
-getNexusTargetError: function() {
-	return this._nexusTargetError;
-},
-
-setNexusCacheSize: function(size) {
-	this._nexusCacheSize = size;
-	var scene = this._scene;
-	if(!scene) return;
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
-		if(!mesh.isNexus) continue;
-		mesh.renderable._maxCacheSize = size;
-	}
-},
-
-getNexusCacheSize: function() {
-	return this._nexusCacheSize;
-},
-
 setScene : function (options) {
 	if (!options) return;
 
@@ -2784,18 +2887,21 @@ setScene : function (options) {
 
 	for (var m in scene.meshes) {
 		var mesh = scene.meshes[m];
+
 		if (!mesh.url) continue;
-		if(String(mesh.url).lastIndexOf(".nxs") == (String(mesh.url).length - 4)) {
-			var nexus = new Nexus.Renderer(gl);
-			mesh.renderable = nexus;
+		if((String(mesh.url).lastIndexOf(".nxs") == (String(mesh.url).length - 4))||(String(mesh.url).lastIndexOf(".nxz") == (String(mesh.url).length - 4))) {
+			Nexus.setTargetError(gl, this._nexusTargetError);
+			Nexus.setTargetFps(gl, this._nexusTargetFps);
+			Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
+
+			var nexus_instance = new Nexus.Renderer(gl);
+			nexus_instance.onLoad = function () { that._onMeshReady(); };
+			nexus_instance.onUpdate = this.ui.postDrawEvent;
+
+			mesh.renderable = nexus_instance;
 			mesh.isNexus = true;
-			nexus.targetError = this._nexusTargetError;
-			//nexus.drawBudget = 0.5*1024*1024;
-			nexus._targetFps = this._nexusTargetFps;
-			nexus._maxCacheSize = this._nexusCacheSize;
-			nexus.onSceneReady = function () { that._onMeshReady(); };
-			nexus.onUpdate = this.ui.postDrawEvent;
-			nexus.open(mesh.url);
+
+			nexus_instance.open(mesh.url);
 		}
 		else {
 			mesh.renderable = null;
@@ -2831,20 +2937,67 @@ setScene : function (options) {
 	}
 
 	// create point-to-point line model
-	this._createLineModel()
+	this._createLineModel();
 	// create quad models
 	this._createQuadModels();
 
 	this._sceneParsed = true;
 },
 
+get version() {
+	return HOP_VERSION;
+},
+
+supportsWebGL : function () {
+	return this._supportsWebGL;
+},
+
+toggleDebugMode : function () {
+	this._isDebugging = !this._isDebugging;
+},
+
+repaint : function () {
+	this.ui.postDrawEvent();
+},
+
+//-----------------------------------------------------------------------------
+// nexus
+
+setNexusTargetFps: function(fps) {
+	this._nexusTargetFps = fps;
+	Nexus.setTargetFps(this.ui.gl, fps);
+},
+
+getNexusTargetFps: function() {
+	return this._nexusTargetFps;
+},
+
+setNexusTargetError: function(error) {
+	this._nexusTargetError = error;
+	Nexus.setTargetError(this.ui.gl, error);
+},
+
+getNexusTargetError: function() {
+	return this._nexusTargetError;
+},
+
+setNexusCacheSize: function(size) {
+	this._nexusCacheSize = size;
+	Nexus.setMaxCacheSize(this.ui.gl, size);
+},
+
+getNexusCacheSize: function() {
+	return this._nexusCacheSize;
+},
+
+//-----------------------------------------------------------------------------
+// trackball
+
 resetTrackball : function () {
 	this.trackball.reset();
 	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 	this._lightDirection = HOP_DEFAULTLIGHT; // also reset lighting
-//		this._scene.config.pointSize = HOP_DEFAULTPOINTSIZE; // also reset points size
-
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 getTrackballPosition : function () {
@@ -2853,13 +3006,16 @@ getTrackballPosition : function () {
 
 setTrackballPosition : function (newposition) {
 	this.trackball.setState(newposition);
-	this.ui.postDrawEvent();
+	this.repaint();
 },
+
+//-----------------------------------------------------------------------------
+// camera animations
 
 animateToTrackballPosition : function (newposition, newtime) {
 	this.ui.animateRate = 30;
 	this.trackball.animateToState(newposition, newtime);
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 isAnimate : function () {
@@ -2869,32 +3025,35 @@ isAnimate : function () {
 },
 
 //-----------------------------------------------------------------------------
-// functions to dynamically change center/radius mode
+// dynamic center/radius mode
 
 setCenterModeFirst : function () {
 	this._scene.space.centerMode = "first";
-	this.ui.postDrawEvent();
+	this.repaint();
 },
+
 setCenterModeScene : function () {
 	this._scene.space.centerMode = "scene";
-	this.ui.postDrawEvent();
+	this.repaint();
 },
+
 setCenterModeSpecific : function (instancename) {
 	if(this._scene.modelInstances[instancename])
 	{
 		this._scene.space.centerMode = "specific";
 		this._scene.space.whichInstanceCenter = instancename;
-		this.ui.postDrawEvent();
+		this.repaint();
 	}
 	else
 		return "ERROR - No such instance";
 },
+
 setCenterModeExplicit : function (newcenter) {
-	if((newcenter.constructor === Array)&&(newcenter.lenght = 3)&&(isFinite(String(newcenter[0])))&&(isFinite(String(newcenter[1])))&&(isFinite(String(newcenter[2]))))
+	if((newcenter.constructor === Array)&&(newcenter.length = 3)&&(isFinite(String(newcenter[0])))&&(isFinite(String(newcenter[1])))&&(isFinite(String(newcenter[2]))))
 	{
 		this._scene.space.centerMode = "explicit";
 		this._scene.space.explicitCenter = newcenter;
-		this.ui.postDrawEvent();
+		this.repaint();
 	}
 	else
 		return "ERROR - Not a point";
@@ -2902,28 +3061,31 @@ setCenterModeExplicit : function (newcenter) {
 
 setRadiusModeFirst : function () {
 	this._scene.space.radiusMode = "first";
-	this.ui.postDrawEvent();
+	this.repaint();
 },
+
 setRadiusModeScene : function () {
 	this._scene.space.radiusMode = "scene";
-	this.ui.postDrawEvent();
+	this.repaint();
 },
+
 setRadiusModeSpecific : function (instancename) {
 	if(this._scene.modelInstances[instancename])
 	{
 		this._scene.space.radiusMode = "specific";
 		this._scene.space.whichInstanceRadius = instancename;
-		this.ui.postDrawEvent();
+		this.repaint();
 	}
 	else
 		return "ERROR - No such instance";
 },
+
 setRadiusModeExplicit : function (newradius) {
 	if((isFinite(String(newradius)))&&(newradius>0.0))
 	{
 		this._scene.space.radiusMode = "explicit";
 		this._scene.space.explicitRadius = newradius;
-		this.ui.postDrawEvent();
+		this.repaint();
 	}
 	else
 		return "ERROR - Not a radius";
@@ -2931,6 +3093,7 @@ setRadiusModeExplicit : function (newradius) {
 
 //-----------------------------------------------------------------------------
 // instance solid color
+
 setInstanceSolidColorByName : function (name, newState, redraw, newColor) {
 	var instances = this._scene.modelInstances;
 
@@ -2949,7 +3112,7 @@ setInstanceSolidColorByName : function (name, newState, redraw, newColor) {
 		}
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 setInstanceSolidColor : function (tag, newState, redraw, newColor) {
@@ -2972,7 +3135,7 @@ setInstanceSolidColor : function (tag, newState, redraw, newColor) {
 		}
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 toggleInstanceSolidColorByName : function (name, redraw) {
@@ -2985,7 +3148,7 @@ toggleInstanceSolidColorByName : function (name, redraw) {
 		if(instances[name]) // if an instance with that name exists
 			instances[name].useSolidColor = !instances[name].useSolidColor;
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 toggleInstanceSolidColor : function (tag, redraw) {
@@ -3000,11 +3163,60 @@ toggleInstanceSolidColor : function (tag, redraw) {
 					instances[inst].useSolidColor = !instances[inst].useSolidColor;
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
+},
+
+isInstanceSolidColorEnabledByName : function (name) {
+	var solidcolor = false;
+	var instances = this._scene.modelInstances;
+
+	if(!name || name==HOP_ALL) {
+		for (var inst in instances) {
+			if(instances[inst].useSolidColor){
+				solidcolor = true;
+				return solidcolor;
+			}
+		}
+	}
+	else {
+		if(instances[name]) { // if an instance with that name exists
+			if(instances[name].useSolidColor){
+				solidcolor = true;
+				return solidcolor;
+			}
+		 }
+	}
+	return solidcolor;
+},
+
+isInstanceSolidColorEnabled : function (tag) {
+	var solidcolor = false;
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(!tag || tag==HOP_ALL){
+			if(instances[inst].useSolidColor){
+				solidcolor = true;
+				return solidcolor;
+			}
+		}
+		else{
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag){
+					if(instances[inst].useSolidColor){
+						solidcolor = true;
+						return solidcolor;
+					}
+				 }
+			}
+		}
+	}
+	return solidcolor;
 },
 
 //-----------------------------------------------------------------------------
 // instance transparency
+
 setInstanceTransparencyByName : function (name, newState, redraw, newAlpha) {
 	var instances = this._scene.modelInstances;
 
@@ -3022,7 +3234,7 @@ setInstanceTransparencyByName : function (name, newState, redraw, newAlpha) {
 		}
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 setInstanceTransparency : function (tag, newState, redraw, newAlpha) {
@@ -3045,7 +3257,7 @@ setInstanceTransparency : function (tag, newState, redraw, newAlpha) {
 		}
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 toggleInstanceTransparencyByName : function (name, redraw) {
@@ -3060,7 +3272,7 @@ toggleInstanceTransparencyByName : function (name, redraw) {
 			instances[name].useTransparency = !instances[name].useTransparency;
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 toggleInstanceTransparency : function (tag, redraw) {
@@ -3080,11 +3292,141 @@ toggleInstanceTransparency : function (tag, redraw) {
 		}
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
+},
+
+
+isInstanceTransparencyEnabledByName : function (name) {
+	var transparency = false;
+	var instances = this._scene.modelInstances;
+
+	if(!name || name==HOP_ALL) {
+		for (var inst in instances) {
+			if(instances[inst].useTransparency){
+				transparency = true;
+				return transparency;
+			}
+		}
+	}
+	else {
+		if(instances[name]) { // if an instance with that name exists
+			if(instances[name].useTransparency){
+				transparency = true;
+				return transparency;
+			}
+		 }
+	}
+	return transparency;
+},
+
+isInstanceTransparencyEnabled : function (tag) {
+	var transparency = false;
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(!tag || tag==HOP_ALL){
+			if(instances[inst].useTransparency){
+				transparency = true;
+				return transparency;
+			}
+		}
+		else{
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag){
+					if(instances[inst].useTransparency){
+						transparency = true;
+						return transparency;
+					}
+				 }
+			}
+		}
+	}
+	return transparency;
+},
+
+//-----------------------------------------------------------------------------
+// instance shading
+//----specular
+
+setInstanceSpecularityByName : function (name, color, hardness, redraw) {
+	var instances = this._scene.modelInstances;
+
+	if(name == HOP_ALL) {
+		for (var inst in instances)
+			instances[inst].specularColor = [color[0], color[1], color[2], hardness];
+	}
+	else {
+		if(instances[name]) // if an instance with that name exists
+			instances[name].specularColor = [color[0], color[1], color[2], hardness];
+	}
+	if(redraw)
+		this.repaint();
+},
+
+setInstanceSpecularity : function (tag, color, hardness, redraw) {
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(tag == HOP_ALL) {
+			instances[inst].specularColor = [color[0], color[1], color[2], hardness];
+		}
+		else {
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag)
+					instances[inst].specularColor = [color[0], color[1], color[2], hardness];
+			}
+		}
+	}
+	if(redraw)
+		this.repaint();
+},
+
+//----backface
+
+setInstanceBackfaceByName : function (name, color, mode, redraw) {
+	var instances = this._scene.modelInstances;
+	var modecode = 0.0;
+	if (mode == "tint") modecode = 0.0;
+	else if (mode == "fill") modecode = 1.0;
+	else if (mode == "cull") modecode = 2.0;
+
+	if(name == HOP_ALL) {
+		for (var inst in instances)
+			instances[inst].backfaceColor = [color[0], color[1], color[2], modecode];
+	}
+	else {
+		if(instances[name]) // if an instance with that name exists
+			instances[name].backfaceColor = [color[0], color[1], color[2], modecode];
+	}
+	if(redraw)
+		this.repaint();
+},
+
+setInstanceBackface : function (tag, color, mode, redraw) {
+	var instances = this._scene.modelInstances;
+	var modecode = 0.0;
+	if (mode == "tint") modecode = 0.0;
+	else if (mode == "fill") modecode = 1.0;
+	else if (mode == "cull") modecode = 2.0;
+
+	for (var inst in instances) {
+		if(tag == HOP_ALL) {
+			instances[inst].backfaceColor = [color[0], color[1], color[2], modecode];
+		}
+		else {
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag)
+					instances[inst].backfaceColor = [color[0], color[1], color[2], modecode];
+			}
+		}
+	}
+	if(redraw)
+		this.repaint();
 },
 
 //-----------------------------------------------------------------------------
 // instance visibility
+
 setInstanceVisibilityByName : function (name, newState, redraw) {
 	var instances = this._scene.modelInstances;
 
@@ -3097,7 +3439,7 @@ setInstanceVisibilityByName : function (name, newState, redraw) {
 			instances[name].visible = newState;
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 setInstanceVisibility : function (tag, newState, redraw) {
@@ -3115,7 +3457,7 @@ setInstanceVisibility : function (tag, newState, redraw) {
 		}
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 toggleInstanceVisibilityByName : function (name, redraw) {
@@ -3130,7 +3472,7 @@ toggleInstanceVisibilityByName : function (name, redraw) {
 			instances[name].visible = !instances[name].visible;
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 toggleInstanceVisibility : function (tag, redraw) {
@@ -3150,7 +3492,7 @@ toggleInstanceVisibility : function (tag, redraw) {
 		}
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 isInstanceVisibilityEnabledByName : function (name) {
@@ -3203,6 +3545,7 @@ isInstanceVisibilityEnabled : function (tag) {
 
 //-----------------------------------------------------------------------------
 // spot visibility
+
 setSpotVisibilityByName : function (name, newState, redraw) {
 	var spots = this._scene.spots;
 
@@ -3215,7 +3558,7 @@ setSpotVisibilityByName : function (name, newState, redraw) {
 			spots[name].visible = newState;
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 setSpotVisibility : function (tag, newState, redraw) {
@@ -3234,7 +3577,7 @@ setSpotVisibility : function (tag, newState, redraw) {
 		}
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 toggleSpotVisibilityByName : function (name, redraw) {
@@ -3248,7 +3591,7 @@ toggleSpotVisibilityByName : function (name, redraw) {
 			spots[name].visible = !spots[name].visible;
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 toggleSpotVisibility : function (tag, redraw) {
@@ -3267,7 +3610,7 @@ toggleSpotVisibility : function (tag, redraw) {
 		}
 	}
 	if(redraw)
-		this.ui.postDrawEvent();
+		this.repaint();
 },
 
 isSpotVisibilityEnabledByName : function (name) {
@@ -3320,33 +3663,34 @@ isSpotVisibilityEnabled : function (tag) {
 
 //-----------------------------------------------------------------------------
 // sections
+
 resetClippingXYZ: function() {
 	this._calculateBounding();
 	this._clipAxis = [0.0, 0.0, 0.0];
 	this._clipPoint = [0.0, 0.0, 0.0];
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 setClippingXYZ: function(cx, cy, cz) {
 	this._calculateBounding();
 	this._clipAxis = [cx,cy,cz];
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 setClippingX: function(cx) {
 	this._calculateBounding();
 	this._clipAxis[0] = cx;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 setClippingY: function(cy) {
 	this._calculateBounding();
 	this._clipAxis[1] = cy;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 setClippingZ: function(cz) {
 	this._calculateBounding();
 	this._clipAxis[2] = cz;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 getClippingX : function () {
@@ -3362,23 +3706,23 @@ getClippingZ : function () {
 setClippingPointXYZabs: function(clx, cly, clz) {
 	this._calculateBounding();
 	this._clipPoint = [clx, cly, clz];
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 setClippingPointXabs: function(clx) {
 	this._calculateBounding();
 	this._clipPoint[0] = clx;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 setClippingPointYabs: function(cly) {
 	this._calculateBounding();
 	this._clipPoint[1] = cly;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 setClippingPointZabs: function(clz) {
 	this._calculateBounding();
 	this._clipPoint[2] = clz;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 setClippingPointXYZ: function(clx, cly, clz) {
@@ -3395,7 +3739,7 @@ setClippingPointXYZ: function(clx, cly, clz) {
 	nClipPoint[2] = this._sceneBboxMin[2] + clz * (this._sceneBboxMax[2] - this._sceneBboxMin[2]);
 
 	this._clipPoint = nClipPoint;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 setClippingPointX: function(clx) {
@@ -3404,7 +3748,7 @@ setClippingPointX: function(clx) {
 	if(clx<0.0) clx=0.0; else if(clx>1.0) clx=1.0;
 	nClipPoint = this._sceneBboxMin[0] + clx * (this._sceneBboxMax[0] - this._sceneBboxMin[0]);
 	this._clipPoint[0] = nClipPoint;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 setClippingPointY: function(cly) {
 	var nClipPoint = 0.0;
@@ -3412,7 +3756,7 @@ setClippingPointY: function(cly) {
 	if(cly<0.0) cly=0.0; else if(cly>1.0) cly=1.0;
 	nClipPoint = this._sceneBboxMin[1] + cly * (this._sceneBboxMax[1] - this._sceneBboxMin[1]);
 	this._clipPoint[1] = nClipPoint;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 setClippingPointZ: function(clz) {
 	var nClipPoint = 0.0;
@@ -3420,14 +3764,16 @@ setClippingPointZ: function(clz) {
 	if(clz<0.0) clz=0.0; else if(clz>1.0) clz=1.0;
 	nClipPoint = this._sceneBboxMin[2] + clz * (this._sceneBboxMax[2] - this._sceneBboxMin[2]);
 	this._clipPoint[2] = nClipPoint;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
-_calculateBounding: function() {	var meshes    = this._scene.meshes;
+_calculateBounding: function() {
+	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
 	this._sceneBboxMin = SglVec3.maxNumber();
 	this._sceneBboxMax = SglVec3.minNumber();
 	this._sceneBboxCenter = [0.0, 0.0, 0.0];
+	this._sceneBboxDiag = 0.0;
 	var imin = [0.0, 0.0, 0.0];
 	var imax = [0.0, 0.0, 0.0];
 
@@ -3467,6 +3813,8 @@ _calculateBounding: function() {	var meshes    = this._scene.meshes;
 	this._sceneBboxCenter[0] = (this._sceneBboxMin[0] + this._sceneBboxMax[0]) / 2.0;
 	this._sceneBboxCenter[1] = (this._sceneBboxMin[1] + this._sceneBboxMax[1]) / 2.0;
 	this._sceneBboxCenter[2] = (this._sceneBboxMin[2] + this._sceneBboxMax[2]) / 2.0;
+
+	this._sceneBboxDiag = SglVec3.length([ this._sceneBboxMax[0]-this._sceneBboxMin[0], this._sceneBboxMax[1]-this._sceneBboxMin[1], this._sceneBboxMax[2]-this._sceneBboxMin[2]]);
 },
 
 setClippingRendermode: function(showPlanes, showBorder, borderSize, borderColor) {
@@ -3477,7 +3825,7 @@ setClippingRendermode: function(showPlanes, showBorder, borderSize, borderColor)
 		this._scene.config.clippingBorderSize = borderSize;
 	if(borderColor)
 		this._scene.config.clippingBorderColor = borderColor;
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 getClippingRendermode: function() {
@@ -3485,7 +3833,46 @@ getClippingRendermode: function() {
 	return rendermode;
 },
 
+resetClippingPlane : function () {
+	this._calculateBounding();
+	this._clipPlane = [0.0, 0.0, 0.0, 0.0];
+	this.repaint();
+},
+
+setClippingPlaneExplicit : function (axis, offset) {
+	this._calculateBounding();
+	this._clipPlane = [axis[0], axis[1], axis[2], offset];
+	this.repaint();
+},
+
+setClippingPlane : function (angleH, angleV, sign, delta, deltaabs) {
+	this._calculateBounding();
+	var axis;
+	var m = SglMat4.identity();
+	this._clipPlaneAH = angleH;
+	this._clipPlaneAV = angleV;
+
+	// horizontal angle
+	m = SglMat4.mul(m, SglMat4.rotationAngleAxis(sglDegToRad(angleH), [0.0, -1.0, 0.0]));
+	// vertical angle
+	m = SglMat4.mul(m, SglMat4.rotationAngleAxis(sglDegToRad(angleV), [0.0, 0.0, 1.0]));
+
+	axis = [sign*1.0, 0.0, 0.0, 1.0];
+	axis = SglMat4.mul4(m, axis);
+
+	var sceneOff = (this._sceneBboxDiag / 2.0) * (delta / 100.0);
+	if(typeof deltaabs !== "undefined")
+		sceneOff = deltaabs;
+	var position = [this._sceneBboxCenter[0] + (axis[0] * sceneOff), this._sceneBboxCenter[1] + (axis[1] * sceneOff), this._sceneBboxCenter[2] + (axis[2] * sceneOff)];
+	sceneOff = SglVec3.dot([axis[0], axis[1], axis[2]], position);
+
+	this._clipPlane = [axis[0], axis[1], axis[2], -sceneOff];
+	this.repaint();
+},
+
 //-----------------------------------------------------------------------------
+// zoom
+
 zoomIn: function() {
 	this.onMouseWheel(1);
 },
@@ -3495,6 +3882,8 @@ zoomOut: function() {
 },
 
 //-----------------------------------------------------------------------------
+// light
+
 rotateLight: function(x, y) {
 	x *= 2;
 	y *= 2;
@@ -3506,11 +3895,15 @@ rotateLight: function(x, y) {
 	}
 	var z = Math.sqrt(1 - r*r);
 	this._lightDirection = [-x, -y, -z];
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
 enableLightTrackball: function(on) {
 	this._movingLight = on;
+
+	if(on && !this._scene.space.sceneLighting) this._scene.space.sceneLighting = on;
+
+	this.repaint();
 },
 
 isLightTrackballEnabled: function() {
@@ -3518,6 +3911,8 @@ isLightTrackballEnabled: function() {
 },
 
 //-----------------------------------------------------------------------------
+// onHover
+
 enableOnHover: function(on) {
 	this._onHover = on;
 },
@@ -3527,6 +3922,8 @@ isOnHoverEnabled: function() {
 },
 
 //-----------------------------------------------------------------------------
+// linear measure
+
 enableMeasurementTool: function(on) {
 	if(on)
 		this._startMeasurement();
@@ -3539,6 +3936,8 @@ isMeasurementToolEnabled: function() {
 },
 
 //-----------------------------------------------------------------------------
+// point measure
+
 enablePickpointMode: function(on) {
 	if(on)
 		this._startPickPoint();
@@ -3551,32 +3950,182 @@ isPickpointModeEnabled: function() {
 },
 
 //-----------------------------------------------------------------------------
+// measurements
+
 isAnyMeasurementEnabled: function() {
 	return this._isMeasuring;
 },
 
 //-----------------------------------------------------------------------------
+// camera type
+
 toggleCameraType: function() {
-	if(this._scene.space.cameraType == "ortho")
+	if(this._scene.space.cameraType == "orthographic")
 		this._scene.space.cameraType = "perspective"
 	else
-		this._scene.space.cameraType = "ortho"
+		this._scene.space.cameraType = "orthographic"
 
-	this.ui.postDrawEvent();
+	this.repaint();
 },
 
-setCameraPerspective() {
+setCameraPerspective: function() {
 	this._scene.space.cameraType = "perspective";
-	this.ui.postDrawEvent();
+	this.repaint();
 },
-setCameraOrthographic() {
-	this._scene.space.cameraType = "ortho";
-	this.ui.postDrawEvent();
+
+setCameraOrthographic: function() {
+	this._scene.space.cameraType = "orthographic";
+	this.repaint();
+},
+
+getCameraType : function () {
+	return this._scene.space.cameraType;
 },
 
 //-----------------------------------------------------------------------------
-repaint() {
-	this.ui.postDrawEvent();
+// trackball lock
+
+toggleTrackballLock: function() {
+	this._scene.trackball.locked = !this._scene.trackball.locked;
 },
+
+setTrackballLock: function(newState) {
+	this._scene.trackball.locked = newState;
+},
+
+isTrackballLockEnabled: function() {
+	return this._scene.trackball.locked;
+},
+
+//-----------------------------------------------------------------------------
+// lighting
+
+enableSceneLighting: function(on) {
+	this._scene.space.sceneLighting = on;
+
+	if(!on && this._movingLight) this._movingLight = on;
+
+	this.repaint();
+},
+
+isSceneLightingEnabled: function() {
+	return this._scene.space.sceneLighting;
+},
+
+setInstanceLightingByName : function (name, newState, redraw) {
+	var instances = this._scene.modelInstances;
+
+	if(name == HOP_ALL) {
+		for (var inst in instances)
+			instances[inst].useLighting = newState;
+	}
+	else {
+		if(instances[name]) // if an instance with that name exists
+			instances[name].useLighting = newState;
+	}
+	if(redraw)
+		this.repaint();
+},
+
+setInstanceLighting : function (tag, newState, redraw) {
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(tag == HOP_ALL) {
+			instances[inst].useLighting = newState;
+		}
+		else {
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag)
+					instances[inst].useLighting = newState;
+			}
+		}
+	}
+	if(redraw)
+		this.repaint();
+},
+
+toggleInstanceLightingByName : function (name, redraw) {
+	var instances = this._scene.modelInstances;
+
+	if(name == HOP_ALL) {
+		for (var inst in instances)
+			instances[inst].useLighting = !instances[inst].useLighting;
+	}
+	else {
+		if(instances[name]) // if an instance with that name exists
+			instances[name].useLighting = !instances[name].useLighting;
+	}
+	if(redraw)
+		this.repaint();
+},
+
+toggleInstanceLighting : function (tag, redraw) {
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(tag == HOP_ALL)
+		{
+			instances[inst].useLighting = !instances[inst].useLighting;
+		}
+		else
+		{
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag)
+					instances[inst].useLighting = !instances[inst].useLighting;
+			}
+		}
+	}
+	if(redraw)
+		this.repaint();
+},
+
+isInstanceLightingEnabledByName : function (name) {
+	var Lighting = false;
+	var instances = this._scene.modelInstances;
+
+	if(!name || name==HOP_ALL) {
+		for (var inst in instances) {
+			if(instances[inst].useLighting){
+				Lighting = true;
+				return Lighting;
+			}
+		}
+	}
+	else {
+		if(instances[name]) { // if an instance with that name exists
+			if(instances[name].useLighting){
+				Lighting = true;
+				return Lighting;
+			}
+		 }
+	}
+	return Lighting;
+},
+
+isInstanceLightingEnabled : function (tag) {
+	var Lighting = false;
+	var instances = this._scene.modelInstances;
+
+	for (var inst in instances) {
+		if(!tag || tag==HOP_ALL){
+			if(instances[inst].useLighting){
+				Lighting = true;
+				return Lighting;
+			}
+		}
+		else{
+			for (var tg in instances[inst].tags){
+				if(instances[inst].tags[tg] == tag){
+					if(instances[inst].useLighting){
+						Lighting = true;
+						return Lighting;
+					}
+				 }
+			}
+		}
+	}
+	return Lighting;
+}
 
 }; // Presenter.prototype END

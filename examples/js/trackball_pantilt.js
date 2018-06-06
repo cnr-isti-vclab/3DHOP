@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -40,13 +40,19 @@ PanTiltTrackball.prototype = {
 			minMaxPanY    : [-0.7, 0.7],
 			minMaxAngleX  : [-70.0, 70.0],
 			minMaxAngleY  : [-70.0, 70.0],
-			animationTime : 1.0
+			pathStates      : [ ],	// path points array
+			animationLocked : false,// if true disable trackball interactions during animation
+			animationTime   : null	// when single position navigation, each to point navigation is # seconds (if null, automatically computed)
 		}, options);
 
 		this._action = SGL_TRACKBALL_NO_ACTION;
 		this._new_action = true;
-
 		this._matrix = SglMat4.identity();
+
+		// path
+		this._pathStates = opt.pathStates;
+		this._animationLocked = opt.animationLocked;
+		this._pathPosNum = 0;
 
 		// trackball center
 		this._center = opt.startCenter;
@@ -56,7 +62,7 @@ PanTiltTrackball.prototype = {
 		this._startPanY = opt.startPanY;					//pan Y
 		this._startAngleX = sglDegToRad(opt.startAngleX);	//angle X
 		this._startAngleY = sglDegToRad(opt.startAngleY);	//angle Y
-		this._startDistance = opt.startDistance;   			//distance
+		this._startDistance = opt.startDistance;			//distance
 
 		// current parameters
 		this._panX = this._startPanX;
@@ -74,12 +80,13 @@ PanTiltTrackball.prototype = {
 
 		//animation data
 		this._isAnimating = false;
-		this._animationTime = this._defaultAnimationTime = opt.animationTime;
 		this._speedPanX = 0.0;
 		this._speedPanY = 0.0;
 		this._speedAngleX = 0.0;
 		this._speedAngleY = 0.0;
 		this._speedDistance = 0.0;
+		this._isAutoWalking = false;
+		this._animationTime = opt.animationTime;
 
 		//limits
 		this._minMaxDist  = opt.minMaxDist;
@@ -96,13 +103,13 @@ PanTiltTrackball.prototype = {
 		this.reset();
 	},
 
-    _clamp: function(value, low, high) {
-      if(value < low) return low;
-      if(value > high) return high;
-      return value;
-    },
+	_clamp : function(value, low, high) {
+		if(value < low) return low;
+		if(value > high) return high;
+		return value;
+	},
 
-    _computeMatrix: function() {
+	_computeMatrix: function() {
 		var m = SglMat4.identity();
 
 		// centering
@@ -119,13 +126,16 @@ PanTiltTrackball.prototype = {
 
 		if(typeof onTrackballUpdate != "undefined")
 			onTrackballUpdate(this.getState());
-    },
+	},
 
 	getState : function () {
 		return [this._panX, this._panY, sglRadToDeg(this._angleX), sglRadToDeg(this._angleY), this._distance];
 	},
 
 	setState : function (newstate) {
+		// stop animation
+		this._isAnimating = this._isAutoWalking = false;
+
 		this._panX     = newstate[0];
 		this._panY     = newstate[1];
 		this._angleX   = sglDegToRad(newstate[2]);
@@ -146,44 +156,66 @@ PanTiltTrackball.prototype = {
 		// stop animation
 		this._isAnimating = false;
 
-		this._targetPanX = newstate[0];
-		this._targetPanY = newstate[1];
-		this._targetAngleX = sglDegToRad(newstate[2]);
-		this._targetAngleY = sglDegToRad(newstate[3]);
-		this._targetDistance = newstate[4];
+		if(newstate)
+		{
+			// stop autoWalking
+			this._isAutoWalking = false;
 
-		if(newtime) this._animationTime = newtime;
-		else this._animationTime = this._defaultAnimationTime;
+			// setting targets
+			this._targetPanX     = newstate[0];
+			this._targetPanY     = newstate[1];
+			this._targetAngleX   = sglDegToRad(newstate[2]);
+			this._targetAngleY   = sglDegToRad(newstate[3]);
+			this._targetDistance = newstate[4];
 
-		//check limits
-		this._targetPanX = this._clamp(this._targetPanX, this._minMaxPanX[0], this._minMaxPanX[1]);
-		this._targetPanY = this._clamp(this._targetPanY, this._minMaxPanY[0], this._minMaxPanY[1]);
-		this._targetAngleX = this._clamp(this._targetAngleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
-		this._targetAngleY = this._clamp(this._targetAngleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
-		this._targetDistance = this._clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
+			//check limits
+			this._targetPanX = this._clamp(this._targetPanX, this._minMaxPanX[0], this._minMaxPanX[1]);
+			this._targetPanY = this._clamp(this._targetPanY, this._minMaxPanY[0], this._minMaxPanY[1]);
+			this._targetAngleX = this._clamp(this._targetAngleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
+			this._targetAngleY = this._clamp(this._targetAngleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
+			this._targetDistance = this._clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
 
-		// setting base velocities
-		this._speedPanX = 2.0;
-		this._speedPanY = 2.0;
-		this._speedAngleX = Math.PI;
-		this._speedAngleY = Math.PI;
-		this._speedDistance = 2.0;
+			// setting base velocities
+			this._speedPanX = 2.0;
+			this._speedPanY = 2.0;
+			this._speedAngleX = Math.PI;
+			this._speedAngleY = Math.PI;
+			this._speedDistance = 2.0;
 
-		// find max animation time to set a time limit and then synchronize all movements
-		var timePanX = Math.abs((this._targetPanX - this._panX) / this._speedPanX);
-		var timePanY = Math.abs((this._targetPanY - this._panY) / this._speedPanY);
-		var timeAngleX = Math.abs((this._targetAngleX - this._angleX) / this._speedAngleX);
-		var timeAngleY = Math.abs((this._targetAngleY - this._angleY) / this._speedAngleY);
-		var timeDistance = Math.abs((this._targetDistance - this._distance) / this._speedDistance);
+			// find max animation time to set a time limit and then synchronize all movements
+			var timePanX = Math.abs((this._targetPanX - this._panX) / this._speedPanX);
+			var timePanY = Math.abs((this._targetPanY - this._panY) / this._speedPanY);
+			var timeAngleX = Math.abs((this._targetAngleX - this._angleX) / this._speedAngleX);
+			var timeAngleY = Math.abs((this._targetAngleY - this._angleY) / this._speedAngleY);
+			var timeDistance = Math.abs((this._targetDistance - this._distance) / this._speedDistance);
 
-		var maxtime = Math.max( timePanX, Math.max( timePanY, Math.max( timeAngleX, Math.max( timeAngleY, timeDistance ) ) ));
-		maxtime = this._clamp(maxtime, 0.5, 2.0);
+			var maxtime = Math.max( timePanX, Math.max( timePanY, Math.max( timeAngleX, Math.max( timeAngleY, timeDistance ) ) ));
+			var animationtime = this._clamp(maxtime, 0.5, 2.0);
 
-		this._speedPanX *= timePanX / maxtime;
-		this._speedPanY *= timePanY / maxtime;
-		this._speedAngleX *= timeAngleX / maxtime;
-		this._speedAngleY *= timeAngleY / maxtime;
-		this._speedDistance *= timeDistance / maxtime;
+			if(newtime) animationtime = newtime;
+			else if (this._animationTime) animationtime = this._animationTime;
+
+			this._speedPanX     *= timePanX / animationtime;
+			this._speedPanY     *= timePanY / animationtime;
+			this._speedAngleX   *= timeAngleX / animationtime;
+			this._speedAngleY   *= timeAngleY / animationtime;
+			this._speedDistance *= timeDistance / animationtime;
+		}
+		else
+		{
+			if(this._pathPosNum == this._pathStates.length){
+				this._isAutoWalking = false;
+				this._pathPosNum = 0;
+			}
+			else {
+				var state = this._pathStates[this._pathPosNum][0];
+				var time = this._animationTime;
+				if(!Array.isArray(state)) state = this._pathStates[this._pathPosNum];
+				else if (this._pathStates[this._pathPosNum][1]) time = this._pathStates[this._pathPosNum][1];
+				if(!this._isAutoWalking) this.animateToState(state, time);
+				this._isAutoWalking = true;
+			}
+		}
 
 		// start animation
 		this._isAnimating = true;
@@ -191,22 +223,22 @@ PanTiltTrackball.prototype = {
 
 	recenter : function (newpoint) {
 		// stop animation
-		this._isAnimating = false;
+		this._isAnimating = this._isAutoWalking = false;
 
 		var newpanX = -(newpoint[0]-presenter.sceneCenter[0]) * presenter.sceneRadiusInv;
 		var newpanY = -(newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
 
-		this.animateToState([newpanX, newpanY, sglRadToDeg(this._angleX), sglRadToDeg(this._angleY), (this._distance * 0.8)]);
+		this.animateToState([newpanX, newpanY, sglRadToDeg(this._angleX), sglRadToDeg(this._angleY), (this._distance * 0.6)]);
 	},
 
 	tick : function (dt) {
 		if(!this._isAnimating) return false;
 
-		var deltaPanX = this._speedPanX * dt / this._animationTime;
-		var deltaPanY = this._speedPanY * dt / this._animationTime;
-		var deltaAngleX = this._speedAngleX * dt / this._animationTime;
-		var deltaAngleY = this._speedAngleY * dt / this._animationTime;
-		var deltaDistance = this._speedDistance * dt / this._animationTime;
+		var deltaPanX     = this._speedPanX * dt;
+		var deltaPanY     = this._speedPanY * dt;
+		var deltaAngleX   = this._speedAngleX * dt;
+		var deltaAngleY   = this._speedAngleY * dt;
+		var deltaDistance = this._speedDistance * dt;
 
 		var diffPanX = this._targetPanX - this._panX;
 		var diffPanY = this._targetPanY - this._panY;
@@ -253,24 +285,27 @@ PanTiltTrackball.prototype = {
 			if(this._panX == this._targetPanX)
 				if(this._angleX == this._targetAngleX)
 					if(this._angleY == this._targetAngleY)
-						if(this._distance == this._targetDistance)
-								{ this._animationTime = this._defaultAnimationTime; this._isAnimating = false; }
+						if(this._distance == this._targetDistance){
+								this._isAnimating = false; 
+								if(this._isAutoWalking) { this._pathPosNum++; this._isAutoWalking = false; this.animateToState(); }
+							}
 
 		this._computeMatrix();
 		return true;
 	},
 
-	get action()  { return this._action; },
-
 	set action(a) { if(this._action != a) { this._new_action = true; this._action = a; } },
 
-	get matrix() { return this._matrix; },
+	get action()  { return this._action; },
+
+	get matrix() { this._computeMatrix(); return this._matrix; },
 
 	get distance() { return this._distance; },
 
 	reset : function () {
 		this._matrix = SglMat4.identity();
-		this._action = SGL_TRACKBALL_NO_ACTION
+		this._action = SGL_TRACKBALL_NO_ACTION;
+		this._new_action = true;
 
 		this._panX = this._startPanX;
 		this._panY = this._startPanY;
@@ -278,60 +313,66 @@ PanTiltTrackball.prototype = {
 		this._angleY = this._startAngleY;
 		this._distance = this._startDistance;
 
+		this._pathPosNum = 0;
+
+		this._isAutoWalking = false;
 		this._isAnimating = false;
+
+		this._computeMatrix();
 	},
 
 	track : function(m, x, y, z) {
-        if(this._new_action) {
-            this._start[0] = x;
-		    this._start[1] = y;
-            this._new_action = false;
-        }
+		if(this._animationLocked && this._isAnimating) this._action = SGL_TRACKBALL_NO_ACTION;
+		if(this._new_action) {
+			this._start[0] = x;
+			this._start[1] = y;
+			this._new_action = false;
+		}
 
-        var dx = this._start[0] - x;
-        var dy = this._start[1] - y;
-        this._start[0] = x;
-        this._start[1] = y;
+		var dx = this._start[0] - x;
+		var dy = this._start[1] - y;
+		this._start[0] = x;
+		this._start[1] = y;
 
 		switch (this._action) {
 			case SGL_TRACKBALL_ROTATE:
-				this._isAnimating = false; //stopping animation
+				this._isAnimating = this._isAutoWalking = false; //stopping animation
 				this.rotate(m, dx, dy);
 			break;
 
 			case SGL_TRACKBALL_PAN:
-				this._isAnimating = false; //stopping animation
+				this._isAnimating = this._isAutoWalking = false; //stopping animation
 				this.pan(m, dx, dy);
 			break;
 
 			case SGL_TRACKBALL_SCALE:
-				this._isAnimating = false; //stopping animation
+				this._isAnimating = this._isAutoWalking = false; //stopping animation
 				this.scale(m, z);
 			break;
 
 			default:
 			break;
 		}
-        return this._computeMatrix();
+		return this._computeMatrix();
 	},
 
-    rotate: function(m, dx, dy) {
-      this._angleX += dx;
-      this._angleY += dy;
-      this._angleX = this._clamp(this._angleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
-      this._angleY = this._clamp(this._angleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
-    },
+	rotate: function(m, dx, dy) {
+		this._angleX += dx;
+		this._angleY += dy;
+		this._angleX = this._clamp(this._angleX, this._minMaxAngleX[0], this._minMaxAngleX[1]);
+		this._angleY = this._clamp(this._angleY, this._minMaxAngleY[0], this._minMaxAngleY[1]);
+	},
 
-    pan: function(m, dx, dy) {
-      var panSpeed = Math.max(Math.min(1.5, this._distance),0.05);		
-      this._panX -= dx/2.0 * panSpeed; 
-      this._panY -= dy/2.0 * panSpeed;
-      this._panX = this._clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
-      this._panY = this._clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
-    },
+	pan: function(m, dx, dy) {
+		var panSpeed = Math.max(Math.min(1.5, this._distance),0.05);
+		this._panX -= dx/2.0 * panSpeed; 
+		this._panY -= dy/2.0 * panSpeed;
+		this._panX = this._clamp(this._panX, this._minMaxPanX[0], this._minMaxPanX[1]);
+		this._panY = this._clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
+	},
 
 	scale : function(m, s) {
-        this._distance *= s;
+		this._distance *= s;
 		this._distance = this._clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
 	}
 };

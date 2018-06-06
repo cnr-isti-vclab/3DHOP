@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -36,21 +36,27 @@ TurnTableTrackball.prototype = {
 			minMaxDist    : [0.2, 4.0],
 			minMaxPhi     : [-180, 180],
 			minMaxTheta   : [-80.0, 80.0],
-			animationTime : 1.0
+			pathStates      : [ ],	// path points array
+			animationLocked : false,// if true disable trackball interactions during animation
+			animationTime   : null	// when single position navigation, each to point navigation is # seconds (if null, automatically computed)
 		}, options);
 
 		this._action = SGL_TRACKBALL_NO_ACTION;
 		this._new_action = true;
-
 		this._matrix = SglMat4.identity();
+
+		// path
+		this._pathStates = opt.pathStates;
+		this._animationLocked = opt.animationLocked;
+		this._pathPosNum = 0;
 
 		// trackball center
 		this._center = opt.startCenter;
 
 		// starting/default parameters
-		this._startPhi = sglDegToRad(opt.startPhi);   	//phi (horizontal rotation)
+		this._startPhi = sglDegToRad(opt.startPhi);		//phi (horizontal rotation)
 		this._startTheta = sglDegToRad(opt.startTheta);	//theta (vertical rotation)
-		this._startDistance = opt.startDistance;   		//distance
+		this._startDistance = opt.startDistance;		//distance
 
 		// current parameters
 		this._phi = this._startPhi;
@@ -64,10 +70,11 @@ TurnTableTrackball.prototype = {
 
 		//animation data
 		this._isAnimating = false;
-		this._animationTime = this._defaultAnimationTime = opt.animationTime;
 		this._speedPhi = 0.0;
 		this._speedTheta = 0.0;
 		this._speedDistance = 0.0;
+		this._isAutoWalking = false;
+		this._animationTime = opt.animationTime;
 
 		// limits
 		this._minMaxDist  = opt.minMaxDist;
@@ -86,13 +93,13 @@ TurnTableTrackball.prototype = {
 		this.reset();
 	},
 
-    _clamp: function(value, low, high) {
-      if(value < low) return low;
-      if(value > high) return high;
-      return value;
-    },
+	_clamp : function(value, low, high) {
+		if(value < low) return low;
+		if(value > high) return high;
+		return value;
+	},
 
-    _computeMatrix: function() {
+	_computeMatrix: function() {
 		var m = SglMat4.identity();
 
 		// centering
@@ -108,7 +115,7 @@ TurnTableTrackball.prototype = {
 
 		if(typeof onTrackballUpdate != "undefined")
 			onTrackballUpdate(this.getState());
-    },
+	},
 
 	getState : function () {
 		return [sglRadToDeg(this._phi), sglRadToDeg(this._theta), this._distance];
@@ -116,7 +123,7 @@ TurnTableTrackball.prototype = {
 
 	setState : function (newstate) {
 		// stop animation
-		this._isAnimating = false;
+		this._isAnimating = this._isAutoWalking = false;
 
 		this._phi      = sglDegToRad(newstate[0]);
 		this._theta    = sglDegToRad(newstate[1]);
@@ -135,67 +142,89 @@ TurnTableTrackball.prototype = {
 		// stop animation
 		this._isAnimating = false;
 
-		this._targetPhi = sglDegToRad(newstate[0]);
-		this._targetTheta = sglDegToRad(newstate[1]);
-		this._targetDistance = newstate[2];
+		if(newstate)
+		{
+			// stop autoWalking
+			this._isAutoWalking = false;
 
-		if(newtime) this._animationTime = newtime;
-		else this._animationTime = this._defaultAnimationTime;
+			// setting targets
+			this._targetPhi = sglDegToRad(newstate[0]);
+			this._targetTheta = sglDegToRad(newstate[1]);
+			this._targetDistance = newstate[2];
 
-		//check limits
-		if(this._limitPhi)
-			this._targetPhi = this._clamp(this._targetPhi, this._minMaxPhi[0], this._minMaxPhi[1]);
-		this._targetPhi = this._targetPhi %	(2*Math.PI);
-		this._targetTheta = this._clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);
-		this._targetDistance = this._clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
+			//check limits
+			if(this._limitPhi)
+				this._targetPhi = this._clamp(this._targetPhi, this._minMaxPhi[0], this._minMaxPhi[1]);
+			this._targetPhi = this._targetPhi % (2*Math.PI);
+			this._targetTheta = this._clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);
+			this._targetDistance = this._clamp(this._targetDistance, this._minMaxDist[0], this._minMaxDist[1]);
 
-		// setting base velocities
-		this._speedPhi = Math.PI;
-		this._speedTheta = Math.PI;
-		this._speedDistance = 2.0;
+			// setting base velocities
+			this._speedPhi = Math.PI;
+			this._speedTheta = Math.PI;
+			this._speedDistance = 2.0;
 
-		//if phi unconstrained rotation, it is necessary to find a good rotation direction
-		if(!this._limitPhi){
-			// normalize (-2pi 2pi) current phi angle, to prevent endless unwinding
-			this._phi = this._phi % (2*Math.PI);
+			//if phi unconstrained rotation, it is necessary to find a good rotation direction
+			if(!this._limitPhi){
+				// normalize (-2pi 2pi) current phi angle, to prevent endless unwinding
+				this._phi = this._phi % (2*Math.PI);
 
-			// determine minimal, normalized target phi angle, to prevent endless unwinding
-			var clampedangle = this._targetPhi;
-			clampedangle = clampedangle % (2*Math.PI);
+				// determine minimal, normalized target phi angle, to prevent endless unwinding
+				var clampedangle = this._targetPhi;
+				clampedangle = clampedangle % (2*Math.PI);
 
-			if(Math.abs(clampedangle - this._phi) < Math.PI) { // standard rotation
-				if(clampedangle > this._phi){
-					this.speedphi = Math.PI;
+				if(Math.abs(clampedangle - this._phi) < Math.PI) { // standard rotation
+					if(clampedangle > this._phi){
+						this.speedphi = Math.PI;
+					}
+					else{
+						this.speedphi = -Math.PI;
+					}
 				}
 				else{
-					this.speedphi = -Math.PI;
+					if(clampedangle > this._phi){
+						clampedangle = (clampedangle - 2*Math.PI)
+						this.speedphi = -Math.PI;
+					}
+					else{
+						clampedangle = (clampedangle + 2*Math.PI)
+						this.speedphi = Math.PI;
+					}
 				}
-			}
-			else{
-				if(clampedangle > this._phi){
-					clampedangle = (clampedangle - 2*Math.PI)
-					this.speedphi = -Math.PI;
-				}
-				else{
-					clampedangle = (clampedangle + 2*Math.PI)
-					this.speedphi = Math.PI;
-				}
+
+				this._targetPhi = clampedangle;
 			}
 
-			this._targetPhi = clampedangle;
+			// find max animation time to set a time limit and then synchronize all movements
+			var timePhi      = Math.abs((this._targetPhi - this._phi) / this._speedPhi);
+			var timeTheta    = Math.abs((this._targetTheta - this._theta) / this._speedTheta);
+			var timeDistance = Math.abs((this._targetDistance - this._distance) / this._speedDistance);
+
+			var maxtime = Math.max( timePhi, Math.max( timeTheta, timeDistance ));
+			var animationtime = this._clamp(maxtime, 0.5, 2.0);
+
+			if(newtime) animationtime = newtime;
+			else if (this._animationTime) animationtime = this._animationTime;
+
+			this._speedPhi      *= timePhi / animationtime;
+			this._speedTheta    *= timeTheta / animationtime;
+			this._speedDistance *= timeDistance / animationtime;
 		}
-
-		// find max animation time to set a time limit and then synchronize all movements
-		var timePhi      = Math.abs((this._targetPhi - this._phi) / this._speedPhi);
-		var timeTheta    = Math.abs((this._targetTheta - this._theta) / this._speedTheta);
-		var timeDistance = Math.abs((this._targetDistance - this._distance) / this._speedDistance);
-
-		var maxtime = Math.max( timePhi, Math.max( timeTheta, timeDistance ));
-		maxtime = this._clamp(maxtime, 0.5, 2.0);
-
-		this._speedPhi *= timePhi / maxtime;
-		this._speedTheta *= timeTheta / maxtime;
-		this._speedDistance *= timeDistance / maxtime;
+		else
+		{
+			if(this._pathPosNum == this._pathStates.length){
+				this._isAutoWalking = false;
+				this._pathPosNum = 0;
+			}
+			else {
+				var state = this._pathStates[this._pathPosNum][0];
+				var time = this._animationTime;
+				if(!Array.isArray(state)) state = this._pathStates[this._pathPosNum];
+				else if (this._pathStates[this._pathPosNum][1]) time = this._pathStates[this._pathPosNum][1];
+				if(!this._isAutoWalking) this.animateToState(state, time);
+				this._isAutoWalking = true;
+			}
+		}
 
 		// start animation
 		this._isAnimating = true;
@@ -204,9 +233,9 @@ TurnTableTrackball.prototype = {
 	tick : function (dt) {
 		if(!this._isAnimating) return false;
 
-		var deltaPhi      = this._speedPhi * dt / this._animationTime;
-		var deltaTheta    = this._speedTheta * dt / this._animationTime;
-		var deltaDistance = this._speedDistance * dt / this._animationTime;
+		var deltaPhi      = this._speedPhi * dt;
+		var deltaTheta    = this._speedTheta * dt;
+		var deltaDistance = this._speedDistance * dt;
 
 		var diffPhi      = this._targetPhi - this._phi;
 		var diffTheta    = this._targetTheta - this._theta;
@@ -235,47 +264,56 @@ TurnTableTrackball.prototype = {
 
 		if(this._phi == this._targetPhi)
 			if(this._theta == this._targetTheta)
-				if(this._distance == this._targetDistance)
-					{ this._animationTime = this._defaultAnimationTime; this._isAnimating = false; }
+				if(this._distance == this._targetDistance){
+					this._isAnimating = false; 
+					if(this._isAutoWalking) { this._pathPosNum++; this._isAutoWalking = false; this.animateToState(); }
+				}
 
 		this._computeMatrix();
 		return true;
 	},
 
-	get action()  { return this._action; },
-
 	set action(a) { if(this._action != a) { this._new_action = true; this._action = a; } },
 
-	get matrix() { return this._matrix; },
+	get action() { return this._action; },
+
+	get matrix() { this._computeMatrix(); return this._matrix; },
 
 	get distance() { return this._distance; },
 
 	reset : function () {
 		this._matrix = SglMat4.identity();
-		this._action = SGL_TRACKBALL_NO_ACTION
+		this._action = SGL_TRACKBALL_NO_ACTION;
+		this._new_action = true;
 
 		this._phi = this._startPhi;
 		this._theta = this._startTheta;
 		this._distance = this._startDistance;
 
+		this._pathPosNum = 0;
+
+		this._isAutoWalking = false;
 		this._isAnimating = false;
+
+		this._computeMatrix();
 	},
 
 	track : function(m, x, y, z) {
-        if(this._new_action) {
-            this._start[0] = x;
-		    this._start[1] = y;
-            this._new_action = false;
-        }
+		if(this._animationLocked && this._isAnimating) this._action = SGL_TRACKBALL_NO_ACTION;
+		if(this._new_action) {
+			this._start[0] = x;
+			this._start[1] = y;
+			this._new_action = false;
+		}
 
-        var dx = this._start[0] - x;
-        var dy = this._start[1] - y;
-        this._start[0] = x;
-        this._start[1] = y;
+		var dx = this._start[0] - x;
+		var dy = this._start[1] - y;
+		this._start[0] = x;
+		this._start[1] = y;
 
 		switch (this._action) {
 			case SGL_TRACKBALL_ROTATE:
-				this._isAnimating = false; //stopping animation
+				this._isAnimating = this._isAutoWalking = false; //stopping animation
 				this.rotate(m, dx, dy);
 			break;
 
@@ -283,17 +321,17 @@ TurnTableTrackball.prototype = {
 			break;
 
 			case SGL_TRACKBALL_SCALE:
-				this._isAnimating = false; //stopping animation
+				this._isAnimating = this._isAutoWalking = false; //stopping animation
 				this.scale(m, z);
 			break;
 
 			default:
 			break;
 		}
-        return this._computeMatrix();
+		return this._computeMatrix();
 	},
 
-    rotate: function(m, dx, dy) {
+	rotate: function(m, dx, dy) {
 		this._phi += dx;
 		if(this._limitPhi)
 			this._phi = this._clamp(this._phi, this._minMaxPhi[0], this._minMaxPhi[1]);
@@ -304,7 +342,7 @@ TurnTableTrackball.prototype = {
 
 		this._theta += dy;
 		this._theta = this._clamp(this._theta, this._minMaxTheta[0], this._minMaxTheta[1]);
-    },
+	},
 
 	scale : function(m, s) {
 		this._distance *= s;

@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2016, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -29,16 +29,19 @@ RailTrackball.prototype = {
 	setup : function (options) {
 		options = options || {};
 		var opt = sglGetDefaultObject({
-			startPhi      : 0.0,
-			startTheta    : 0.0,
-			startOffset   : 0.0,
-			minMaxTheta   : [-80.0, 80.0],
-			pathPoints    : [ [0.0, 0.0, 0.0] ],
-			pathCircular  : false,
-			pathLocked    : false,
-			useSpaceTransform : true,
-			stepLength    : 0.01,
-			animationTime : 1.0
+			startPhi          : 0.0,
+			startTheta        : 0.0,
+			startOffset       : 0.0,
+			minMaxTheta       : [-80.0, 80.0],
+			pathPoints        : [ ],	// path points array
+			pathOnEndStop     : true,	// if true animation stops at the path end
+			pathCircular      : true,	// if true transform the path in a loop
+			pathStepsLocked   : false,	// if true disable path step interactions during animation
+			pathStepsLength   : 0.01,	// one mouse wheel step is 10% of the path (100 wheel steps for a lap)
+			pathLapTime       : 30.0,	// when automatic navigation, a full lap is 30 seconds
+			animationLocked   : false,// if true disable trackball interactions during animation
+			animationTime     : null,	// when single position navigation, each to point navigation is # seconds (if null, automatically computed)
+			useSpaceTransform : true
 		}, options);
 
 		this._action = SGL_TRACKBALL_NO_ACTION;
@@ -47,14 +50,17 @@ RailTrackball.prototype = {
 
 		// path
 		this._pathPoints = opt.pathPoints;
+		this._pathOnEndStop = opt.pathOnEndStop;
 		this._pathCircular = opt.pathCircular;
-		this._pathLocked = opt.pathLocked;
+		this._pathStepsLocked = opt.pathStepsLocked;
+		this._pathStepsLength = opt.pathStepsLength;
+		this._pathLapTime = opt.pathLapTime;
+		this._animationLocked = opt.animationLocked;
 		this._useSpaceTransform = opt.useSpaceTransform;
 		this._createPath();
-		this._stepLength = opt.stepLength;
 
 		// starting/default parameters
-		this._startPhi = sglDegToRad(opt.startPhi);   	//phi (horizontal rotation)
+		this._startPhi = sglDegToRad(opt.startPhi);		//phi (horizontal rotation)
 		this._startTheta = sglDegToRad(opt.startTheta);	//theta (vertical rotation)
 		this._startDistance = 0.0;
 		this._startOffset = opt.startOffset;
@@ -79,7 +85,8 @@ RailTrackball.prototype = {
 		this._speedOffset = 0.0;
 		this._isAutoWalking = false;
 		this._hasToGoLap = false;
-		this._animationTime = this._defaultAnimationTime = opt.animationTime;
+		this._reversePath = false;
+		this._animationTime = opt.animationTime;
 
 		// limits
 		this._minMaxTheta = opt.minMaxTheta;
@@ -94,45 +101,45 @@ RailTrackball.prototype = {
 		this.reset();
 	},
 
-    _createPath: function() {
+	_createPath: function() {
 		// if circular, add at the end of points a copy of the first one
 		if(this._pathCircular)
-		{
 			this._pathPoints[this._pathPoints.length] = this._pathPoints[0];
-		}
-		
+
 		this._pathPosNum = this._pathPoints.length;
 		this._pathLen = 0.0;
 
-    	var pp = 1;
+		var pp = 1;
 
 		// vector with base offset for each path point
-    	this._pathBaseOffs = [];
-    	this._pathBaseOffs[0] = 0.0;
+		this._pathBaseOffs = [];
+		this._pathBaseOffs[0] = 0.0;
 
-    	while(pp<this._pathPosNum) {
-    		var dd = this._pathBaseOffs[pp-1];
-    		dd += SglVec3.length(SglVec3.sub(this._pathPoints[pp], this._pathPoints[pp-1]));
-    		this._pathBaseOffs[pp] = dd;
-    		pp +=1;
+		while(pp<this._pathPosNum) {
+			var dd = this._pathBaseOffs[pp-1];
+			dd += SglVec3.length(SglVec3.sub(this._pathPoints[pp], this._pathPoints[pp-1]));
+			this._pathBaseOffs[pp] = dd;
+			pp +=1;
 		}
 
 		// total length
-    	this._pathLen = this._pathBaseOffs[this._pathPosNum-1];
+		this._pathLen = this._pathBaseOffs[this._pathPosNum-1];
 
-    	// normalize all base offs
+		// normalize all base offs
 		pp = 1;
-    	while(pp<this._pathPosNum) {
-    		this._pathBaseOffs[pp] = this._pathBaseOffs[pp]/this._pathLen;
-    		pp +=1;
+		while(pp<this._pathPosNum) {
+			this._pathBaseOffs[pp] = this._pathBaseOffs[pp]/this._pathLen;
+			pp +=1;
 		}
 		this._pathBaseOffs[this._pathPosNum-1] = 1.0;
 
 		this._currPosition = this._computeCurrPoint();
-    },
+	},
 
-    _computeCurrPoint: function() {
+	_computeCurrPoint: function() {
 		var mypoint = [0.0, 0.0, 0.0];
+
+		if (!this._pathPoints[0]) return [0.0, 0.0, 0.0];
 
 		// update scene radius
 		this._sceneRadiusInv = presenter.sceneRadiusInv;
@@ -141,9 +148,9 @@ RailTrackball.prototype = {
 		// interpolating
 		var pp = 0;
 
-    	while(this._pathBaseOffs[pp+1] <= this._pathOffset) {
-    		pp +=1;
-    	}
+		while(this._pathBaseOffs[pp+1] <= this._pathOffset) {
+			pp +=1;
+		}
 
 		if(pp==this._pathPosNum-1)
 			mypoint = this._pathPoints[this._pathPosNum-1];
@@ -157,23 +164,23 @@ RailTrackball.prototype = {
 		if(this._useSpaceTransform)
 		{
 			var spaceTr = presenter._scene.space.transform.matrix;
-			var pp = SglVec3.to4(mypoint,1);
-			pp = SglMat4.mul4(spaceTr, pp);
-			mypoint = SglVec4.to3(pp);
+			var spacePp = SglVec3.to4(mypoint,1);
+			spacePp = SglMat4.mul4(spaceTr, spacePp);
+			mypoint = SglVec4.to3(spacePp);
 		}
-		
+
 		return [(mypoint[0]-this._sceneCenter[0])*this._sceneRadiusInv, (mypoint[1]-this._sceneCenter[1])*this._sceneRadiusInv, (mypoint[2]-this._sceneCenter[2])*this._sceneRadiusInv];
 	},
 
-    _clamp: function(value, low, high) {
+	_clamp: function(value, low, high) {
 		if(value < low) return low;
 		if(value > high) return high;
 		return value;
-    },
+	},
 
-    _computeMatrix: function() {
-		var m = SglMat4.identity();	
-	
+	_computeMatrix: function() {
+		var m = SglMat4.identity();
+
 		// update currposition
 		this._currPosition = this._computeCurrPoint();
 		// zoom
@@ -188,29 +195,61 @@ RailTrackball.prototype = {
 		this._matrix = m;
 		
 		if(typeof onTrackballUpdate != "undefined")
-			onTrackballUpdate(this.getState());		
-    },
+			onTrackballUpdate(this.getState());	
+	},
 
-	stepFW: function() {
-		this._pathOffset += this._stepLength;
-		if(this._pathOffset > 1.0)
+	stepFW : function() {
+		if(this._reversePath)
+			this._pathOffset -= this._pathStepsLength;
+		else
+			this._pathOffset += this._pathStepsLength;
+		if(this._pathOffset < 0.0) {
 			if(this._pathCircular)
-				this._pathOffset -= 1.0;
+				this._pathOffset = 1.0;
+			else
+				this._pathOffset = 0.0;
+			if(!this._pathOnEndStop && !this._pathCircular)
+				this._reversePath = !this._reversePath;
+		}
+		if(this._pathOffset > 1.0) {
+			if(this._pathCircular)
+				this._pathOffset = 0.0;
 			else
 				this._pathOffset = 1.0;
+			if(!this._pathOnEndStop && !this._pathCircular)
+				this._reversePath = !this._reversePath;
+		}
 
 		this._computeMatrix();
 	},
 
-	stepBW: function() {
-		this._pathOffset -= this._stepLength;
-		if(this._pathOffset < 0.0)
+	stepBW : function() {
+		if(!this._reversePath)
+			this._pathOffset -= this._pathStepsLength;
+		else
+			this._pathOffset += this._pathStepsLength;
+		if(this._pathOffset < 0.0) {
 			if(this._pathCircular)
-				this._pathOffset += 1.0;
+				this._pathOffset = 1.0;
 			else
 				this._pathOffset = 0.0;
+			if(!this._pathOnEndStop && !this._pathCircular)
+				this._reversePath = !this._reversePath;
+		}
+		if(this._pathOffset > 1.0) {
+			if(this._pathCircular)
+				this._pathOffset = 0.0;
+			else
+				this._pathOffset = 1.0;
+			if(!this._pathOnEndStop && !this._pathCircular)
+				this._reversePath = !this._reversePath;
+		}
 
 		this._computeMatrix();
+	},
+
+	getPathBaseOffs : function () {
+		return this._pathBaseOffs;
 	},
 
 	getState : function () {
@@ -219,7 +258,7 @@ RailTrackball.prototype = {
 
 	setState : function (newstate) {
 		// stop animation
-		this._isAnimating = false;
+		this._isAnimating = this._isAutoWalking = false;
 
 		this._phi        = sglDegToRad(newstate[0]);
 		this._theta      = sglDegToRad(newstate[1]);
@@ -242,13 +281,13 @@ RailTrackball.prototype = {
 
 		if(newstate)
 		{
+			// stop autoWalking
 			this._isAutoWalking = false;
+
+			// setting targets
 			this._targetPhi    = sglDegToRad(newstate[0]);
 			this._targetTheta  = sglDegToRad(newstate[1]);
 			this._targetOffset = newstate[2];
-
-		if(newtime) this._animationTime = newtime;
-		else this._animationTime = this._defaultAnimationTime;
 
 			//check limits
 			this._targetTheta = this._clamp(this._targetTheta, this._minMaxTheta[0], this._minMaxTheta[1]);
@@ -362,17 +401,17 @@ RailTrackball.prototype = {
 			var timeOffset   = Math.abs(offdist / this._speedOffset);
 
 			var maxtime = Math.max( timePhi, Math.max( timeTheta, timeOffset ));
+			var animationtime = this._clamp(maxtime, 0.5, 2.0);
 
-			maxtime = this._clamp(maxtime, 1.0, 3.0);
+			if(newtime) animationtime = newtime;
+			else if (this._animationTime) animationtime = this._animationTime;
 
-			this._speedPhi *= timePhi / maxtime;
-			this._speedTheta *= timeTheta / maxtime;
-			this._speedOffset *= timeOffset / maxtime;
+			this._speedPhi *= timePhi / animationtime;
+			this._speedTheta *= timeTheta / animationtime;
+			this._speedOffset *= timeOffset / animationtime;
 		}
 		else
-		{
 			this._isAutoWalking = true;
-		}
 
 		// start animation
 		this._isAnimating = true;
@@ -383,20 +422,36 @@ RailTrackball.prototype = {
 
 		if(this._isAutoWalking)
 		{
-			this._pathOffset += (dt / this._animationTime);
+			if(this._reversePath)
+				this._pathOffset -= ( 1 / this._pathLapTime) * dt;
+			else
+				this._pathOffset += ( 1 / this._pathLapTime) * dt;
+			if(this._pathOffset < 0.0) {
+				if(this._pathCircular)
+					this._pathOffset = 1.0;
+				else
+					this._pathOffset = 0.0;
+				if(this._pathOnEndStop) 
+					this._isAnimating = this._isAutoWalking = false;
+				else if (!this._pathCircular)
+					this._reversePath = !this._reversePath;
+			}
 			if(this._pathOffset > 1.0) {
 				if(this._pathCircular)
-					this._pathOffset -= 1.0;
+					this._pathOffset = 0.0;
 				else
 					this._pathOffset = 1.0;
-			 if(!this._pathCircular) this._isAutoWalking = this._isAnimating = false;
+				if(this._pathOnEndStop) 
+					this._isAnimating = this._isAutoWalking = false;
+				else if (!this._pathCircular)
+					this._reversePath = !this._reversePath;
 			}
 		}
 		else
 		{
-			var deltaPhi    = this._speedPhi * dt / this._animationTime;
-			var deltaTheta  = this._speedTheta * dt / this._animationTime;
-			var deltaOffset = this._speedOffset * dt / this._animationTime;
+			var deltaPhi    = this._speedPhi * dt;
+			var deltaTheta  = this._speedTheta * dt;
+			var deltaOffset = this._speedOffset * dt;
 
 			var diffPhi    = this._targetPhi - this._phi;
 			var diffTheta  = this._targetTheta - this._theta;
@@ -455,40 +510,38 @@ RailTrackball.prototype = {
 			if(this._phi == this._targetPhi)
 				if(this._theta == this._targetTheta)
 					if(this._pathOffset == this._targetOffset)
-						{ this._animationTime = this._defaultAnimationTime; this._isAnimating = false; }
+						this._isAnimating = false;
 		}
 
 		this._computeMatrix();
-
 		return true;
 	},
 
-	get action()  { return this._action; },
-
 	set action(a) { if(this._action != a) { this._new_action = true; this._action = a; } },
 
-	get matrix() {
-		this._computeMatrix();
-		return this._matrix;
-	},
+	get action()  { return this._action; },
+
+	get matrix() { this._computeMatrix(); return this._matrix; },
 
 	reset : function () {
 		this._matrix = SglMat4.identity();
-		this._action = SGL_TRACKBALL_NO_ACTION
+		this._action = SGL_TRACKBALL_NO_ACTION;
+		this._new_action = true;
 
 		this._phi = this._startPhi;
 		this._theta = this._startTheta;
 		this._pathOffset = this._startOffset;
 
-		this._computeMatrix();
-
-		this._isAnimating = false;
-		this._isAutoWalking = false;
 		this._hasToGoLap = false;
+		this._isAutoWalking = false;
+		this._isAnimating = false;
+
+		this._computeMatrix();
 	},
 
 	track : function(m, x, y, z) {
-        if(this._new_action) {
+		if(this._animationLocked && this._isAnimating) this._action = SGL_TRACKBALL_NO_ACTION;
+		if(this._new_action) {
 			this._start[0] = x;
 			this._start[1] = y;
 			this._new_action = false;
@@ -501,14 +554,14 @@ RailTrackball.prototype = {
 
 		switch (this._action) {
 			case SGL_TRACKBALL_ROTATE:
-				//this._isAnimating = false; //stopping animation
+				if(this._isAnimating && !this._isAutoWalking) this._isAnimating = this._isAutoWalking = false; //stopping animation
 				this.rotate(m, dx, dy);
 				break;
 			case SGL_TRACKBALL_PAN:
 				break;
 			case SGL_TRACKBALL_SCALE:
-				if(this._pathLocked) break;
-				this._isAnimating = false; //stopping animation
+				if(this._pathStepsLocked) break;
+				this._isAnimating = this._isAutoWalking = false; //stopping animation
 				this.scale(m, z);
 				break;
 			default:

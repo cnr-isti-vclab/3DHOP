@@ -1,4 +1,4 @@
-**3DHOP**
+![3DHOP Logo](documentation/img/logo.png) **3DHOP**
 =========
 3D Heritage Online Presenter
 ----------------------------
@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-19 December 2016
+4 June 2018
 
 #### TEAM
 ---------

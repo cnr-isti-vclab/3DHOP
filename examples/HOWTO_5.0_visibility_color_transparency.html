@@ -25,13 +25,13 @@
 <body>
 <div id="3dhop" class="tdhop" onmousedown="if (event.preventDefault) event.preventDefault()"><div id="tdhlg"></div>
  <div id="toolbar">
-  <img id="home"     title="Home"                  src="skins/dark/home.png"   /><br/>
-  <img id="zoomin"   title="Zoom In"               src="skins/dark/zoomin.png" /><br/>
-  <img id="zoomout"  title="Zoom Out"              src="skins/dark/zoomout.png"/><br/>
-  <img id="light_on" title="Disable Light Control" src="skins/dark/light_on.png" style="position:absolute; visibility:hidden;"/>
-  <img id="light"    title="Enable Light Control"  src="skins/dark/light.png"/><br/>
-  <img id="full_on"  title="Exit Full Screen"      src="skins/dark/full_on.png" style="position:absolute; visibility:hidden;"/>
-  <img id="full"     title="Full Screen"           src="skins/dark/full.png"   />
+  <img id="home"     title="Home"                  src="skins/dark/home.png"            /><br/>
+  <img id="zoomin"   title="Zoom In"               src="skins/dark/zoomin.png"          /><br/>
+  <img id="zoomout"  title="Zoom Out"              src="skins/dark/zoomout.png"         /><br/>
+  <img id="light_on" title="Disable Light Control" src="skins/dark/lightcontrol_on.png" style="position:absolute; visibility:hidden;"/>
+  <img id="light"    title="Enable Light Control"  src="skins/dark/lightcontrol.png"    /><br/>
+  <img id="full_on"  title="Exit Full Screen"      src="skins/dark/full_on.png"         style="position:absolute; visibility:hidden;"/>
+  <img id="full"     title="Full Screen"           src="skins/dark/full.png"            />
  </div>
  <canvas id="draw-canvas" style="background-image: url(skins/backgrounds/light.jpg)"/>
 </div>
@@ -61,7 +61,7 @@ function setup3dhop() {
 			"Cage"           : { url: "models/singleres/cage.ply"    },
 			"Laurana"        : { url: "models/singleres/laurana.ply" },
 			"GargoyleSingle" : { url: "models/singleres/gargo.ply"   },
-			"GargoyleMulti"  : { url: "models/multires/gargo.nxs"    }
+			"GargoyleMulti"  : { url: "models/multires/gargo.nxz"    }
 		},
 		modelInstances : {
 			"Base" : {

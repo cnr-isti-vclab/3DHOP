@@ -1,0 +1,143 @@
+<!DOCTYPE>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta content="charset=UTF-8"/>
+<title>3DHOP - 3D Heritage Online Presenter</title>
+<!--STYLESHEET-->
+<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>  
+<!--SPIDERGL-->
+<script type="text/javascript" src="js/spidergl.js"></script>
+<!--JQUERY-->
+<script type="text/javascript" src="js/jquery.js"></script>
+<!--PRESENTER-->
+<script type="text/javascript" src="js/presenter.js"></script>
+<!--3D MODELS LOADING AND RENDERING-->
+<script type="text/javascript" src="js/nexus.js"></script>
+<script type="text/javascript" src="js/ply.js"></script>
+<!--TRACKBALLS-->
+<script type="text/javascript" src="js/trackball_sphere.js"></script>
+<script type="text/javascript" src="js/trackball_turntable.js"></script>
+<script type="text/javascript" src="js/trackball_turntable_pan.js"></script>
+<script type="text/javascript" src="js/trackball_pantilt.js"></script>
+<!--UTILITY-->
+<script type="text/javascript" src="js/init.js"></script>
+</head>
+<body>
+<div id="3dhop" class="tdhop" onmousedown="if (event.preventDefault) event.preventDefault()"><div id="tdhlg"></div>
+ <div id="toolbar">
+  <img id="home"         title="Home"                 src="skins/dark/home.png"         /><br/>
+  <img id="zoomin"       title="Zoom In"              src="skins/dark/zoomin.png"       /><br/>
+  <img id="zoomout"      title="Zoom Out"             src="skins/dark/zoomout.png"      /><br/>
+  <img id="lighting_off" title="Enable Lighting"      src="skins/dark/lighting_off.png" style="position:absolute; visibility:hidden;"/>
+  <img id="lighting"     title="Disable Lighting"     src="skins/dark/lighting.png"     /><br/>
+  <img id="perspective"  title="Perspective Camera"   src="skins/dark/perspective.png"  style="position:absolute; visibility:hidden;"/>
+  <img id="orthographic" title="Orthographic Camera"  src="skins/dark/orthographic.png" /><br/>
+  <img id="full_on"      title="Exit Full Screen"     src="skins/dark/full_on.png"      style="position:absolute; visibility:hidden;"/>
+  <img id="full"         title="Full Screen"          src="skins/dark/full.png"         />
+ </div>
+ <canvas id="draw-canvas" style="background-image: url(skins/backgrounds/light.jpg)"/>
+</div> 
+</body>
+
+<script type="text/javascript">
+var presenter = null;
+
+function setup3dhop() { 
+	presenter = new Presenter("draw-canvas");
+
+	presenter.setScene({
+		meshes: {
+			"Gargoyle" : { url: "models/multires/gargo.nxz" },
+			"Sphere" : { url: "models/singleres/sphere.ply" },
+			"Cube" : { url: "models/singleres/cube.ply" }
+		},
+		modelInstances : {
+			"Gargo" : {
+				mesh : "Gargoyle",
+				transform : { 
+					translation : [-60.0, 0.0, 0.0]
+				},
+			},
+			"S1" : {
+				mesh : "Sphere",
+				transform : { 
+					translation : [0.0, 20.0, 0.0],
+					scale       : [20.0, 20.0, 20.0]
+				},
+				color           : [ 1.0, 0.2, 0.2 ],
+				useSolidColor   : true,
+				useLighting     : false
+			},
+			"S2" : {
+				mesh : "Sphere",
+				transform : { 
+					translation : [0.0, 60.0, 0.0],
+					scale       : [20.0, 20.0, 20.0]
+				},
+				color           : [ 0.2, 1.0, 0.2 ],
+				useSolidColor   : true
+			},
+			"S3" : {
+				mesh : "Sphere",
+				transform : { 
+					translation : [0.0, 100.0, 0.0],
+					scale       : [20.0, 20.0, 20.0]
+				},
+				color           : [ 0.2, 0.2, 1.0 ],
+				useSolidColor   : true,
+				useLighting     : false
+			},
+			"Box" : {
+				mesh : "Cube",
+				transform : { 
+					translation : [60.0, 20.0, 0.0],
+					rotation    : [0.0, 20.0, 0.0],
+					scale       : [0.8, 0.8, 0.8]
+				},
+				color           : [ 0.5, 0.7, 0.8 ],
+				useSolidColor   : true
+			},
+			"Base" : {
+				mesh : "Cube",
+				transform : { 
+					translation : [0.0, -5.0, 0.0],
+					scale       : [5.0, 0.2, 3.0]
+				},
+			}
+		},
+		trackball: {
+			type : TurntablePanTrackball,
+			trackOptions : {
+				startDistance : 1.0,
+				minMaxDist    : [0.1, 3.0],
+				startPanY     : 0.2
+			}
+		},
+		space: {
+			centerMode       : "scene",
+			radiusMode       : "scene",
+			cameraFOV        : 60.0,
+			cameraNearFar    : [0.01, 10.0],
+			cameraType       : "perspective",
+			sceneLighting    : true
+		}
+	});
+}
+
+function actionsToolbar(action) {
+	if(action=='home') presenter.resetTrackball();
+	else if(action=='zoomin') presenter.zoomIn();
+	else if(action=='zoomout') presenter.zoomOut();
+	else if(action=='lighting' || action=='lighting_off') { presenter.enableSceneLighting(!presenter.isSceneLightingEnabled()); lightingSwitch(); }
+	else if(action=='perspective' || action=='orthographic') { presenter.toggleCameraType(); cameraSwitch(); }
+	else if(action=='full' || action=='full_on') fullscreenSwitch();
+}
+
+$(document).ready(function(){
+	init3dhop();
+
+	setup3dhop();
+});
+</script>
+
+</html>
