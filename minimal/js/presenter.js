@@ -195,7 +195,7 @@ _parseSpace : function (options) {
 		cameraFOV        : 60.0,
 		cameraNearFar    : [0.01, 10.0],
 		cameraType       : "perspective",
-		useLighting      : true,
+		sceneLighting      : true,
 	}, options);
 	r.transform = this._parseTransform(r.transform);
 	if(r.cameraFOV < 2.0)  r.cameraFOV = 2.0;
@@ -1640,7 +1640,7 @@ _drawScene : function () {
 			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : 1.0,
 			"uUseSolidColor"             : instance.useSolidColor,
-			"uUseLighting"               : space.useLighting && instance.useLighting,
+			"uUseLighting"               : space.sceneLighting && instance.useLighting,
 			"uBackFaceColor"             : instance.backfaceColor,
 			"uSpecularColor"             : instance.specularColor,
 			"uSolidColor"                : instance.color,
@@ -1726,7 +1726,7 @@ _drawScene : function () {
 			"uPointSize"                 : config.pointSize,
 			"uAlpha"                     : instance.alpha,
 			"uUseSolidColor"             : instance.useSolidColor,
-			"uUseLighting"               : space.useLighting && instance.useLighting,
+			"uUseLighting"               : space.sceneLighting && instance.useLighting,
 			"uBackFaceColor"             : instance.backfaceColor,
 			"uSpecularColor"             : instance.specularColor,
 			"uSolidColor"                : instance.color,
@@ -3901,7 +3901,7 @@ rotateLight: function(x, y) {
 enableLightTrackball: function(on) {
 	this._movingLight = on;
 
-	if(on && !this._scene.space.useLighting) this._scene.space.useLighting = on;
+	if(on && !this._scene.space.sceneLighting) this._scene.space.sceneLighting = on;
 
 	this.repaint();
 },
@@ -4001,7 +4001,7 @@ isTrackballLockEnabled: function() {
 // lighting
 
 enableSceneLighting: function(on) {
-	this._scene.space.useLighting = on;
+	this._scene.space.sceneLighting = on;
 
 	if(!on && this._movingLight) this._movingLight = on;
 
@@ -4009,7 +4009,7 @@ enableSceneLighting: function(on) {
 },
 
 isSceneLightingEnabled: function() {
-	return this._scene.space.useLighting;
+	return this._scene.space.sceneLighting;
 },
 
 setInstanceLightingByName : function (name, newState, redraw) {
