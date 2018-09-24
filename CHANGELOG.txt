@@ -21,6 +21,17 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 #### CHANGELOG FILE
 -------------------
 
+*Development Version*  
+
+**Main Changes**
+
+* Updated NEXUS TEXTURE HANDLING in node recovery system;
+
+**Files Added/Modified**
+
+* Updated "nexus.js" file;
+
+
 *Version 4.2*  
 
 **Main Changes**
