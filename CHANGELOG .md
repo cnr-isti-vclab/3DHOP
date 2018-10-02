@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-4 June 2018
+2 October 2018
 
 #### TEAM
 ---------
@@ -26,10 +26,12 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 **Main Changes**
 
 * Updated NEXUS TEXTURE HANDLING in node recovery system;
+* Updated NEXUS CACHE REFRESH system;
 
 **Files Added/Modified**
 
 * Updated "nexus.js" file;
+* Updated "3DHpanels.css" file;
 
 
 *Version 4.2*  
