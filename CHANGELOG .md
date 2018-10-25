@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-2 October 2018
+16 October 2018
 
 #### TEAM
 ---------
@@ -27,6 +27,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 * Updated NEXUS TEXTURE HANDLING in node recovery system;
 * Updated NEXUS CACHE REFRESH system;
+* Updated NEXUS parameters for POINT SIZE CONTROL in point cloud rendering;
 
 **Files Added/Modified**
 
