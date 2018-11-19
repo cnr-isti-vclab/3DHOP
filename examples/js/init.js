@@ -130,7 +130,7 @@ function init3dhop() {
 }
 
 function set3dhlg() {
-  $('#tdhlg').html("Powered by 3DHOP</br>&nbsp;C.N.R. &nbsp;&ndash;&nbsp; I.S.T.I.");
+  $('#tdhlg').html("Powered by 3DHOP</br>CNR &nbsp;&ndash;&nbsp; ISTI");
   $('#tdhlg').mouseover(function() {
 	 $('#tdhlg').animate({ 
 		height: "25px"
