@@ -97,6 +97,10 @@ function actionsToolbar(action) {
 	else if(action=='full'  || action=='full_on') fullscreenSwitch(); 
 }
 
+function onTrackballArrived(state){
+	log("Animation Finished: [" + state + "]");
+}
+
 function log(msg) {
 	document.getElementById("log-text").innerHTML += msg + "\n";
 	document.getElementById("log-text").scrollTop = document.getElementById("log-text").scrollHeight;

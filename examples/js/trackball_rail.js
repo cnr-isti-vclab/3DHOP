@@ -509,8 +509,11 @@ RailTrackball.prototype = {
 
 			if(this._phi == this._targetPhi)
 				if(this._theta == this._targetTheta)
-					if(this._pathOffset == this._targetOffset)
+					if(this._pathOffset == this._targetOffset){
 						this._isAnimating = false;
+						if(typeof onTrackballArrived != "undefined")
+							onTrackballArrived(this.getState());
+					}
 		}
 
 		this._computeMatrix();

@@ -265,7 +265,9 @@ TurnTableTrackball.prototype = {
 		if(this._phi == this._targetPhi)
 			if(this._theta == this._targetTheta)
 				if(this._distance == this._targetDistance){
-					this._isAnimating = false; 
+					this._isAnimating = false;
+					if(typeof onTrackballArrived != "undefined")
+						onTrackballArrived(this.getState());
 					if(this._isAutoWalking) { this._pathPosNum++; this._isAutoWalking = false; this.animateToState(); }
 				}
 

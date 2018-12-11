@@ -286,7 +286,9 @@ PanTiltTrackball.prototype = {
 				if(this._angleX == this._targetAngleX)
 					if(this._angleY == this._targetAngleY)
 						if(this._distance == this._targetDistance){
-								this._isAnimating = false; 
+								this._isAnimating = false;
+								if(typeof onTrackballArrived != "undefined")
+									onTrackballArrived(this.getState());
 								if(this._isAutoWalking) { this._pathPosNum++; this._isAutoWalking = false; this.animateToState(); }
 							}
 
