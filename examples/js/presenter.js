@@ -1651,7 +1651,7 @@ _drawScene : function () {
 			"uClipColorSize"             : thisClipBordersize
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mtype === "nexus") {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
@@ -1668,7 +1668,7 @@ _drawScene : function () {
 				nexus.render();
 			program.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mtype === "ply") {
 			var technique;
 			if(instance.rendermode=="FILL")
 				technique = CurrFaceTechnique;
@@ -1738,7 +1738,7 @@ _drawScene : function () {
 			"uClipColorSize"             : thisClipBordersize
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mtype === "nexus") {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
@@ -1755,7 +1755,7 @@ _drawScene : function () {
 				nexus.render();
 			program.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mtype === "ply") {
 			var technique;
 			if(instance.rendermode=="FILL")
 				technique = CurrFaceTechnique;
@@ -1916,7 +1916,7 @@ _drawScene : function () {
 			"uColorID"                   : [spot.color[0], spot.color[1], spot.color[2], spot.alpha]
 		}
 
-		if(mesh.isNexus) {
+		if(mesh.mtype === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -1928,7 +1928,7 @@ _drawScene : function () {
 				nexus.render();
 			program.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mtype === "ply") {
 			renderer.begin();
 				renderer.setTechnique(CCTechnique);
 				renderer.setDefaultGlobals();
@@ -2157,7 +2157,7 @@ _drawScenePickingXYZ : function () {
 			"uPointSize"                 : this._scene.config.pointSize
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mtype === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2173,7 +2173,7 @@ _drawScenePickingXYZ : function () {
 
 			this.pickFramebuffer.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mtype === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2273,7 +2273,7 @@ _drawScenePickingInstances : function () {
 			"uColorID"                   : colorID
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mtype === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2289,7 +2289,7 @@ _drawScenePickingInstances : function () {
 
 			this.pickFramebuffer.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mtype === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2366,7 +2366,7 @@ _drawScenePickingSpots : function () {
 			"uColorID"                   : [0.0, 0.0, 0.0, 0.0]
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mtype === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2382,7 +2382,7 @@ _drawScenePickingSpots : function () {
 
 			this.pickFramebuffer.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mtype === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2421,7 +2421,7 @@ _drawScenePickingSpots : function () {
 			"uColorID"                   : colorID
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mtype === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2437,7 +2437,7 @@ _drawScenePickingSpots : function () {
 
 			this.pickFramebuffer.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mtype === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2889,7 +2889,8 @@ setScene : function (options) {
 		var mesh = scene.meshes[m];
 
 		if (!mesh.url) continue;
-		if((String(mesh.url).lastIndexOf(".nxs") == (String(mesh.url).length - 4))||(String(mesh.url).lastIndexOf(".nxz") == (String(mesh.url).length - 4))) {
+		var extension = mesh.url.split('.').pop().split(/\#|\?/)[0].toLowerCase();
+		if((extension === "nxs") || (extension === "nxz")) {
 			Nexus.setTargetError(gl, this._nexusTargetError);
 			Nexus.setTargetFps(gl, this._nexusTargetFps);
 			Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
@@ -2899,13 +2900,13 @@ setScene : function (options) {
 			nexus_instance.onUpdate = this.ui.postDrawEvent;
 
 			mesh.renderable = nexus_instance;
-			mesh.isNexus = true;
+			mesh.mtype = "nexus";
 
 			nexus_instance.open(mesh.url);
 		}
-		else {
+		else if(extension === "ply") {
 			mesh.renderable = null;
-			mesh.isNexus = false;
+			mesh.mtype = "ply";
 			sglRequestBinary(mesh.url, {
 				onSuccess : (function(m){ return function (req) { that._onPlyLoaded(req, m, gl); }; })(mesh)
 			});
