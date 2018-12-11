@@ -18,9 +18,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
+//------------------------------------------------------
+// returns a pastel color. 
+// You specify how many unique colors you need, and which color you want to generate
+// colorNum is the # of the color you need (0 - NCol-1)
+// totalColors is the total number NCol of available colors
+//------------------------------------------------------
+function pastelColor(colorNum, totalColors) {
+	return hsvToRgb(colorNum*(360.0/totalColors), 0.4, 0.8);
+}
 
 //------------------------------------------------------
-//  HSB space to RGB [0-1]
+//  HSV space to RGB [0-1]
 //------------------------------------------------------
 function hsvToRgb(h, s, v) {
     var i,f,p,q,t;
@@ -55,7 +64,6 @@ function hsvToRgb(h, s, v) {
 			return [ v, p, q ];		
     }
 }
-
 
 //-----------------------------------------
 // creates a copy of a pure JSON structure
