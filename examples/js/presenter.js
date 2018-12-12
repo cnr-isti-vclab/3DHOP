@@ -260,10 +260,10 @@ _parseTransform : function (options) {
 //----------------------------------------------------------------------------------------
 //SHADERS RELATED FUNCTIONS
 //----------------------------------------------------------------------------------------
-// standard program for NXS rendering, points and faces
-_createStandardPointNXSProgram : function () {
+// standard program for rendering, points and faces
+_createStandardPointsProgram : function () {
 	var gl = this.ui.gl;
-	var nxsVertexShader = new SglVertexShader(gl, "\
+	var pointsVertexShader = new SglVertexShader(gl, "\
 		precision highp float;													\n\
 																				\n\
 		uniform   mat4 uWorldViewProjectionMatrix;								\n\
@@ -294,9 +294,9 @@ _createStandardPointNXSProgram : function () {
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD POINT Vertex Shader Log:\n" + nxsVertexShader.log);
+		console.log("STD POINTS Vertex Shader Log:\n" + pointsVertexShader.log);
 
-	var nxsFragmentShader = new SglFragmentShader(gl, "\
+	var pointsFragmentShader = new SglFragmentShader(gl, "\
 		#extension GL_EXT_frag_depth : enable									\n\
 		precision highp float;													\n\
 																				\n\
@@ -371,12 +371,12 @@ _createStandardPointNXSProgram : function () {
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD POINT Fragment Shader Log:\n" + nxsFragmentShader.log);
+		console.log("STD POINTS	Fragment Shader Log:\n" + pointsFragmentShader.log);
 
 	var program = new SglProgram(gl, {
 		shaders    : [
-			nxsVertexShader,
-			nxsFragmentShader
+			pointsVertexShader,
+			pointsFragmentShader
 		],
 		attributes : {
 			"aPosition" : 0,
@@ -404,14 +404,14 @@ _createStandardPointNXSProgram : function () {
 		}
 	});
 	if(this._isDebugging)
-		console.log("STD POINT Program Log:\n" + program.log);
+		console.log("STD POINTS Program Log:\n" + program.log);
 
 	return program;
 },
 
-_createStandardFaceNXSProgram : function () {
+_createStandardFacesProgram : function () {
 	var gl = this.ui.gl;
-	var nxsVertexShader = new SglVertexShader(gl, "\
+	var facesVertexShader = new SglVertexShader(gl, "\
 		precision highp float;													\n\
 																				\n\
 		uniform   mat4 uWorldViewProjectionMatrix;								\n\
@@ -442,9 +442,9 @@ _createStandardFaceNXSProgram : function () {
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD FACE Vertex Shader Log:\n" + nxsVertexShader.log);
+		console.log("STD FACE Vertex Shader Log:\n" + facesVertexShader.log);
 
-	var nxsFragmentShader = new SglFragmentShader(gl, "\
+	var facesFragmentShader = new SglFragmentShader(gl, "\
 		precision highp float;													\n\
 																				\n\
 		uniform   vec3 uViewSpaceLightDirection;								\n\
@@ -526,12 +526,12 @@ _createStandardFaceNXSProgram : function () {
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD FACE Fragment Shader Log:\n" + nxsFragmentShader.log);
+		console.log("STD FACE Fragment Shader Log:\n" + facesFragmentShader.log);
 
 	var program = new SglProgram(gl, {
 		shaders    : [
-			nxsVertexShader,
-			nxsFragmentShader
+			facesVertexShader,
+			facesFragmentShader
 		],
 		attributes : {
 			"aPosition"     : 0,
@@ -819,7 +819,7 @@ _createColorShadedNXSProgram : function () {
 _createStandardPointPLYtechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
-		program  : this._createStandardPointNXSProgram(),
+		program  : this._createStandardPointsProgram(),
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
@@ -852,7 +852,7 @@ _createStandardPointPLYtechnique : function () {
 _createStandardFacePLYtechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
-		program  : this._createStandardFaceNXSProgram(),
+		program  : this._createStandardFacesProgram(),
 		vertexStreams : {
 			"aNormal"       : [ 0.0, 0.0, 0.0, 0.0 ],
 			"aColor"        : [ 0.8, 0.8, 0.8, 1.0 ]
@@ -1585,10 +1585,10 @@ _drawScene : function () {
 	var height   = this.ui.height;
 	var xform    = this.xform;
 	var renderer = this.renderer;
-	var CurrFaceProgram    = this.faceNXSProgram;
-	var CurrPointProgram   = this.pointNXSProgram;
-	var CurrFaceTechnique  = this.facePLYTechnique;
-	var CurrPointTechnique = this.pointPLYTechnique;
+	var CurrFacesProgram    = this.facesProgram;
+	var CurrPointsProgram   = this.pointsProgram;
+	var CurrFacesTechnique  = this.facePLYTechnique;
+	var CurrPointsTechnique = this.pointPLYTechnique;
 	var CCProgram          = this.colorShadedNXSProgram;
 	var CCTechnique        = this.colorShadedPLYTechnique;
 	var lineTechnique      = this.simpleLineTechnique;
@@ -1659,9 +1659,9 @@ _drawScene : function () {
 
 			var program;
 			if(instance.rendermode=="FILL")
-				program = CurrFaceProgram;
+				program = CurrFacesProgram;
 			else
-				program = CurrPointProgram;
+				program = CurrPointsProgram;
 			program.bind();
 			program.setUniforms(uniforms);
 				nexus.setPrimitiveMode(instance.rendermode);
@@ -1671,9 +1671,9 @@ _drawScene : function () {
 		else if(mesh.mtype === "ply") {
 			var technique;
 			if(instance.rendermode=="FILL")
-				technique = CurrFaceTechnique;
+				technique = CurrFacesTechnique;
 			else
-				technique = CurrPointTechnique;
+				technique = CurrPointsTechnique;
 			renderer.begin();
 				renderer.setTechnique(technique);
 				renderer.setDefaultGlobals();
@@ -1746,9 +1746,9 @@ _drawScene : function () {
 
 			var program;
 			if(instance.rendermode=="FILL")
-				program = CurrFaceProgram;
+				program = CurrFacesProgram;
 			else
-				program = CurrPointProgram;
+				program = CurrPointsProgram;
 			program.bind();
 			program.setUniforms(uniforms);
 				nexus.setPrimitiveMode(instance.rendermode);
@@ -1758,9 +1758,9 @@ _drawScene : function () {
 		else if(mesh.mtype === "ply") {
 			var technique;
 			if(instance.rendermode=="FILL")
-				technique = CurrFaceTechnique;
+				technique = CurrFacesTechnique;
 			else
-				technique = CurrPointTechnique;
+				technique = CurrPointsTechnique;
 			renderer.begin();
 				renderer.setTechnique(technique);
 				renderer.setDefaultGlobals();
@@ -2572,8 +2572,8 @@ onInitialize : function () {
 	this._nexusCacheSize   = 50000000;
 
 	// shaders
-	this.faceNXSProgram = this._createStandardFaceNXSProgram();
-	this.pointNXSProgram = this._createStandardPointNXSProgram();
+	this.facesProgram = this._createStandardFacesProgram();
+	this.pointsProgram = this._createStandardPointsProgram();
 	this.colorShadedNXSProgram = this._createColorShadedNXSProgram();
 	this.colorCodedIDNXSProgram = this._createColorCodedIDNXSProgram();
 	this.colorCodedXYZNXSProgram = this._createXYZNXSProgram();
