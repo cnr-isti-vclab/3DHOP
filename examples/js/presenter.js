@@ -508,9 +508,10 @@ _createStandardFacesProgram : function () {
 			renderColor = (diffuse * lambert) + specular;						\n\
 			if(!gl_FrontFacing)													\n\
 			{																	\n\
-				if(uBackFaceColor[3]==0.0) renderColor = renderColor * uBackFaceColor.rgb;	\n\
+				if (uBackFaceColor[3]==0.0) renderColor = renderColor * uBackFaceColor.rgb;	\n\
 				else if(uBackFaceColor[3]==1.0) renderColor = uBackFaceColor.rgb;			\n\
 				else if(uBackFaceColor[3]==2.0) discard;									\n\
+				else if(uBackFaceColor[3]==3.0) renderColor = (uBackFaceColor.rgb * lambert)+specular;\n\
 			}																	\n\
 																				\n\
 			if((length(uClipPlane.xyz) > 0.0)&&(uClipColorSize>0.0))			\n\
@@ -2480,6 +2481,7 @@ onInitialize : function () {
 	this._nexusCacheSize   = 50000000;
 
 	// shaders
+	this.createDefaultShaders();
 	this.facesProgram = this._createStandardFacesProgram();
 	this.pointsProgram = this._createStandardPointsProgram();
 	this.utilsProgram = this._createUtilsProgram();
@@ -2569,6 +2571,21 @@ onInitialize : function () {
 	this._sceneBboxMax = [0.0, 0.0, 0.0];
 	this._sceneBboxCenter = [0.0, 0.0, 0.0];
 	this._sceneBboxDiag = 0.0;
+},
+
+createDefaultShaders : function () {
+	this.facesProgram = this._createStandardFacesProgram();
+	this.pointsProgram = this._createStandardPointsProgram();
+	this.utilsProgram = this._createUtilsProgram();
+	this.colorShadedProgram = this._createColorShadedProgram();
+
+	this.faceTechnique = this._createStandardFaceTechnique();
+	this.pointTechnique = this._createStandardPointTechnique();
+	this.utilsTechnique = this._createUtilsTechnique();	
+	this.colorShadedTechnique = this._createColorShadedTechnique();
+
+	this.simpleLineTechnique = this._createSimpleLinetechnique();
+	this.multiLinesPointsTechnique = this._createMultiLinesPointstechnique();
 },
 
 onDrag : function (button, x, y, e) {
