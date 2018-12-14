@@ -667,7 +667,7 @@ _createUtilsProgram : function () {
 },
 
 // single-color barely-shaded program for NXS rendering, points and faces
-_createColorShadedNXSProgram : function () {
+_createColorShadedProgram : function () {
 	var gl = this.ui.gl;
 	var nxsVertexShader = new SglVertexShader(gl, "\
 		precision highp float;                                                \n\
@@ -743,7 +743,7 @@ _createColorShadedNXSProgram : function () {
 },
 
 //standard technique for PLY rendering, points and faces
-_createStandardPointPLYtechnique : function () {
+_createStandardPointTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
 		program  : this._createStandardPointsProgram(),
@@ -776,7 +776,7 @@ _createStandardPointPLYtechnique : function () {
 	return technique;
 },
 
-_createStandardFacePLYtechnique : function () {
+_createStandardFaceTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
 		program  : this._createStandardFacesProgram(),
@@ -835,10 +835,10 @@ _createUtilsTechnique : function () {
 },
 
 // single-color barely-shaded technique for PLY rendering
-_createColorShadedPLYtechnique : function () {
+_createColorShadedTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
-		program  : this._createColorShadedNXSProgram(),
+		program  : this._createColorShadedProgram(),
 		vertexStreams : {
 			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
 			"aPointSize" : 1.0
@@ -1492,10 +1492,10 @@ _drawScene : function () {
 	var renderer = this.renderer;
 	var CurrFacesProgram    = this.facesProgram;
 	var CurrPointsProgram   = this.pointsProgram;
-	var CurrFacesTechnique  = this.facePLYTechnique;
-	var CurrPointsTechnique = this.pointPLYTechnique;
-	var CCProgram          = this.colorShadedNXSProgram;
-	var CCTechnique        = this.colorShadedPLYTechnique;
+	var CurrFacesTechnique  = this.faceTechnique;
+	var CurrPointsTechnique = this.pointTechnique;
+	var CCProgram          = this.colorShadedProgram;
+	var CCTechnique        = this.colorShadedTechnique;
 	var lineTechnique      = this.simpleLineTechnique;
 	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
@@ -2483,12 +2483,12 @@ onInitialize : function () {
 	this.facesProgram = this._createStandardFacesProgram();
 	this.pointsProgram = this._createStandardPointsProgram();
 	this.utilsProgram = this._createUtilsProgram();
-	this.colorShadedNXSProgram = this._createColorShadedNXSProgram();
+	this.colorShadedProgram = this._createColorShadedProgram();
 
-	this.facePLYTechnique = this._createStandardFacePLYtechnique();
-	this.pointPLYTechnique = this._createStandardPointPLYtechnique();
+	this.faceTechnique = this._createStandardFaceTechnique();
+	this.pointTechnique = this._createStandardPointTechnique();
 	this.utilsTechnique = this._createUtilsTechnique();	
-	this.colorShadedPLYTechnique = this._createColorShadedPLYtechnique();
+	this.colorShadedTechnique = this._createColorShadedTechnique();
 
 	this.simpleLineTechnique = this._createSimpleLinetechnique();
 	this.multiLinesPointsTechnique = this._createMultiLinesPointstechnique();
