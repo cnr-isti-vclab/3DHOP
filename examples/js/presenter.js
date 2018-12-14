@@ -2482,18 +2482,6 @@ onInitialize : function () {
 
 	// shaders
 	this.createDefaultShaders();
-	this.facesProgram = this._createStandardFacesProgram();
-	this.pointsProgram = this._createStandardPointsProgram();
-	this.utilsProgram = this._createUtilsProgram();
-	this.colorShadedProgram = this._createColorShadedProgram();
-
-	this.faceTechnique = this._createStandardFaceTechnique();
-	this.pointTechnique = this._createStandardPointTechnique();
-	this.utilsTechnique = this._createUtilsTechnique();	
-	this.colorShadedTechnique = this._createColorShadedTechnique();
-
-	this.simpleLineTechnique = this._createSimpleLinetechnique();
-	this.multiLinesPointsTechnique = this._createMultiLinesPointstechnique();
 
 	// handlers
 	this._onPickedInstance  = 0;
