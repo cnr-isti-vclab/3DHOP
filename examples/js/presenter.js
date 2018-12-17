@@ -328,10 +328,9 @@ _createStandardPointsProgram : function () {
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
 			}																	\n\
 																				\n\
-			float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);					\n\
-			float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);					\n\
-			float c = 1.0 - (a + b);											\n\
-			if(c < 0.0) { discard; }											\n\
+			vec2 cxy = 2.0 * gl_PointCoord - 1.0;								\n\
+			float r = dot(cxy, cxy);											\n\
+			if (r > 1.0) { discard; }											\n\
 																				\n\
 			vec3  renderColor = vec3(1.0, 1.0, 1.0);							\n\
 			vec3  diffuse = vColor.rgb;											\n\
@@ -367,7 +366,7 @@ _createStandardPointsProgram : function () {
 			}																	\n\
 																				\n\
 			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
-			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));		\n\
+			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(pow(r, 2.0));			\n\
 		}																		\n\
 	");
 	if(this._isDebugging)
