@@ -1512,7 +1512,7 @@ _drawScene : function () {
 	gl.clearColor(bkg[0], bkg[1], bkg[2], bkg[3]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	gl.enable(gl.DEPTH_TEST);
-
+	
 	// draw non-transparent geometries
 	for (var inst in instances) {
 		var instance = instances[inst];
@@ -2481,7 +2481,7 @@ onInitialize : function () {
 	this._nexusCacheSize   = 50000000;
 
 	// shaders
-	this.createDefaultShaders();
+	this.installDefaultShaders();
 
 	// handlers
 	this._onPickedInstance  = 0;
@@ -2561,7 +2561,7 @@ onInitialize : function () {
 	this._sceneBboxDiag = 0.0;
 },
 
-createDefaultShaders : function () {
+installDefaultShaders : function () {
 	this.facesProgram = this._createStandardFacesProgram();
 	this.pointsProgram = this._createStandardPointsProgram();
 	this.utilsProgram = this._createUtilsProgram();
