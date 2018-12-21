@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-19 November 2018
+21 December 2018
 
 #### TEAM
 ---------
@@ -25,17 +25,18 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
+* Updated 3DHOP SHADERS set;
+* Updated 3DHOP MODELS LOADING routine;
 * Updated NEXUS TEXTURE HANDLING in node recovery system;
 * Updated NEXUS CACHE REFRESH system;
 * Updated NEXUS parameters for POINT SIZE CONTROL in point cloud rendering;
 
 **Files Added/Modified**
 
-* Updated "init.js" file;
-* Updated "nexus.js" file;
-* Updated "presenter.js" file;
-* Updated "3dhop.css" file;
-* Updated "3DHpanels.css" file;
+* Added "helpers.js" file;
+* Updated "HOWTO_6.0_animations.html" file;
+* Updated all "*.js" files;
+* Updated all "*.css" files;
 
 
 *Version 4.2*  

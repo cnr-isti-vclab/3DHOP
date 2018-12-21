@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2019, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.4";
+const HOP_VERSION             = "4.2.5";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -260,7 +260,7 @@ _parseTransform : function (options) {
 //----------------------------------------------------------------------------------------
 //SHADERS RELATED FUNCTIONS
 //----------------------------------------------------------------------------------------
-// standard program for rendering, points and faces
+// standard program for points rendering
 _createStandardPointsProgram : function () {
 	var gl = this.ui.gl;
 	var pointsVertexShader = new SglVertexShader(gl, "\
@@ -408,6 +408,7 @@ _createStandardPointsProgram : function () {
 	return program;
 },
 
+// standard program for faces rendering
 _createStandardFacesProgram : function () {
 	var gl = this.ui.gl;
 	var facesVertexShader = new SglVertexShader(gl, "\
@@ -441,7 +442,7 @@ _createStandardFacesProgram : function () {
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD FACE Vertex Shader Log:\n" + facesVertexShader.log);
+		console.log("STD FACES Vertex Shader Log:\n" + facesVertexShader.log);
 
 	var facesFragmentShader = new SglFragmentShader(gl, "\
 		precision highp float;													\n\
@@ -526,7 +527,7 @@ _createStandardFacesProgram : function () {
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD FACE Fragment Shader Log:\n" + facesFragmentShader.log);
+		console.log("STD FACES Fragment Shader Log:\n" + facesFragmentShader.log);
 
 	var program = new SglProgram(gl, {
 		shaders    : [
@@ -565,7 +566,7 @@ _createStandardFacesProgram : function () {
 	return program;
 },
 
-// combined shader for XYZ picking and color coded rendering
+// utils program for XYZ picking and color coded rendering
 _createUtilsProgram : function () {
 	var gl = this.ui.gl;
 	var utilsVertexShader = new SglVertexShader(gl, "\
@@ -663,13 +664,13 @@ _createUtilsProgram : function () {
 	if(this._isDebugging)
 		console.log("UTILS Program Log:\n" + utilsProgram.log);
 
-	return utilsProgram;	
+	return utilsProgram;
 },
 
-// single-color barely-shaded program for NXS rendering, points and faces
+// single-color barely-shaded program for rendering
 _createColorShadedProgram : function () {
 	var gl = this.ui.gl;
-	var nxsVertexShader = new SglVertexShader(gl, "\
+	var colorShadedVertexShader = new SglVertexShader(gl, "\
 		precision highp float;                                                \n\
 																			  \n\
 		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
@@ -691,9 +692,9 @@ _createColorShadedProgram : function () {
 		}                                                                     \n\
 	");
 	if(this._isDebugging)
-		console.log("COLOR SHADED Vertex Shader Log:\n" + nxsVertexShader.log);
+		console.log("COLOR SHADED Vertex Shader Log:\n" + colorShadedVertexShader.log);
 
-	var nxsFragmentShader = new SglFragmentShader(gl, "\
+	var colorShadedFragmentShader = new SglFragmentShader(gl, "\
 		precision highp float;                                                \n\
 																			  \n\
 		uniform   vec3 uViewSpaceLightDirection;                              \n\
@@ -716,12 +717,12 @@ _createColorShadedProgram : function () {
 		}                                                                     \n\
 	");
 	if(this._isDebugging)
-		console.log("COLOR SHADED Fragment Shader Log:\n" + nxsFragmentShader.log);
+		console.log("COLOR SHADED Fragment Shader Log:\n" + colorShadedFragmentShader.log);
 
 	var program = new SglProgram(gl, {
 		shaders    : [
-			nxsVertexShader,
-			nxsFragmentShader
+			colorShadedVertexShader,
+			colorShadedFragmentShader
 		],
 		attributes : {
 			"aPosition" : 0,
@@ -742,8 +743,8 @@ _createColorShadedProgram : function () {
 	return program;
 },
 
-//standard technique for PLY rendering, points and faces
-_createStandardPointTechnique : function () {
+// standard technique for PLY points rendering
+_createStandardPointsTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
 		program  : this._createStandardPointsProgram(),
@@ -776,7 +777,8 @@ _createStandardPointTechnique : function () {
 	return technique;
 },
 
-_createStandardFaceTechnique : function () {
+// standard technique for PLY faces rendering
+_createStandardFacesTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
 		program  : this._createStandardFacesProgram(),
@@ -808,7 +810,7 @@ _createStandardFaceTechnique : function () {
 	return technique;
 },
 
-// UTILS technique for PLY rendering
+// utils technique for PLY rendering
 _createUtilsTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
@@ -2326,7 +2328,8 @@ _drawScenePickingSpots : function () {
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uPointSize"                 : this._scene.config.pointSize,
-			"uColorID"                   : colorID
+			"uColorID"                   : colorID,
+			"uMode"                      : 2.0
 		};
 
 		if(mesh.mtype === "nexus") {
@@ -2566,8 +2569,8 @@ installDefaultShaders : function () {
 	this.utilsProgram = this._createUtilsProgram();
 	this.colorShadedProgram = this._createColorShadedProgram();
 
-	this.faceTechnique = this._createStandardFaceTechnique();
-	this.pointTechnique = this._createStandardPointTechnique();
+	this.faceTechnique = this._createStandardFacesTechnique();
+	this.pointTechnique = this._createStandardPointsTechnique();
 	this.utilsTechnique = this._createUtilsTechnique();	
 	this.colorShadedTechnique = this._createColorShadedTechnique();
 

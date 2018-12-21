@@ -98,11 +98,11 @@ function actionsToolbar(action) {
 }
 
 function onTrackballArrived(state){
-	log("Animation Finished: [" + state + "]");
+	log(state);
 }
 
 function log(msg) {
-	document.getElementById("log-text").innerHTML += msg + "\n";
+	document.getElementById("log-text").innerHTML += "Trackball position: [" + msg + "]\n";
 	document.getElementById("log-text").scrollTop = document.getElementById("log-text").scrollHeight;
 }
 
