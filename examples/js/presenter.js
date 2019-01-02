@@ -216,6 +216,7 @@ _parseConfig : function (options) {
 		clippingBorderColor : [0.0, 1.0, 1.0],
 		pointSize           : 1.0,
 		pointSizeMinMax     : [1.0, 5.0],
+		autoSaveScreenshot  : true,
 	}, options);
 	return r;
 },
@@ -2005,6 +2006,20 @@ _drawScene : function () {
 		gl.depthMask(true);
 	}
 	Nexus.endFrame(this.ui.gl);
+	
+	// saving image, if necessary
+	if(this.isCapturingScreenshot){
+	    this.isCapturingScreenshot = false;
+		this.screenshotData = this.ui._canvas.toDataURL('image/png',1);
+		if(this._scene.config.autoSaveScreenshot)
+		{
+			var currentdate = new Date();			
+			var a  = document.createElement('a');
+			a.href = this.screenshotData;
+			a.download = "screenshot_" + currentdate.getHours() + "_" + currentdate.getMinutes() + "_" + currentdate.getSeconds() + ".png";
+			a.click();
+		}
+	}
 },
 
 _drawScenePickingXYZ : function () {
@@ -2477,6 +2492,10 @@ onInitialize : function () {
 	this.xform      = new SglTransformationStack();
 	this.viewMatrix = SglMat4.identity();
 
+	// screenshot support
+	this.isCapturingScreenshot = false;
+	this.screenshotData = null;
+	
 	// nexus parameters
 	this._nexusTargetFps   = 15.0;
 	this._nexusTargetError = 1.0;
@@ -2663,6 +2682,17 @@ onClick : function (button, x, y, e) {
 		if(this._isMeasuringDistance) this._measureRefresh(0, x, y, e);
 	}
 	this._clickable = false;
+},
+
+onKeyDown : function (key, e) {
+	if (e.ctrlKey) {
+		if (e.key == 'p') // ctrl-p to save screenshot
+		{
+			e.preventDefault();
+			this.isCapturingScreenshot = true;
+			this.repaint();
+		}
+	}
 },
 
 onKeyPress : function (key, e) {
