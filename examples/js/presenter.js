@@ -1711,12 +1711,7 @@ _drawScene : function () {
 			renderer.renderModel();
 		renderer.end();
 
-		lineUniforms = {
-			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uLineColor"                 : [config.pickedpointColor[0] * 0.4, config.pickedpointColor[1] * 0.5, config.pickedpointColor[2] * 0.6, 0.5],
-			"uPointA"                    : this._pickedPoint,
-			"uPointB"                    : this._pickedPoint
-		};
+		lineUniforms["uLineColor"] = [config.pickedpointColor[0] * 0.4, config.pickedpointColor[1] * 0.5, config.pickedpointColor[2] * 0.6, 0.5];
 
 		gl.depthFunc(gl.GREATER);
 		gl.depthMask(false);
@@ -1766,12 +1761,7 @@ _drawScene : function () {
 			renderer.renderModel();
 		renderer.end();
 
-		lineUniforms = {
-			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uLineColor"                 : [config.measurementColor[0] * 0.4, config.measurementColor[1] * 0.5, config.measurementColor[2] * 0.6, 0.5],
-			"uPointA"                    : this._pointA,
-			"uPointB"                    : (this._measurementStage==2)?this._pointA:this._pointB,
-		};
+		lineUniforms["uLineColor"] = [config.measurementColor[0] * 0.4, config.measurementColor[1] * 0.5, config.measurementColor[2] * 0.6, 0.5];
 
 		gl.depthFunc(gl.GREATER);
 		gl.depthMask(false);
@@ -1852,16 +1842,12 @@ _drawScene : function () {
 					gl.enable(gl.STENCIL_TEST);
 					gl.stencilFunc(gl.ALWAYS, 0, 255);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
-
 					renderer.renderModel();
-
 					//second pass
 					gl.colorMask(true, true, true, true);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); // Don't change the stencil buffer...
 					gl.stencilFunc(gl.EQUAL, 1, 0x01); // The stencil buffer contains the shadow values...
-
 					renderer.renderModel();
-
 					gl.disable(gl.STENCIL_TEST);
 				}
 				else
@@ -1902,7 +1888,7 @@ _drawScene : function () {
 			xform.model.push();
 			xform.model.translate(planepoint);
 			xform.model.multiply(rotm);
-			xform.model.scale([psize, psize, psize ]);
+			xform.model.scale([psize, psize, psize]);
 
 			var QuadUniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
@@ -1988,7 +1974,6 @@ _drawScene : function () {
 				"uViewSpaceLightDirection"   : this._lightDirection,
 				"uColorID"                   : [0.0, 0.0, 1.0, 0.25]
 			};
-
 
 			renderer.begin();
 				renderer.setTechnique(CCTechnique);
