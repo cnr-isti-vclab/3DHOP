@@ -217,6 +217,7 @@ _parseConfig : function (options) {
 		pointSize           : 1.0,
 		pointSizeMinMax     : [1.0, 5.0],
 		autoSaveScreenshot  : true,
+		screenshotBaseName  : "screenshot",
 	}, options);
 	return r;
 },
@@ -2016,7 +2017,7 @@ _drawScene : function () {
 			var currentdate = new Date();			
 			var a  = document.createElement('a');
 			a.href = this.screenshotData;
-			a.download = "screenshot_" + currentdate.getHours() + "_" + currentdate.getMinutes() + "_" + currentdate.getSeconds() + ".png";
+			a.download = this._scene.config.screenshotBaseName + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds() + ".png";
 			a.click();
 		}
 	}
