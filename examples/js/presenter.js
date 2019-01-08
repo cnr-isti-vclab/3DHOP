@@ -127,6 +127,7 @@ _parseModelInstance : function (options) {
 		visible         : true,
 		tags            : [ ],
 		clippable       : true,
+		measurable      : true,
 	}, options);
 	r.transform = this._parseTransform(r.transform);
 	r.ID = this._instancesProgressiveID;
@@ -2041,6 +2042,7 @@ _drawScenePickingXYZ : function () {
 		var renderable = mesh.renderable;
 		if (!renderable) continue;
 		if (!instance.visible) continue;
+		if (!instance.measurable) continue;
 
 		// GLstate setup
 		xform.model.push();
