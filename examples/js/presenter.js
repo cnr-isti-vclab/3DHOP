@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.5";
+const HOP_VERSION             = "4.2.6";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -1844,11 +1844,13 @@ _drawScene : function () {
 					gl.stencilFunc(gl.ALWAYS, 0, 255);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
 					renderer.renderModel();
+
 					//second pass
 					gl.colorMask(true, true, true, true);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); // Don't change the stencil buffer...
 					gl.stencilFunc(gl.EQUAL, 1, 0x01); // The stencil buffer contains the shadow values...
 					renderer.renderModel();
+
 					gl.disable(gl.STENCIL_TEST);
 				}
 				else
@@ -2620,7 +2622,7 @@ onDrag : function (button, x, y, e) {
 	for(var i=0; i<testMatrix.length; i++) {
 		if(testMatrix[i]!=this.trackball._matrix[i]) {diff=true; break;}
 	}
-	if(diff) ui.postDrawEvent();
+	if(diff) this.repaint();
 },
 
 onMouseMove : function (x, y, e) {

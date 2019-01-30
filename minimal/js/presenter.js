@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.5";
+const HOP_VERSION             = "4.2.6";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -127,6 +127,7 @@ _parseModelInstance : function (options) {
 		visible         : true,
 		tags            : [ ],
 		clippable       : true,
+		measurable      : true,
 	}, options);
 	r.transform = this._parseTransform(r.transform);
 	r.ID = this._instancesProgressiveID;
@@ -216,6 +217,8 @@ _parseConfig : function (options) {
 		clippingBorderColor : [0.0, 1.0, 1.0],
 		pointSize           : 1.0,
 		pointSizeMinMax     : [1.0, 5.0],
+		autoSaveScreenshot  : true,
+		screenshotBaseName  : "screenshot",
 	}, options);
 	return r;
 },
@@ -1709,12 +1712,7 @@ _drawScene : function () {
 			renderer.renderModel();
 		renderer.end();
 
-		lineUniforms = {
-			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uLineColor"                 : [config.pickedpointColor[0] * 0.4, config.pickedpointColor[1] * 0.5, config.pickedpointColor[2] * 0.6, 0.5],
-			"uPointA"                    : this._pickedPoint,
-			"uPointB"                    : this._pickedPoint
-		};
+		lineUniforms["uLineColor"] = [config.pickedpointColor[0] * 0.4, config.pickedpointColor[1] * 0.5, config.pickedpointColor[2] * 0.6, 0.5];
 
 		gl.depthFunc(gl.GREATER);
 		gl.depthMask(false);
@@ -1764,12 +1762,7 @@ _drawScene : function () {
 			renderer.renderModel();
 		renderer.end();
 
-		lineUniforms = {
-			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uLineColor"                 : [config.measurementColor[0] * 0.4, config.measurementColor[1] * 0.5, config.measurementColor[2] * 0.6, 0.5],
-			"uPointA"                    : this._pointA,
-			"uPointB"                    : (this._measurementStage==2)?this._pointA:this._pointB,
-		};
+		lineUniforms["uLineColor"] = [config.measurementColor[0] * 0.4, config.measurementColor[1] * 0.5, config.measurementColor[2] * 0.6, 0.5];
 
 		gl.depthFunc(gl.GREATER);
 		gl.depthMask(false);
@@ -1850,14 +1843,12 @@ _drawScene : function () {
 					gl.enable(gl.STENCIL_TEST);
 					gl.stencilFunc(gl.ALWAYS, 0, 255);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
-
 					renderer.renderModel();
 
 					//second pass
 					gl.colorMask(true, true, true, true);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); // Don't change the stencil buffer...
 					gl.stencilFunc(gl.EQUAL, 1, 0x01); // The stencil buffer contains the shadow values...
-
 					renderer.renderModel();
 
 					gl.disable(gl.STENCIL_TEST);
@@ -1900,7 +1891,7 @@ _drawScene : function () {
 			xform.model.push();
 			xform.model.translate(planepoint);
 			xform.model.multiply(rotm);
-			xform.model.scale([psize, psize, psize ]);
+			xform.model.scale([psize, psize, psize]);
 
 			var QuadUniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
@@ -1987,7 +1978,6 @@ _drawScene : function () {
 				"uColorID"                   : [0.0, 0.0, 1.0, 0.25]
 			};
 
-
 			renderer.begin();
 				renderer.setTechnique(CCTechnique);
 				renderer.setDefaultGlobals();
@@ -2005,6 +1995,20 @@ _drawScene : function () {
 		gl.depthMask(true);
 	}
 	Nexus.endFrame(this.ui.gl);
+	
+	// saving image, if necessary
+	if(this.isCapturingScreenshot){
+	    this.isCapturingScreenshot = false;
+		this.screenshotData = this.ui._canvas.toDataURL('image/png',1);
+		if(this._scene.config.autoSaveScreenshot)
+		{
+			var currentdate = new Date();			
+			var a  = document.createElement('a');
+			a.href = this.screenshotData;
+			a.download = this._scene.config.screenshotBaseName + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds() + ".png";
+			a.click();
+		}
+	}
 },
 
 _drawScenePickingXYZ : function () {
@@ -2040,6 +2044,7 @@ _drawScenePickingXYZ : function () {
 		var renderable = mesh.renderable;
 		if (!renderable) continue;
 		if (!instance.visible) continue;
+		if (!instance.measurable) continue;
 
 		// GLstate setup
 		xform.model.push();
@@ -2477,6 +2482,10 @@ onInitialize : function () {
 	this.xform      = new SglTransformationStack();
 	this.viewMatrix = SglMat4.identity();
 
+	// screenshot support
+	this.isCapturingScreenshot = false;
+	this.screenshotData = null;
+	
 	// nexus parameters
 	this._nexusTargetFps   = 15.0;
 	this._nexusTargetError = 1.0;
@@ -2613,7 +2622,7 @@ onDrag : function (button, x, y, e) {
 	for(var i=0; i<testMatrix.length; i++) {
 		if(testMatrix[i]!=this.trackball._matrix[i]) {diff=true; break;}
 	}
-	if(diff) ui.postDrawEvent();
+	if(diff) this.repaint();
 },
 
 onMouseMove : function (x, y, e) {
@@ -2663,6 +2672,17 @@ onClick : function (button, x, y, e) {
 		if(this._isMeasuringDistance) this._measureRefresh(0, x, y, e);
 	}
 	this._clickable = false;
+},
+
+onKeyDown : function (key, e) {
+	if (e.ctrlKey) {
+		if (e.key == 'p') // ctrl-p to save screenshot
+		{
+			e.preventDefault();
+			this.isCapturingScreenshot = true;
+			this.repaint();
+		}
+	}
 },
 
 onKeyPress : function (key, e) {

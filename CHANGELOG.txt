@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-21 December 2018
+30 January 2019
 
 #### TEAM
 ---------
@@ -25,6 +25,8 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
+* Added SCREENSHOT functionality;
+* Updated MEASUREMENT tool (instances selection);
 * Updated 3DHOP SHADERS set;
 * Updated 3DHOP MODELS LOADING routine;
 * Updated NEXUS TEXTURE HANDLING in node recovery system;
