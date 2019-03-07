@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.6";
+const HOP_VERSION             = "4.2.7";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -155,6 +155,7 @@ _parseSpot : function (options) {
 		color           : [ 0.0, 0.25, 1.0 ],
 		useSolidColor   : true,
 		alpha           : 0.5,
+		alphaHigh       : 0.8,
 		useTransparency : true,
 		useStencil      : false,
 		cursor          : "pointer",
@@ -707,6 +708,7 @@ _createColorShadedProgram : function () {
 																			  \n\
 		void main(void)                                                       \n\
 		{                                                                     \n\
+			if(uColorID[3] == 0.0) discard;                                   \n\
 			vec3  diffuse = vec3(uColorID[0], uColorID[1], uColorID[2]);      \n\
 																			  \n\
 			if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
@@ -1023,8 +1025,6 @@ _pickingRefresh: function(x,y) {
 					if (spots[spt].ID == ID) {
 						this._pickedSpot = spt;
 						if(this._onHover){
-							if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
-							spots[this._pickedSpot].alpha += 0.3;
 							cursor = spots[spt].cursor;
 							if(/*!this._movingLight ||*/ !this._isMeasuring){
 								this._lastCursor = document.getElementById(this.ui.canvas.id).style.cursor;
@@ -1043,7 +1043,6 @@ _pickingRefresh: function(x,y) {
 			else{
 				this._pickedSpot = null;
 				if(this._onHover){
-					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
 					if(/*!this._movingLight ||*/ !this._isMeasuring) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 					if(this._onLeaveSpot && this._lastPickedSpot!=null) this._onLeaveSpot(this._lastPickedSpot);
 					//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
@@ -1813,7 +1812,7 @@ _drawScene : function () {
 			"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 			"uViewSpaceLightDirection"   : this._lightDirection,
 			"uPointSize"                 : config.pointSize,
-			"uColorID"                   : [spot.color[0], spot.color[1], spot.color[2], spot.alpha]
+			"uColorID"                   : [spot.color[0], spot.color[1], spot.color[2], (spt == this._pickedSpot)?spot.alphaHigh:spot.alpha]
 		}
 
 		if(mesh.mtype === "nexus") {

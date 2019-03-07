@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-30 January 2019
+07 March 2019
 
 #### TEAM
 ---------
@@ -25,8 +25,10 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
-* Added SCREENSHOT functionality;
-* Updated MEASUREMENT tool (instances selection);
+* Added 3DHOP SCREENSHOT functionality;
+* Updated NEXUS TRAVERSAL ROUTINE for avoiding redundant repainting;
+* Updated 3DHOP HOTSPOTS TRANSPARENCY levels;
+* Updated 3DHOP MEASUREMENT tool (instances selection);
 * Updated 3DHOP SHADERS set;
 * Updated 3DHOP MODELS LOADING routine;
 * Updated NEXUS TEXTURE HANDLING in node recovery system;
@@ -37,6 +39,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 * Added "helpers.js" file;
 * Updated "HOWTO_6.0_animations.html" file;
+* Updated "HOWTO_7.0_hotspots_events.html" file;
 * Updated all "*.js" files;
 * Updated all "*.css" files;
 
