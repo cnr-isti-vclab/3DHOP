@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-07 March 2019
+03 April 2019
 
 #### TEAM
 ---------
@@ -26,6 +26,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 **Main Changes**
 
 * Added 3DHOP SCREENSHOT functionality;
+* Fixed 16 BIT ALIGNMENT critical bug;
 * Updated NEXUS TRAVERSAL ROUTINE for avoiding redundant repainting;
 * Updated 3DHOP HOTSPOTS TRANSPARENCY levels;
 * Updated 3DHOP MEASUREMENT tool (instances selection);
