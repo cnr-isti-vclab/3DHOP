@@ -8,14 +8,12 @@
 
 Contact Us @ info@3dhop.net
 
-4 June 2018
+12 June 2018
 
 #### TEAM
 ---------
 
 Marco Callieri       @ marco.callieri@isti.cnr.it  
-Massimiliano Corsini @ massimiliano.corsini@isti.cnr.it  
-Matteo Dellepiane    @ matteo.dellepiane@isti.cnr.it  
 Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 #### CONTENTS
