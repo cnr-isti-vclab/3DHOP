@@ -105,22 +105,29 @@ function init3dhop() {
 	}
 
 	$(window).on('resize', function () {
-		if (!presenter._resizable) return;
+//		if (!presenter._resizable) return;
 
 		var width, height;
-		width = Math.max(document.documentElement.clientWidth, window.innerWidth);
-		(isIOS()) ? (height = document.documentElement.clientHeight) : (height = window.innerHeight); //IOS DEVICES CHECK
+
+		if(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement ) {
+			width = Math.max(document.documentElement.clientWidth, window.innerWidth);
+			height = window.innerHeight;
+		}
+		else {
+			width = $('#3dhop').parent().width();
+			height = $('#3dhop').parent().height();
+		}
 
 		resizeCanvas(width,height);
 
 		presenter.ui.postDrawEvent();
 	});
 
-	$(window).on('load mouseup touchend pointerup dragend', function() { //focus handler
-		var x = window.scrollX, y = window.scrollY;
-		$('#draw-canvas').focus();
-		window.scrollTo(x, y);
-	});
+//	$(window).on('load mouseup touchend pointerup dragend', function() { //focus handler
+//		var x = window.scrollX, y = window.scrollY;
+//		$('#draw-canvas').focus();
+//		window.scrollTo(x, y);
+//	});
 
 	resizeCanvas($('#3dhop').parent().width(),$('#3dhop').parent().height());
 
@@ -440,8 +447,8 @@ function enterFullscreen() {
 
   presenter._nativeWidth  = presenter.ui.width;
   presenter._nativeHeight = presenter.ui.height;
-  presenter._nativeResizable = presenter._resizable;
-  presenter._resizable = true;
+//  presenter._nativeResizable = presenter._resizable;
+//  presenter._resizable = true;
 
   var viewer = $('#3dhop')[0];
   if (viewer.msRequestFullscreen) viewer.msRequestFullscreen();
@@ -458,7 +465,7 @@ function exitFullscreen() {
   if (isIOS()) return; //IOS DEVICES CHECK
 
   resizeCanvas(presenter._nativeWidth,presenter._nativeHeight)
-  presenter._resizable = presenter._nativeResizable;
+//  presenter._resizable = presenter._nativeResizable;
 
   if (document.msExitFullscreen) document.msExitFullscreen();
   else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
@@ -523,14 +530,14 @@ function resizeCanvas(w,h) {
   $('#3dhop').css('width', w);
   $('#3dhop').css('height', h);
 
-  if (!presenter) return;
+//  if (!presenter) return;
 
-  var width, height;
-  width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-  (isIOS()) ? (height = document.documentElement.clientHeight) : (height = window.innerHeight); //IOS DEVICES CHECK
+//  var width, height;
+//  width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+//  (isIOS()) ? (height = document.documentElement.clientHeight) : (height = window.innerHeight); //IOS DEVICES CHECK
 
-  if (width != w || height != h) presenter._resizable = false;
-  else presenter._resizable = true;
+//  if (width != w || height != h) presenter._resizable = false;
+//  else presenter._resizable = true;
 }
 
 function anchorPanels() {
