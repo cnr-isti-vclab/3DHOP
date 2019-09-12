@@ -2207,7 +2207,7 @@ _drawScenePickingXYZ : function () {
 
 	var ppointc;
 
-	if((rr==0.0) && (gg==0.0) && (bb==00))
+	if((rr==0.0) && (gg==0.0) && (bb==0.0))
 		return(null);
 	else
 		ppointc = xform.unproject([this._pickpoint[0]/width,this._pickpoint[1]/height,depth]);
@@ -2679,7 +2679,7 @@ onDrag : function (button, x, y, e) {
 
 	// if locked trackball, just return. we check AFTER the light-trackball test
 	if (this._scene.trackball.locked) return;
-	
+
 	if(ui.dragDeltaX(button) != 0) this.x += (ui.cursorDeltaX/500);
 	if(ui.dragDeltaY(button) != 0) this.y += (ui.cursorDeltaY/500);
 
@@ -2794,7 +2794,7 @@ onMouseWheel: function (wheelDelta, x, y, e) {
 	else {
 		// if locked trackball, just return.
 		if (this._scene.trackball.locked) return;
-		
+
 		var action = SGL_TRACKBALL_SCALE;
 
 		var factor = wheelDelta > 0.0 ? (0.90) : (1.10);
