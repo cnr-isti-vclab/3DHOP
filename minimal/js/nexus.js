@@ -1223,6 +1223,13 @@ function readyNode(node) {
 	m.status[n]--;
 
 	if(m.status[n] == 2) {
+
+		///////////
+		// Added event indicating rendering start
+		//
+        var event = new Event('threeDNodeRendered');
+        document.dispatchEvent(event);
+
 		m.status[n]--; //ready
 		node.reqAttempt = 0;
 		node.context.pending--;
