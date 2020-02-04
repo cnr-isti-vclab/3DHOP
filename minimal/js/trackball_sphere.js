@@ -207,8 +207,6 @@ SphereTrackball.prototype = {
 
 		var v0 = this._transformOnSphere(mInv, this._pts[0][0], this._pts[0][1]);
 		var v1 = this._transformOnSphere(mInv, this._pts[1][0], this._pts[1][1]);
-		var v1 = this._transformOnSphere(mInv, this._pts[1][0], this._pts[1][1]);
-		var v1 = this._transformOnSphere(mInv, this._pts[1][0], this._pts[1][1]);
 
 		var axis   = SglVec3.cross(v0, v1);
 		var angle  = SglVec3.length(axis);
