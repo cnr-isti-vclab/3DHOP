@@ -922,6 +922,7 @@ _createMultiLinesPointstechnique : function () {
 			precision highp float;                                                \n\
 																				  \n\
 			uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+			uniform   float uPointSize;  				                          \n\
 																				  \n\
 			attribute vec3 aPosition;                                             \n\
 			attribute vec3 aNormal;                                               \n\
@@ -934,25 +935,33 @@ _createMultiLinesPointstechnique : function () {
 			{                                                                     \n\
 				vColor      = aColor;                                             \n\
 				gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-				gl_PointSize = 8.0;	                 							  \n\
+				gl_PointSize = uPointSize;				 					 	  \n\
 			}                                                                     \n\
 		",
 		fragmentShader : "\
-			precision highp float;                                                \n\
+		#extension GL_EXT_frag_depth : enable									  \n\
+		precision highp float;													  \n\
+																				  \n\
+			uniform   vec4 uColorID;											  \n\
+			uniform   float uZOff;												  \n\
 																				  \n\
 			varying   vec4 vColor;                                                \n\
 																				  \n\
 			void main(void)                                                       \n\
 			{                                                                     \n\
-				gl_FragColor = vColor;                                            \n\
+				gl_FragColor = uColorID;                                          \n\
+				gl_FragDepthEXT = gl_FragCoord.z - uZOff;						  \n\
 			}                                                                     \n\
 		",
 		vertexStreams : {
-			"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 1.0, 1.0 ]
+			"aNormal" : [ 0.0, 0.0, 0.0, 0.0 ],
+			"aColor"  : [ 1.0, 0.0, 0.0, 1.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
+			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
+			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
+			"uZOff"                      : { semantic : "uZOff",                      value : 0.0 },
 		}
 	});
 
@@ -1502,8 +1511,10 @@ _drawScene : function () {
 	var CCProgram          = this.colorShadedProgram;
 	var CCTechnique        = this.colorShadedTechnique;
 	var lineTechnique      = this.simpleLineTechnique;
+	var entitiesTechnique  = this.multiLinesPointsTechnique;
 	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
+	var entities  = this._scene.entities;
 	var spots     = this._scene.spots;
 	var space     = this._scene.space;
 	var config    = this._scene.config;
@@ -1786,6 +1797,41 @@ _drawScene : function () {
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
 		gl.depthFunc(gl.LESS);
+		xform.model.pop();
+	}
+
+	// draw entities
+	for (var ent in entities) {
+		var entity = entities[ent];
+		if (!entity.visible) continue;		
+		if (!entity.renderable) continue;
+			
+		xform.model.push();
+		xform.model.multiply(space.transform.matrix);
+		xform.model.multiply(entity.transform.matrix);
+		
+		var entityUniforms = {
+			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+			"uPointSize"                 : 8.0,//config.pointSize,
+			"uColorID"                   : entity.color,
+			"uZOff"                      : entity.zOff,
+		};		
+		
+		//drawing lines
+		renderer.begin();
+			renderer.setTechnique(entitiesTechnique);
+			if (entity.type == "lines")
+				renderer.setPrimitiveMode("LINE");
+			else if (entity.type == "points")
+				renderer.setPrimitiveMode("POINT");
+			else if (entity.type == "triangles")
+				renderer.setPrimitiveMode("FILL");
+			renderer.setDefaultGlobals();
+			renderer.setGlobals(entityUniforms);			
+			renderer.setModel(entity.renderable);
+			renderer.renderModel();
+		renderer.end();
+		
 		xform.model.pop();
 	}
 
@@ -2882,6 +2928,9 @@ setScene : function (options) {
 	// create quad models
 	this._createQuadModels();
 
+	// create a space for other entities
+	this._scene.entities = {};
+
 	this._sceneParsed = true;
 },
 
@@ -2899,6 +2948,54 @@ toggleDebugMode : function () {
 
 repaint : function () {
 	this.ui.postDrawEvent();
+},
+
+//------entities-------------------
+createEntity : function (eName, type, positionList) {
+	// type "points", "lines", "triangles"
+	var nEntity = {};
+	nEntity.visible = true;
+	nEntity.type = type;
+	nEntity.renderable = null;
+	nEntity.transform = {};
+	nEntity.transform.matrix = SglMat4.identity();
+	nEntity.color = [1.0, 0.0, 1.0, 1.0];
+	nEntity.zOff = 0.0;
+
+	var modelDescriptor = {};
+	if(type == "points")
+		modelDescriptor.primitives = ["points"];
+	else if(type == "lines")
+		modelDescriptor.primitives = ["lines"];
+	else if(type == "triangles")
+		modelDescriptor.primitives = ["triangles"];	
+	modelDescriptor.vertices = {};
+	modelDescriptor.vertices.position = [];
+	modelDescriptor.vertices.normal = [];
+	modelDescriptor.vertices.color = {value : [ 1.0, 0.0, 1.0, 1.0 ]};
+	var numVerts = positionList.length;
+
+	for (vInd = 0; vInd < numVerts; vInd++)
+	{
+		modelDescriptor.vertices.position.push(positionList[vInd][0]);
+		modelDescriptor.vertices.position.push(positionList[vInd][1]);
+		modelDescriptor.vertices.position.push(positionList[vInd][2]);
+		
+		modelDescriptor.vertices.normal.push(0.0);
+		modelDescriptor.vertices.normal.push(0.0);
+		modelDescriptor.vertices.normal.push(0.0);
+	}
+	var gl = this.ui.gl;
+	nEntity.renderable = new SglModel(gl, modelDescriptor);
+	
+	// setting
+	this._scene.entities[eName] = {};
+	this._scene.entities[eName] = nEntity;
+	return this._scene.entities[eName];
+},
+
+deleteEntity : function (eName) {
+	delete this._scene.entities[eName];
 },
 
 //-----------------------------------------------------------------------------
