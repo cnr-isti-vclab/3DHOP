@@ -84,6 +84,7 @@ _parseMeshes : function (options) {
 _parseMesh : function (options) {
 	var r = sglGetDefaultObject({
 		url       : null,
+		mType     : null,
 		transform : null
 	}, options);
 	r.transform = this._parseTransform(r.transform);
@@ -921,6 +922,7 @@ _createMultiLinesPointstechnique : function () {
 			precision highp float;                                                \n\
 																				  \n\
 			uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+			uniform   float uPointSize;  				                          \n\
 																				  \n\
 			attribute vec3 aPosition;                                             \n\
 			attribute vec3 aNormal;                                               \n\
@@ -933,25 +935,33 @@ _createMultiLinesPointstechnique : function () {
 			{                                                                     \n\
 				vColor      = aColor;                                             \n\
 				gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-				gl_PointSize = 8.0;	                 							  \n\
+				gl_PointSize = uPointSize;				 					 	  \n\
 			}                                                                     \n\
 		",
 		fragmentShader : "\
-			precision highp float;                                                \n\
+		#extension GL_EXT_frag_depth : enable									  \n\
+		precision highp float;													  \n\
+																				  \n\
+			uniform   vec4 uColorID;											  \n\
+			uniform   float uZOff;												  \n\
 																				  \n\
 			varying   vec4 vColor;                                                \n\
 																				  \n\
 			void main(void)                                                       \n\
 			{                                                                     \n\
-				gl_FragColor = vColor;                                            \n\
+				gl_FragColor = uColorID;                                          \n\
+				gl_FragDepthEXT = gl_FragCoord.z - uZOff;						  \n\
 			}                                                                     \n\
 		",
 		vertexStreams : {
-			"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 1.0, 1.0 ]
+			"aNormal" : [ 0.0, 0.0, 0.0, 0.0 ],
+			"aColor"  : [ 1.0, 0.0, 0.0, 1.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
+			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
+			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
+			"uZOff"                      : { semantic : "uZOff",                      value : 0.0 },
 		}
 	});
 
@@ -1501,8 +1511,10 @@ _drawScene : function () {
 	var CCProgram          = this.colorShadedProgram;
 	var CCTechnique        = this.colorShadedTechnique;
 	var lineTechnique      = this.simpleLineTechnique;
+	var entitiesTechnique  = this.multiLinesPointsTechnique;
 	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
+	var entities  = this._scene.entities;
 	var spots     = this._scene.spots;
 	var space     = this._scene.space;
 	var config    = this._scene.config;
@@ -1560,7 +1572,7 @@ _drawScene : function () {
 			"uClipColorSize"             : thisClipBordersize
 		};
 
-		if(mesh.mtype === "nexus") {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
@@ -1577,7 +1589,7 @@ _drawScene : function () {
 				nexus.render();
 			program.unbind();
 		}
-		else if(mesh.mtype === "ply") {
+		else if(mesh.mType === "ply") {
 			var technique;
 			if(instance.rendermode=="FILL")
 				technique = CurrFacesTechnique;
@@ -1647,7 +1659,7 @@ _drawScene : function () {
 			"uClipColorSize"             : thisClipBordersize
 		};
 
-		if(mesh.mtype === "nexus") {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
@@ -1664,7 +1676,7 @@ _drawScene : function () {
 				nexus.render();
 			program.unbind();
 		}
-		else if(mesh.mtype === "ply") {
+		else if(mesh.mType === "ply") {
 			var technique;
 			if(instance.rendermode=="FILL")
 				technique = CurrFacesTechnique;
@@ -1788,6 +1800,41 @@ _drawScene : function () {
 		xform.model.pop();
 	}
 
+	// draw entities
+	for (var ent in entities) {
+		var entity = entities[ent];
+		if (!entity.visible) continue;		
+		if (!entity.renderable) continue;
+			
+		xform.model.push();
+		xform.model.multiply(space.transform.matrix);
+		xform.model.multiply(entity.transform.matrix);
+		
+		var entityUniforms = {
+			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+			"uPointSize"                 : 8.0,//config.pointSize,
+			"uColorID"                   : entity.color,
+			"uZOff"                      : entity.zOff,
+		};		
+		
+		//drawing lines
+		renderer.begin();
+			renderer.setTechnique(entitiesTechnique);
+			if (entity.type == "lines")
+				renderer.setPrimitiveMode("LINE");
+			else if (entity.type == "points")
+				renderer.setPrimitiveMode("POINT");
+			else if (entity.type == "triangles")
+				renderer.setPrimitiveMode("FILL");
+			renderer.setDefaultGlobals();
+			renderer.setGlobals(entityUniforms);			
+			renderer.setModel(entity.renderable);
+			renderer.renderModel();
+		renderer.end();
+		
+		xform.model.pop();
+	}
+
 	// draw transparent spot geometries
 	for (var spt in spots) {
 		var spot = spots[spt];
@@ -1815,7 +1862,7 @@ _drawScene : function () {
 			"uColorID"                   : [spot.color[0], spot.color[1], spot.color[2], (spt == this._pickedSpot)?spot.alphaHigh:spot.alpha]
 		}
 
-		if(mesh.mtype === "nexus") {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -1827,7 +1874,7 @@ _drawScene : function () {
 				nexus.render();
 			program.unbind();
 		}
-		else if(mesh.mtype === "ply") {
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setTechnique(CCTechnique);
 				renderer.setDefaultGlobals();
@@ -2069,7 +2116,7 @@ _drawScenePickingXYZ : function () {
 			"uMode"                      : 1.0
 		};
 
-		if(mesh.mtype === "nexus") {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2085,7 +2132,7 @@ _drawScenePickingXYZ : function () {
 
 			this.pickFramebuffer.unbind();
 		}
-		else if(mesh.mtype === "ply") {
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2186,7 +2233,7 @@ _drawScenePickingInstances : function () {
 			"uMode"                      : 2.0
 		};
 
-		if(mesh.mtype === "nexus") {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2202,7 +2249,7 @@ _drawScenePickingInstances : function () {
 
 			this.pickFramebuffer.unbind();
 		}
-		else if(mesh.mtype === "ply") {
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2280,7 +2327,7 @@ _drawScenePickingSpots : function () {
 			"uMode"                      : 2.0
 		};
 
-		if(mesh.mtype === "nexus") {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2296,7 +2343,7 @@ _drawScenePickingSpots : function () {
 
 			this.pickFramebuffer.unbind();
 		}
-		else if(mesh.mtype === "ply") {
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2336,7 +2383,7 @@ _drawScenePickingSpots : function () {
 			"uMode"                      : 2.0
 		};
 
-		if(mesh.mtype === "nexus") {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2352,7 +2399,7 @@ _drawScenePickingSpots : function () {
 
 			this.pickFramebuffer.unbind();
 		}
-		else if(mesh.mtype === "ply") {
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2817,28 +2864,35 @@ setScene : function (options) {
 	var that = this;
 	var gl = this.ui.gl;
 
+	// init nexus parameters
+	Nexus.setTargetError(gl, this._nexusTargetError);
+	Nexus.setTargetFps(gl, this._nexusTargetFps);
+	Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
+
 	for (var m in scene.meshes) {
 		var mesh = scene.meshes[m];
 
 		if (!mesh.url) continue;
-		var extension = mesh.url.split('.').pop().split(/\#|\?/)[0].toLowerCase();
-		if((extension === "nxs") || (extension === "nxz")) {
-			Nexus.setTargetError(gl, this._nexusTargetError);
-			Nexus.setTargetFps(gl, this._nexusTargetFps);
-			Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
+		if(mesh.mType == null)
+		{
+			var ext = mesh.url.split('.').pop().split(/\#|\?/)[0].toLowerCase();
+			if((ext === "nxs") || (ext === "nxz")) 
+				mesh.mType = "nexus";
+			else if(ext === "ply")
+				mesh.mType = "ply";
+		}
 
+
+		if(mesh.mType === "nexus") {
 			var nexus_instance = new Nexus.Renderer(gl);
 			nexus_instance.onLoad = function () { that._onMeshReady(); };
 			nexus_instance.onUpdate = this.ui.postDrawEvent;
 
 			mesh.renderable = nexus_instance;
-			mesh.mtype = "nexus";
-
 			nexus_instance.open(mesh.url);
 		}
-		else if(extension === "ply") {
+		else if(mesh.mType === "ply") {
 			mesh.renderable = null;
-			mesh.mtype = "ply";
 			sglRequestBinary(mesh.url, {
 				onSuccess : (function(m){ return function (req) { that._onPlyLoaded(req, m, gl); }; })(mesh)
 			});
@@ -2874,6 +2928,9 @@ setScene : function (options) {
 	// create quad models
 	this._createQuadModels();
 
+	// create a space for other entities
+	this._scene.entities = {};
+
 	this._sceneParsed = true;
 },
 
@@ -2891,6 +2948,54 @@ toggleDebugMode : function () {
 
 repaint : function () {
 	this.ui.postDrawEvent();
+},
+
+//------entities-------------------
+createEntity : function (eName, type, positionList) {
+	// type "points", "lines", "triangles"
+	var nEntity = {};
+	nEntity.visible = true;
+	nEntity.type = type;
+	nEntity.renderable = null;
+	nEntity.transform = {};
+	nEntity.transform.matrix = SglMat4.identity();
+	nEntity.color = [1.0, 0.0, 1.0, 1.0];
+	nEntity.zOff = 0.0;
+
+	var modelDescriptor = {};
+	if(type == "points")
+		modelDescriptor.primitives = ["points"];
+	else if(type == "lines")
+		modelDescriptor.primitives = ["lines"];
+	else if(type == "triangles")
+		modelDescriptor.primitives = ["triangles"];	
+	modelDescriptor.vertices = {};
+	modelDescriptor.vertices.position = [];
+	modelDescriptor.vertices.normal = [];
+	modelDescriptor.vertices.color = {value : [ 1.0, 0.0, 1.0, 1.0 ]};
+	var numVerts = positionList.length;
+
+	for (vInd = 0; vInd < numVerts; vInd++)
+	{
+		modelDescriptor.vertices.position.push(positionList[vInd][0]);
+		modelDescriptor.vertices.position.push(positionList[vInd][1]);
+		modelDescriptor.vertices.position.push(positionList[vInd][2]);
+		
+		modelDescriptor.vertices.normal.push(0.0);
+		modelDescriptor.vertices.normal.push(0.0);
+		modelDescriptor.vertices.normal.push(0.0);
+	}
+	var gl = this.ui.gl;
+	nEntity.renderable = new SglModel(gl, modelDescriptor);
+	
+	// setting
+	this._scene.entities[eName] = {};
+	this._scene.entities[eName] = nEntity;
+	return this._scene.entities[eName];
+},
+
+deleteEntity : function (eName) {
+	delete this._scene.entities[eName];
 },
 
 //-----------------------------------------------------------------------------
