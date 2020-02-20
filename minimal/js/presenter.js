@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.9";
+const HOP_VERSION             = "4.2.10";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -64,12 +64,12 @@ _parseScene : function (options) {
 },
 
 _parseBackground : function (options) {
-	options = options || { };
 	var r = sglGetDefaultObject({
 		image         : null,
 		isEnvironment : false,
 		color         : [ 0.0, 0.0, 0.0, 0.0 ]
 	}, options);
+	if (r.image) { this._objectsToProcess++; this._objectsToLoad++; }
 	return r;
 },
 
@@ -88,6 +88,7 @@ _parseMesh : function (options) {
 		transform : null
 	}, options);
 	r.transform = this._parseTransform(r.transform);
+	if (r.url) { this._objectsToProcess++; this._objectsToLoad++; }
 	return r;
 },
 
@@ -100,7 +101,11 @@ _parseTexturedQuads : function (options) {
 },
 
 _parseTexturedQuad : function (options) {
-	return options;
+	var r = sglGetDefaultObject({
+		url       : null
+	}, options);
+	if (r.url) { this._objectsToProcess++; this._objectsToLoad++; }
+	return r;
 },
 
 _parseModelInstances : function (options) {
@@ -130,14 +135,14 @@ _parseModelInstance : function (options) {
 		clippable       : true,
 		measurable      : true,
 	}, options);
-	r.transform = this._parseTransform(r.transform);
-	r.ID = this._instancesProgressiveID;
 	if (r.color[3]) //3DHOP 2.0 backward compatibility
 	{
 		r.alpha = r.color[3];
 		r.color = [r.color[0], r.color[1], r.color[2]]
 	}
-	this._instancesProgressiveID += 1;
+	r.transform = this._parseTransform(r.transform);
+	r.ID = this._instancesProgressiveID;
+	this._instancesProgressiveID++;
 	return r;
 },
 
@@ -165,14 +170,14 @@ _parseSpot : function (options) {
 		visible         : true,
 		tags            : [ ]
 	}, options);
-	r.transform = this._parseTransform(r.transform);
-	r.ID = this._spotsProgressiveID;
 	if (r.color[3]) //3DHOP 2.0 backward compatibility
 	{
 		r.alpha = r.color[3];
 		r.color = [r.color[0], r.color[1], r.color[2]]
 	}
-	this._spotsProgressiveID += 1;
+	r.transform = this._parseTransform(r.transform);
+	r.ID = this._spotsProgressiveID;
+	this._spotsProgressiveID++;
 	return r;
 },
 
@@ -186,7 +191,6 @@ _parseTrackball : function (options) {
 },
 
 _parseSpace : function (options) {
-	options = options || { };
 	var r = sglGetDefaultObject({
 		centerMode       : "first",
 		radiusMode       : "first",
@@ -203,13 +207,11 @@ _parseSpace : function (options) {
 	r.transform = this._parseTransform(r.transform);
 	if(r.cameraFOV < 2.0)  r.cameraFOV = 2.0;
 	if(r.cameraFOV > 88.0) r.cameraFOV = 88.0;
-	if((r.cameraType != "perspective") && (r.cameraType != "orthographic"))
-		r.cameraType = "perspective";
+	if((r.cameraType != "perspective") && (r.cameraType != "orthographic")) r.cameraType = "perspective";
 	return r;
 },
 
 _parseConfig : function (options) {
-	options = options || { };
 	var r = sglGetDefaultObject({
 		pickedpointColor    : [1.0, 0.0, 1.0],
 		measurementColor    : [0.5, 1.0, 0.5],
@@ -583,7 +585,7 @@ _createUtilsProgram : function () {
 																			  \n\
 		attribute vec3 aPosition;                                             \n\
 		attribute vec3 aNormal;                                               \n\
-		attribute vec3 aColor;                                                \n\
+		attribute vec4 aColor;                                                \n\
 		attribute float aPointSize;                                           \n\
 																			  \n\
 		varying   vec4 vModelPos;                                             \n\
@@ -597,7 +599,7 @@ _createUtilsProgram : function () {
 	");
 	if(this._isDebugging)
 		console.log("UTILS Vertex Shader Log:\n" + utilsVertexShader.log);
-	
+
 	var utilsFragmentShader = new SglFragmentShader(gl, "\
 		precision highp float;													\n\
 																				\n\
@@ -656,7 +658,7 @@ _createUtilsProgram : function () {
 		},
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
-			"uModelMatrix" 				 : SglMat4.identity(),
+			"uModelMatrix"               : SglMat4.identity(),
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
 			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
@@ -672,7 +674,7 @@ _createUtilsProgram : function () {
 	return utilsProgram;
 },
 
-// single-color barely-shaded program for rendering
+// single-color barely-shaded program for spot and planes rendering
 _createColorShadedProgram : function () {
 	var gl = this.ui.gl;
 	var colorShadedVertexShader = new SglVertexShader(gl, "\
@@ -755,7 +757,7 @@ _createStandardPointsTechnique : function () {
 	var technique = new SglTechnique(gl, {
 		program  : this._createStandardPointsProgram(),
 		vertexStreams : {
-			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
+			"aNormal"    : [ 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
 			"aPointSize" : 1.0
 		},
@@ -789,7 +791,7 @@ _createStandardFacesTechnique : function () {
 	var technique = new SglTechnique(gl, {
 		program  : this._createStandardFacesProgram(),
 		vertexStreams : {
-			"aNormal"       : [ 0.0, 0.0, 0.0, 0.0 ],
+			"aNormal"       : [ 0.0, 0.0, 0.0 ],
 			"aColor"        : [ 0.8, 0.8, 0.8, 1.0 ]
 		},
 		globals : {
@@ -816,13 +818,13 @@ _createStandardFacesTechnique : function () {
 	return technique;
 },
 
-// utils technique for PLY rendering
+// utils technique for PLY picking and color coded rendering
 _createUtilsTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
 		program  : this._createUtilsProgram(),
 		vertexStreams : {
-			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
+			"aNormal"    : [ 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
 			"aPointSize" : 1.0,
 		},
@@ -842,13 +844,13 @@ _createUtilsTechnique : function () {
 	return technique;
 },
 
-// single-color barely-shaded technique for PLY rendering
+// single-color barely-shaded technique for PLY spot and planes rendering
 _createColorShadedTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
 		program  : this._createColorShadedProgram(),
 		vertexStreams : {
-			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
+			"aNormal"    : [ 0.0, 0.0, 0.0 ],
 			"aPointSize" : 1.0
 		},
 		globals : {
@@ -876,7 +878,7 @@ _createSimpleLinetechnique : function () {
 																				  \n\
 			attribute vec3 aPosition;                                             \n\
 			attribute vec3 aNormal;                                               \n\
-			attribute vec3 aColor;                                                \n\
+			attribute vec4 aColor;                                                \n\
 																				  \n\
 			void main(void)                                                       \n\
 			{                                                                     \n\
@@ -900,8 +902,8 @@ _createSimpleLinetechnique : function () {
 			}                                                                     \n\
 		",
 		vertexStreams : {
-			"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 0.0, 1.0 ]
+			"aNormal" : [ 0.0, 0.0, 0.0 ],
+			"aColor"  : [ 0.8, 0.8, 0.8, 1.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -954,8 +956,8 @@ _createMultiLinesPointstechnique : function () {
 			}                                                                     \n\
 		",
 		vertexStreams : {
-			"aNormal" : [ 0.0, 0.0, 0.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 0.0, 1.0 ]
+			"aNormal" : [ 0.0, 0.0, 0.0 ],
+			"aColor"  : [ 0.8, 0.8, 0.8, 1.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -990,7 +992,6 @@ _objectLoaded : function () {
 
 _testReady : function () {
 	if (this._objectsToLoad != 0) return;
-	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 
 	this._sceneReady = this._scenePrepare();
 
@@ -1583,8 +1584,8 @@ _drawScene : function () {
 				program = CurrFacesProgram;
 			else
 				program = CurrPointsProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
@@ -1670,8 +1671,8 @@ _drawScene : function () {
 				program = CurrFacesProgram;
 			else
 				program = CurrPointsProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
@@ -1868,8 +1869,8 @@ _drawScene : function () {
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			var program = CCProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(spot.rendermode);
 				nexus.render();
 			program.unbind();
@@ -2041,7 +2042,7 @@ _drawScene : function () {
 		gl.depthMask(true);
 	}
 	Nexus.endFrame(this.ui.gl);
-	
+
 	// saving image, if necessary
 	if(this.isCapturingScreenshot){
 	    this.isCapturingScreenshot = false;
@@ -2124,8 +2125,8 @@ _drawScenePickingXYZ : function () {
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
@@ -2166,7 +2167,7 @@ _drawScenePickingXYZ : function () {
 
 	var ppointc;
 
-	if((rr==0.0) && (gg==0.0) && (bb==00))
+	if((rr==0.0) && (gg==0.0) && (bb==0.0))
 		return(null);
 	else
 		ppointc = xform.unproject([this._pickpoint[0]/width,this._pickpoint[1]/height,depth]);
@@ -2241,8 +2242,8 @@ _drawScenePickingInstances : function () {
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
@@ -2335,8 +2336,8 @@ _drawScenePickingSpots : function () {
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
@@ -2391,8 +2392,8 @@ _drawScenePickingSpots : function () {
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(spot.rendermode);
 				nexus.render();
 			program.unbind();
@@ -2435,78 +2436,121 @@ _drawNull : function () {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 },
 
+// creates mesh models
+_createMeshModels : function () {
+	var that = this;
+	var gl = this.ui.gl;
+
+	for(var keys = Object.keys(this._scene.meshes), i = keys.length-1; i >= 0; i--) {
+		var m = keys[i];
+
+		var mesh = this._scene.meshes[m];
+
+		if (!mesh.url) continue;
+
+		if (this._objectsToProcess == 0) this._testReady();
+		else {
+			this._objectsToProcess--;
+
+			if(mesh.mType == null)
+			{
+				var ext = mesh.url.split('.').pop().split(/\#|\?/)[0].toLowerCase();
+				if((ext === "nxs") || (ext === "nxz")) 
+					mesh.mType = "nexus";
+				else if(ext === "ply")
+					mesh.mType = "ply";
+			}
+
+			if(mesh.mType === "nexus") {
+				var nexus_instance = new Nexus.Renderer(gl);
+				nexus_instance.onLoad = function () { that._onMeshReady(); };
+				nexus_instance.onUpdate = this.ui.postDrawEvent;
+
+				mesh.renderable = nexus_instance;
+				nexus_instance.open(mesh.url);
+			}
+			else if(mesh.mType === "ply") {
+				mesh.renderable = null;
+				sglRequestBinary(mesh.url, {
+					onSuccess : (function(m){ return function (req) { that._onPlyLoaded(req, m, gl); }; })(mesh)
+				});
+			}
+		}
+	}
+},
+
 // creates simple 2-point line model
 _createLineModel : function () {
 	var gl = this.ui.gl;
 	this.simpleLineModel = new SglModel(gl, {
-				vertices : {
-					position : [ 0,0,0,
-								 1,1,1 ],
-					normal : [ 0,0,0,
-							   0,0,0 ],
-					color : {value : [ 1.0, 0.0, 0.0 ]}
-				},
-				primitives : ["lines","points"]
-			});
+		vertices : {
+			position : [ 0,0,0,
+						 1,1,1 ],
+			normal : [ 0,0,0,
+					   0,0,0 ],
+			color : {value : [ 1.0, 0.0, 0.0 ]}
+		},
+		primitives : ["lines","points"]
+	});
 },
 
 // creates simple quad model
 _createQuadModels : function () {
 	var gl = this.ui.gl;
 	this.simpleQuadXModel = new SglModel(gl, {
-				vertices : {
-					position : [ 0.0, 0.5, 0.5,
-								 0.0,-0.5, 0.5,
-								 0.0,-0.5,-0.5,
-								 0.0, 0.5,-0.5,
-								 0.0,-0.5,-0.5,
-								 0.0, 0.5, 0.5],
-					normal : [ 1.0,0.0,0.0,
-							   1.0,0.0,0.0,
-							   1.0,0.0,0.0,
-							   1.0,0.0,0.0,
-							   1.0,0.0,0.0,
-							   1.0,0.0,0.0 ],
-					color : {value : [ 1.0, 0.0, 0.0 ]}
-				},
-				primitives : ["triangles"]
-			});
+		vertices : {
+			position : [ 0.0, 0.5, 0.5,
+						 0.0,-0.5, 0.5,
+						 0.0,-0.5,-0.5,
+						 0.0, 0.5,-0.5,
+						 0.0,-0.5,-0.5,
+						 0.0, 0.5, 0.5],
+			normal : [ 1.0,0.0,0.0,
+					   1.0,0.0,0.0,
+					   1.0,0.0,0.0,
+					   1.0,0.0,0.0,
+					   1.0,0.0,0.0,
+					   1.0,0.0,0.0 ],
+			color : {value : [ 1.0, 0.0, 0.0 ]}
+		},
+		primitives : ["triangles"]
+	});
 	this.simpleQuadYModel = new SglModel(gl, {
-				vertices : {
-					position : [  0.5, 0.0, 0.5,
-								 -0.5, 0.0, 0.5,
-								 -0.5, 0.0,-0.5,
-								  0.5, 0.0,-0.5,
-								 -0.5, 0.0,-0.5,
-								  0.5, 0.0, 0.5],
-					normal : [ 0.0,1.0,0.0,
-							   0.0,1.0,0.0,
-							   0.0,1.0,0.0,
-							   0.0,1.0,0.0,
-							   0.0,1.0,0.0,
-							   0.0,1.0,0.0 ],
-					color : {value : [ 0.0, 1.0, 0.0 ]}
-				},
-				primitives : ["triangles"]
-			});
+		vertices : {
+			position : [  0.5, 0.0, 0.5,
+						 -0.5, 0.0, 0.5,
+						 -0.5, 0.0,-0.5,
+						  0.5, 0.0,-0.5,
+						 -0.5, 0.0,-0.5,
+						  0.5, 0.0, 0.5],
+			normal : [ 0.0,1.0,0.0,
+					   0.0,1.0,0.0,
+					   0.0,1.0,0.0,
+					   0.0,1.0,0.0,
+					   0.0,1.0,0.0,
+					   0.0,1.0,0.0 ],
+			color : {value : [ 0.0, 1.0, 0.0 ]}
+		},
+		primitives : ["triangles"]
+	});
 	this.simpleQuadZModel = new SglModel(gl, {
-				vertices : {
-					position : [  0.5, 0.5, 0.0,
-								 -0.5, 0.5, 0.0,
-								 -0.5,-0.5, 0.0,
-								  0.5,-0.5, 0.0,
-								 -0.5,-0.5, 0.0,
-								  0.5, 0.5, 0.0],
-					normal : [ 0.0,0.0,1.0,
-							   0.0,0.0,1.0,
-							   0.0,0.0,1.0,
-							   0.0,0.0,1.0,
-							   0.0,0.0,1.0,
-							   0.0,0.0,1.0 ],
-					color : {value : [ 0.0, 0.0, 1.0 ]}
-				},
-				primitives : ["triangles"]
-			});
+		vertices : {
+			position : [  0.5, 0.5, 0.0,
+						 -0.5, 0.5, 0.0,
+						 -0.5,-0.5, 0.0,
+						  0.5,-0.5, 0.0,
+						 -0.5,-0.5, 0.0,
+						  0.5, 0.5, 0.0],
+			normal : [ 0.0,0.0,1.0,
+					   0.0,0.0,1.0,
+					   0.0,0.0,1.0,
+					   0.0,0.0,1.0,
+					   0.0,0.0,1.0,
+					   0.0,0.0,1.0 ],
+			color : {value : [ 0.0, 0.0, 1.0 ]}
+		},
+		primitives : ["triangles"]
+	});
 },
 
 //----------------------------------------------------------------------------------------
@@ -2522,6 +2566,12 @@ onInitialize : function () {
 	gl.clearColor(0.5, 0.5, 0.5, 1.0);
 	gl.clearStencil(0);
 	gl.depthFunc(gl.LESS);
+
+	// vertex attrib defaults
+	gl.vertexAttrib3f(1.0, 0.0, 0.0, 0.0);		//1 aNormal
+	gl.vertexAttrib4f(2.0, 0.8, 0.8, 0.8, 1.0);	//2 aColor
+	gl.vertexAttrib2f(3.0, 0.0, 0.0);			//3 aTextureCoord
+	gl.vertexAttrib1f(4.0, 1.0);				//4 aPointSize
 
 	// scene rendering support data
 	this.renderer   = new SglModelRenderer(gl);
@@ -2563,6 +2613,7 @@ onInitialize : function () {
 	this._scene         = null;
 	this._sceneParsed   = false;
 	this._sceneReady    = false;
+	this._objectsToProcess = 0;
 	this._objectsToLoad = 0;
 
 	this._instancesProgressiveID = 1;
@@ -2626,7 +2677,7 @@ installDefaultShaders : function () {
 
 	this.faceTechnique = this._createStandardFacesTechnique();
 	this.pointTechnique = this._createStandardPointsTechnique();
-	this.utilsTechnique = this._createUtilsTechnique();	
+	this.utilsTechnique = this._createUtilsTechnique();
 	this.colorShadedTechnique = this._createColorShadedTechnique();
 
 	this.simpleLineTechnique = this._createSimpleLinetechnique();
@@ -2647,7 +2698,7 @@ onDrag : function (button, x, y, e) {
 
 	// if locked trackball, just return. we check AFTER the light-trackball test
 	if (this._scene.trackball.locked) return;
-	
+
 	if(ui.dragDeltaX(button) != 0) this.x += (ui.cursorDeltaX/500);
 	if(ui.dragDeltaY(button) != 0) this.y += (ui.cursorDeltaY/500);
 
@@ -2826,6 +2877,7 @@ setScene : function (options) {
 		this._sceneReady    = false;
 		this._instancesProgressiveID = 1;
 		this._spotsProgressiveID     = 1;
+		this._objectsToProcess = 0;
 		this._objectsToLoad = 0;
 		this._stopMeasurement();
 		this._stopPickPoint();
@@ -2834,98 +2886,30 @@ setScene : function (options) {
 		this.enableLightTrackball(false);
 	}
 
+	// scene parsing
 	var scene = this._parseScene(options);
 	if (!scene) return;
 	this._scene = scene;
 
-	this._objectsToLoad = 0;
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
-		if (mesh.url) {
-			this._objectsToLoad++;
-		}
-	}
+	// trackball creation
+	this.trackball  = new scene.trackball.type();
+	this.trackball.setup(scene.trackball.trackOptions);
+	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 
-	for (var t in scene.texturedQuads) {
-		var tex = scene.texturedQuads[t];
-		if (tex.url) {
-			this._objectsToLoad++;
-		}
-	}
-
-	if (scene.background.image) {
-		this._objectsToLoad++;
-	}
-
-	// creating the desired trackball
-	this.trackball  = new this._scene.trackball.type();
-	this.trackball.setup(this._scene.trackball.trackOptions);
-
-	var that = this;
 	var gl = this.ui.gl;
 
-	// init nexus parameters
+	// nexus parameters init
 	Nexus.setTargetError(gl, this._nexusTargetError);
 	Nexus.setTargetFps(gl, this._nexusTargetFps);
 	Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
 
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
+	// mesh models creation
+	this._createMeshModels();
 
-		if (!mesh.url) continue;
-		if(mesh.mType == null)
-		{
-			var ext = mesh.url.split('.').pop().split(/\#|\?/)[0].toLowerCase();
-			if((ext === "nxs") || (ext === "nxz")) 
-				mesh.mType = "nexus";
-			else if(ext === "ply")
-				mesh.mType = "ply";
-		}
-
-
-		if(mesh.mType === "nexus") {
-			var nexus_instance = new Nexus.Renderer(gl);
-			nexus_instance.onLoad = function () { that._onMeshReady(); };
-			nexus_instance.onUpdate = this.ui.postDrawEvent;
-
-			mesh.renderable = nexus_instance;
-			nexus_instance.open(mesh.url);
-		}
-		else if(mesh.mType === "ply") {
-			mesh.renderable = null;
-			sglRequestBinary(mesh.url, {
-				onSuccess : (function(m){ return function (req) { that._onPlyLoaded(req, m, gl); }; })(mesh)
-			});
-		}
-	}
-
-	for (var t in scene.texturedQuads) {
-		var quad = scene.texturedQuads[t];
-		if (!tex.url) continue;
-		scene.quad.texture = new SglTexture2D(gl, {
-			internalFormat : gl.RGBA,
-			format         : gl.RGBA,
-			type           : gl.UNSIGNED_BYTE,
-			generateMipmap : true,
-			onSuccess      : function () { that._onTextureReady(); },
-			url            : tex.url
-		});
-	}
-
-	if (scene.background.image) {
-		scene.background.texture = new SglTexture2D(gl, {
-			internalFormat : gl.RGBA,
-			format         : gl.RGBA,
-			type           : gl.UNSIGNED_BYTE,
-			generateMipmap : true,
-			onSuccess      : function () { that._onBackgroundReady(); },
-			url            : scene.background.image
-		});
-	}
-
-	// create point-to-point line model
+	// point-to-point line model creation
 	this._createLineModel();
-	// create quad models
+
+	// quad models creation
 	this._createQuadModels();
 
 	// create a space for other entities

@@ -137,6 +137,7 @@ function init3dhop() {
 }
 
 function set3dhlg() {
+  $('#tdhlg').css({right:2, bottom:2});
   $('#tdhlg').html("Powered by 3DHOP</br>CNR &nbsp;&ndash;&nbsp; ISTI");
   $('#tdhlg').mouseover(function() {
 	 $('#tdhlg').animate({ 

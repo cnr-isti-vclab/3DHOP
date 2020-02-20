@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-20 August 2019
+20 February 2020
 
 #### TEAM
 ---------
@@ -24,7 +24,11 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 **Main Changes**
 
 * Added 3DHOP SCREENSHOT functionality;
+* Added ENTITIES functionality;
+* Added NEXUS verbose debug system;
 * Fixed 16 BIT ALIGNMENT critical bug;
+* Updated 3DHOP SCENE SETUP for easier dynamic creation;
+* Updated 3DHOP WATERMARK positioning;
 * Updated 3DHOP FULLSCREEN and FOCUS policies;
 * Updated NEXUS TRAVERSAL ROUTINE for avoiding redundant repainting;
 * Updated 3DHOP HOTSPOTS TRANSPARENCY levels;
@@ -38,6 +42,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 **Files Added/Modified**
 
 * Added "helpers.js" file;
+* Added "grey_gradient.jpg" file;
 * Updated "HOWTO_6.0_animations.html" file;
 * Updated "HOWTO_7.0_hotspots_events.html" file;
 * Updated all "*.js" files;
