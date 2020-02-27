@@ -66,6 +66,38 @@ function hsvToRgb(h, s, v) {
 }
 
 //-----------------------------------------
+// return relative mouse coordinates of an event
+// i.e. the coordinates in the canvas space
+//
+// to start using this function, install it like this:
+// HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
+//
+//----------------------------------------
+function relMouseCoords(event){
+    var totalOffsetX = 0;
+    var totalOffsetY = 0;
+    var canvasX = 0;
+    var canvasY = 0;
+    var pageX = 0;
+    var pageY = 0;
+    var currentElement = this;
+
+    do {
+        totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
+        totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
+    }
+    while(currentElement = currentElement.offsetParent)
+
+    (event.touches) ? (pageX = event.touches[0].pageX) : (pageX = event.pageX);
+    (event.touches) ? (pageY = event.touches[0].pageY) : (pageY = event.pageY);
+
+    canvasX = pageX - totalOffsetX;
+    canvasY = pageY - totalOffsetY;
+
+    return {x:canvasX, y:canvasY}
+}
+
+//-----------------------------------------
 // creates a copy of a pure JSON structure
 //-----------------------------------------
 function jsonCopy(src) {
