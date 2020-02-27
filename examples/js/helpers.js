@@ -98,6 +98,23 @@ function relMouseCoords(event){
 }
 
 //-----------------------------------------
+// parses the URL page parameters, i.e. url like object.html?property1=value1&property2=value2
+// fills the "parameters" object with the parsed set of property-value couples
+//-----------------------------------------
+function parsePageParams() {
+	var parsedParameters = [];
+    var paramString = document.URL.split('?')[1];
+    if(paramString != undefined){
+        paramString = paramString.split('&');
+        for(var i = 0; i < paramString.length; i++){
+            var currParam = paramString[i].split('=');
+            parsedParameters[currParam[0]] = currParam[1];
+        }
+	}
+	return parsedParameters;
+}
+
+//-----------------------------------------
 // creates a copy of a pure JSON structure
 //-----------------------------------------
 function jsonCopy(src) {
