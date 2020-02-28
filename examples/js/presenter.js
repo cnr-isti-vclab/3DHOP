@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.10";
+const HOP_VERSION             = "4.2.11";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -792,7 +792,8 @@ _createStandardFacesTechnique : function () {
 		program  : this._createStandardFacesProgram(),
 		vertexStreams : {
 			"aNormal"       : [ 0.0, 0.0, 0.0 ],
-			"aColor"        : [ 0.8, 0.8, 0.8, 1.0 ]
+			"aColor"        : [ 0.8, 0.8, 0.8, 1.0 ],
+			"aTextureCoord" : [ 0.0, 0.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -833,7 +834,7 @@ _createUtilsTechnique : function () {
 			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
 			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
 			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
-			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
 			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.0, 1.0] },
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
@@ -1804,7 +1805,7 @@ _drawScene : function () {
 	// draw entities
 	for (var ent in entities) {
 		var entity = entities[ent];
-		if (!entity.visible) continue;		
+		if (!entity.visible) continue;
 		if (!entity.renderable) continue;
 			
 		xform.model.push();
@@ -1828,7 +1829,7 @@ _drawScene : function () {
 			else if (entity.type == "triangles")
 				renderer.setPrimitiveMode("FILL");
 			renderer.setDefaultGlobals();
-			renderer.setGlobals(entityUniforms);			
+			renderer.setGlobals(entityUniforms);
 			renderer.setModel(entity.renderable);
 			renderer.renderModel();
 		renderer.end();
