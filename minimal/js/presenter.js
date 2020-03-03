@@ -1818,8 +1818,14 @@ _drawScene : function () {
 			"uColorID"                   : entity.color,
 			"uZOff"                      : entity.zOff,
 		};		
-		
-		//drawing lines
+
+		if(entity.useTransparency)
+		{
+			gl.depthMask(false);
+			gl.enable(gl.BLEND);
+			gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+		}
+		//drawing entity
 		renderer.begin();
 			renderer.setTechnique(entitiesTechnique);
 			if (entity.type == "lines")
@@ -1834,6 +1840,11 @@ _drawScene : function () {
 			renderer.renderModel();
 		renderer.end();
 		
+		if(entity.useTransparency)
+		{
+			gl.depthMask(true);
+			gl.disable(gl.BLEND);
+		}
 		xform.model.pop();
 	}
 
@@ -2945,6 +2956,7 @@ createEntity : function (eName, type, positionList) {
 	nEntity.transform = {};
 	nEntity.transform.matrix = SglMat4.identity();
 	nEntity.color = [1.0, 0.0, 1.0, 1.0];
+	nEntity.useTransparency = false;
 	nEntity.zOff = 0.0;
 
 	var modelDescriptor = {};
