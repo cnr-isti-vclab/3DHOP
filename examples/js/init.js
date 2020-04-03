@@ -123,11 +123,14 @@ function init3dhop() {
 		presenter.ui.postDrawEvent();
 	});
 
-//	$(window).on('load mouseup touchend pointerup dragend', function() { //focus handler
-//		var x = window.scrollX, y = window.scrollY;
-//		$('#draw-canvas').focus();
-//		window.scrollTo(x, y);
-//	});
+	$('.close').mouseenter( function() {
+		$('.close').css("display", "none");
+		$('.close_on').css("display", "inline");
+	});
+	$('.close_on').mouseleave( function() {
+		$('.close_on').css("display", "none");
+		$('.close').css("display", "inline");
+	});
 
 	resizeCanvas($('#3dhop').parent().width(),$('#3dhop').parent().height());
 
@@ -473,6 +476,12 @@ function exitFullscreen() {
   else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
 
   presenter.ui.postDrawEvent(); 
+}
+
+function showPanel(id) {
+    $('#cover').css("display", "table");
+    $('.panel').css("display", "none");
+    $('#'+id).css("display", "table");
 }
 
 /*DEPRECATED*/

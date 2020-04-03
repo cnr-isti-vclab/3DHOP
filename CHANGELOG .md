@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-20 February 2020
+03 April 2020
 
 #### TEAM
 ---------
@@ -27,6 +27,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 * Added ENTITIES functionality;
 * Added NEXUS verbose debug system;
 * Fixed 16 BIT ALIGNMENT critical bug;
+* Updated 3DHOP PANELS creation;
 * Updated 3DHOP SCENE SETUP for easier dynamic creation;
 * Updated 3DHOP WATERMARK positioning;
 * Updated 3DHOP FULLSCREEN and FOCUS policies;
@@ -43,6 +44,8 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 * Added "helpers.js" file;
 * Added "grey_gradient.jpg" file;
+* Added "3dhop_panels.css" file;
+* Removed "3DHpanels.css" file;
 * Updated "HOWTO_6.0_animations.html" file;
 * Updated "HOWTO_7.0_hotspots_events.html" file;
 * Updated all "*.js" files;
