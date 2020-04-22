@@ -1,20 +1,25 @@
 /*
 Nexus
-Copyright (c) 2012-2019, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2012-2020, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-You should have received a copy of the GNU General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 */
 
 Nexus = function() {
@@ -305,7 +310,7 @@ Mesh.prototype = {
 				if(!header) {
 					if(Debug.verbose) console.log("Empty header!");
 					if(mesh.reqAttempt < maxReqAttempt) mesh.open(mesh.url + '?' + Math.random()); // BLINK ENGINE CACHE BUG PATCH
-					return null;
+					return;
 				}
 				mesh.reqAttempt = 0;
 				for(i in header)
@@ -353,7 +358,7 @@ Mesh.prototype = {
 		mesh.httpRequest(
 			88,
 			end,
-			function() { mesh.handleIndex(this.response); },
+			function() { if(Debug.verbose) console.log("Loading index for " + mesh.url); mesh.handleIndex(this.response); },
 			function() { console.log("Index request error!");},
 			function() { console.log("Index request abort!");}
 		);
@@ -728,7 +733,7 @@ Instance.prototype = {
 		//resolution is how long is a pixel at distance 1.
 		var error = t.mesh.nerrors[n]/(t.currentResolution*dist); //in pixels
 
-		if (!t.isVisible(cx, cy. cz, spheres[off+4]))
+		if (!t.isVisible(cx, cy, cz, spheres[off+4]))
 			error /= 1000.0;
 		return error;
 	},
@@ -831,8 +836,8 @@ Instance.prototype = {
 					var pointsize = Math.ceil(1.2* Math.min(error, 5));
 
 				if(typeof attr.size == 'object') { //threejs pointcloud rendering
-					gl.uniform1f(attr.size, 1.0);
-					gl.uniform1f(attr.scale, 1.0);
+					gl.uniform1f(attr.size, t.pointsize);
+					gl.uniform1f(attr.scale, t.pointscale);
 				} else
 					gl.vertexAttrib1fv(attr.size, [pointsize]);
 
@@ -1023,6 +1028,7 @@ function requestNodeTexture(context, node) {
 		return;
 
 	m.status[n]++; //pending
+
 	m.texreq = m.httpRequest(
 		m.textures[tex],
 		m.textures[tex+1],
