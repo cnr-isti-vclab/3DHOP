@@ -65,10 +65,12 @@ function loadMeco() {
 			node:{ nface: node.nface, nvert: node.nvert, buffer:node.buffer, request:this.count},
 			patches:patches
 		});
+		node.buffer = null;
 		this.requests[this.count++] = node;
 	};
 	meco.onmessage = function(e) {
 		var node = this.requests[e.data.request];
+		delete this.requests[e.data.request];
 		node.buffer = e.data.buffer;
 		readyNode(node);
 	};
@@ -77,16 +79,18 @@ function loadMeco() {
 var corto = null;
 function loadCorto() {
 
-	corto = new Worker(path.replace('nexus.js', 'corto.js'));
+	corto = new Worker(path.replace('nexus.js', 'corto.em.js'));
 	corto.requests = {};
 	corto.count = 0;
 	corto.postRequest = function(node) {
-		corto.postMessage({ buffer: node.buffer, request:this.count, rgba_colors: true, short_normals: true });
+		corto.postMessage({ buffer: node.buffer, request:this.count, rgba_colors: true, short_index: true, short_normals: true});
+		node.buffer = null;
 		this.requests[this.count++] = node;
 	}
 	corto.onmessage = function(e) {
-		var node = this.requests[e.data.request];
-		node.buffer = e.data.buffer;
+		var request = e.data.request;
+		var node = this.requests[request];
+		delete this.requests[request];
 		node.model = e.data.model;
 		readyNode(node);
 	};
@@ -941,7 +945,8 @@ function beginFrame(gl, fps) { //each context has a separate frame count.
 		if(c.currentError < c.targetError)
 			c.currentError = c.targetError;
 		if(c.currentError > 10) c.currentError = 10;
-	}
+	} else
+		c.currentError = c.targetError;
 //	console.log("current", c.currentError, "fps", fps, "targetFps", c.targetFps, "rendered", c.rendered);
 	c.rendered = 0;
 }
@@ -1119,6 +1124,7 @@ function loadNodeTexture(request, context, node, texid) {
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.generateMipmap(gl.TEXTURE_2D);
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flip);
 
 		m.status[n]--;
@@ -1219,6 +1225,11 @@ function readyNode(node) {
 	if(nf == 0)
 		scramble(nv, v, no, co);
 
+	if(n == 1) {
+		m.basev = new Float32Array(vertices, 0, nv*3);
+		m.basei = new Uint16Array(indices, 0, nf*3);
+	}
+
 	var gl = node.context.gl;
 	var vbo = m.vbo[n] = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
@@ -1236,6 +1247,11 @@ function readyNode(node) {
 		node.instance.onUpdate && node.instance.onUpdate();
 		updateCache(gl);
 	}
+}
+
+function flush(context, mesh) {
+	for(var i = 0; i < mesh.nodesCount; i++)
+		removeNode(context, {mesh:mesh, id: i });
 }
 
 function updateCache(gl) {
@@ -1286,7 +1302,7 @@ function setMaxCacheSize(gl, size) {
 }
 
 return { Mesh: Mesh, Renderer: Instance, Renderable: Instance, Instance:Instance,
-	Debug: Debug, contexts: contexts, beginFrame:beginFrame, endFrame:endFrame, updateCache: updateCache,
+	Debug: Debug, contexts: contexts, beginFrame:beginFrame, endFrame:endFrame, updateCache: updateCache, flush: flush,
 	setTargetError:setTargetError, setTargetFps:setTargetFps, setMaxCacheSize:setMaxCacheSize };
 
 }();

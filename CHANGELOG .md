@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-03 April 2020
+05 May 2020
 
 #### TEAM
 ---------
@@ -23,6 +23,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
+* Added EMSCRIPTEN version of CORTO;
 * Added 3DHOP SCREENSHOT functionality;
 * Added ENTITIES functionality;
 * Added NEXUS verbose debug system;
@@ -42,6 +43,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Files Added/Modified**
 
+* Added "corto.em.js" file;
 * Added "helpers.js" file;
 * Added "grey_gradient.jpg" file;
 * Added "3dhop_panels.css" file;

@@ -66,13 +66,13 @@ Once installed the Web server there are just a few step to run 3DHOP:
 
 2. **Browser Tweaking**   
 The simplest way to test the 3DHOP features on your PC _without_ installing any other software, is to allow your browser to access local files on your file system (this practice is disabled by default due to security risk).
-The trick to solve this issue is simple, but is restricted only to the Google CHROME or OPERA browsers. Here are the instructions (more detailed info about the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/download/3DHOPsite_deployment.pdf)).
+The trick to solve this issue is simple, but is restricted only to Chromium based browsers (CHROME, EDGE or OPERA). Here are the instructions (more detailed info about the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/download/3DHOPsite_deployment.pdf)).
    
    For Windows: 
-   + browse to google CHROME (or OPERA) folder in your local file system; 
-   + right click on the CHROME (or OPERA) executable file, and select "send to" Desktop as link in the contextual menu;
+   + browse to google CHROME (or EDGE, or OPERA) folder in your local file system; 
+   + right click on the CHROME (or EDGE, or OPERA) executable file, and select "send to" Desktop as link in the contextual menu;
    + browse to your desktop;
-   + right click on the just created CHROME (or OPERA) executable link, and select "properties" in the contextual menu;
+   + right click on the just created CHROME (or EDGE, or OPERA) executable link, and select "properties" in the contextual menu;
    + in the just opened properties window select the "shortcut" tab and edit the "target" field adding to the end of the line "--allow-file-access-from-files", then click on "apply";
    + open your browser from the just edited link on the desktop (now the browser should be enabled to open local files);
    + download and unpack 3DHOP on your PC;
@@ -88,7 +88,7 @@ The trick to solve this issue is simple, but is restricted only to the Google CH
    OR
    + create an appleScript using Automator, that launch the browser using the appropriate parameter.
    
-   [Tip: on FIREFOX, EDGE and SAFARI browsers, there is no simple way to enable the local files access (so, it is recommended to install a Web Server if you need to work with these browser locally). However, by default it supports the use of 3D models in Ply format, so you can use 3DHOP in a limited mode, restricted to single resolution models, but without to perform any procedure or to install nothing.]  
+   [Tip: on FIREFOX and SAFARI browsers, there is no simple way to enable the local files access (so, it is recommended to install a Web Server if you need to work with these browser locally). However, by default it supports the use of 3D models in Ply format, so you can use 3DHOP in a limited mode, restricted to single resolution models, but without to perform any procedure or to install nothing.]  
 
 #### TECHNICAL INFO
 -------------------
