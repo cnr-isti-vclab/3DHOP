@@ -23,6 +23,7 @@
 <script type="text/javascript" src="js/init.js"></script>
 </head>
 <body>
+
 <div id="3dhop" class="tdhop" onmousedown="if (event.preventDefault) event.preventDefault()"><div id="tdhlg"></div>
  <div id="toolbar">
   <img id="home"        title="Home"                   src="skins/dark/home.png"/><br/>
@@ -58,6 +59,9 @@
   <img id="perspective"  title="Perspective Camera"    src="skins/dark/perspective.png" style="position:absolute; visibility:hidden;"/>
   <img id="orthographic" title="Orthographic Camera"   src="skins/dark/orthographic.png"/><br/>
 <!--CAMERA-->
+<!--SCREENSHOT-->
+  <img id="screenshot" title="Save Screenshot"   src="skins/dark/screenshot.png"/><br/>
+<!--SCREENSHOT-->
 <!--FULLSCREEN-->
   <img id="full_on"     title="Exit Full Screen"       src="skins/dark/full_on.png" style="position:absolute; visibility:hidden;"/>
   <img id="full"        title="Full Screen"            src="skins/dark/full.png"/>
@@ -171,6 +175,9 @@ function actionsToolbar(action) {
 //--POINT PICKING--
 	else if(action=='pick' || action=='pick_on') { presenter.enablePickpointMode(!presenter.isPickpointModeEnabled()); pickpointSwitch(); }
 //--POINT PICKING--
+//--SCREENSHOT--
+	else if(action=='screenshot') presenter.saveScreenshot();
+//--SCREENSHOT--
 //--SECTIONS--
 	else if(action=='sections' || action=='sections_on') { sectiontoolReset(); sectiontoolSwitch(); }
 //--SECTIONS--
@@ -199,5 +206,6 @@ $(document).ready(function(){
 
 	setup3dhop();
 });
+
 </script>
 </html>

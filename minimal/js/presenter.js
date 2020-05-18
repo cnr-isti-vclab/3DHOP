@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.15";
+const HOP_VERSION             = "4.2.16";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -2058,14 +2058,26 @@ _drawScene : function () {
 	// saving image, if necessary
 	if(this.isCapturingScreenshot){
 	    this.isCapturingScreenshot = false;
-		this.screenshotData = this.ui._canvas.toDataURL('image/png',1);
+		this.screenshotData = this.ui._canvas.toDataURL('image/png',1).replace("image/png", "image/octet-stream");
 		if(this._scene.config.autoSaveScreenshot)
 		{
-			var currentdate = new Date();			
-			var a  = document.createElement('a');
-			a.href = this.screenshotData;
-			a.download = this._scene.config.screenshotBaseName + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds() + ".png";
-			a.click();
+			var currentdate = new Date();
+			var fName = this._scene.config.screenshotBaseName + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds() + ".png";
+			
+			if(this.ui._canvas.msToBlob) // IE or EDGEhtml
+			{
+				console.error("IE and EDGEhtml cannot save images");
+				var blob = this.ui._canvas.msToBlob();
+                window.navigator.msSaveBlob(blob, fName);
+			}
+			else // every other browser
+			{
+				var a  = document.createElement('a');		
+				a.href = this.screenshotData;
+				a.download = fName;
+				a.target="_blank";
+				a.click();
+			}
 		}
 	}
 },
@@ -2944,6 +2956,11 @@ toggleDebugMode : function () {
 
 repaint : function () {
 	this.ui.postDrawEvent();
+},
+
+saveScreenshot : function () {
+	this.isCapturingScreenshot = true;
+	this.repaint();
 },
 
 //------entities-------------------
