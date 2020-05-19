@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.15";
+const HOP_VERSION             = "4.2.17";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -372,7 +372,7 @@ _createStandardPointsProgram : function () {
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + (uClipAxis[2]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
 			}																	\n\
 																				\n\
-			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
+			gl_FragColor = vec4(renderColor, uAlpha);							\n\
 			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(pow(r, 2.0));			\n\
 		}																		\n\
 	");
@@ -513,7 +513,7 @@ _createStandardFacesProgram : function () {
 			}																	\n\
 																				\n\
 			renderColor = (diffuse * lambert) + specular;						\n\
-			if(!gl_FrontFacing)													\n\
+			if(gl_FrontFacing==false)											\n\
 			{																	\n\
 				if (uBackFaceColor[3]==0.0) renderColor = renderColor * uBackFaceColor.rgb;	\n\
 				else if(uBackFaceColor[3]==1.0) renderColor = uBackFaceColor.rgb;			\n\
@@ -530,7 +530,7 @@ _createStandardFacesProgram : function () {
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + (uClipAxis[2]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
 			}																	\n\
 																				\n\
-			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
+			gl_FragColor = vec4(renderColor, uAlpha);							\n\
 		}																		\n\
 	");
 	if(this._isDebugging)
@@ -631,7 +631,7 @@ _createUtilsProgram : function () {
 				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
 			}																	\n\
-			if((!gl_FrontFacing) &&	(uBackFaceColor[3]==2.0)) discard;			\n\
+			if((gl_FrontFacing==false) && (uBackFaceColor[3]==2.0)) discard;	\n\
 																				\n\
 			vec4 outColor;														\n\
 			if(uMode == 1.0)	//xyx picking									\n\
@@ -639,7 +639,7 @@ _createUtilsProgram : function () {
 			else if(uMode == 2.0)	//color coded								\n\
 				outColor = uColorID;											\n\
 																				\n\
-			gl_FragColor  = outColor;											\n\
+			gl_FragColor = outColor;											\n\
 		}																		\n\
 	");
 	if(this._isDebugging)
@@ -721,7 +721,7 @@ _createColorShadedProgram : function () {
 																			  \n\
 				diffuse = (diffuse * 0.5) + (diffuse * lambert * 0.5);        \n\
 			}                                                                 \n\
-			gl_FragColor  = vec4(diffuse, uColorID[3]);                       \n\
+			gl_FragColor = vec4(diffuse, uColorID[3]);                       \n\
 		}                                                                     \n\
 	");
 	if(this._isDebugging)
@@ -899,7 +899,7 @@ _createSimpleLinetechnique : function () {
 																				  \n\
 			void main(void)                                                       \n\
 			{                                                                     \n\
-				gl_FragColor    = uLineColor;                                     \n\
+				gl_FragColor = uLineColor;                                     \n\
 			}                                                                     \n\
 		",
 		vertexStreams : {
@@ -2058,14 +2058,26 @@ _drawScene : function () {
 	// saving image, if necessary
 	if(this.isCapturingScreenshot){
 	    this.isCapturingScreenshot = false;
-		this.screenshotData = this.ui._canvas.toDataURL('image/png',1);
+		this.screenshotData = this.ui._canvas.toDataURL('image/png',1).replace("image/png", "image/octet-stream");
 		if(this._scene.config.autoSaveScreenshot)
 		{
-			var currentdate = new Date();			
-			var a  = document.createElement('a');
-			a.href = this.screenshotData;
-			a.download = this._scene.config.screenshotBaseName + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds() + ".png";
-			a.click();
+			var currentdate = new Date();
+			var fName = this._scene.config.screenshotBaseName + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds() + ".png";
+			
+			if(this.ui._canvas.msToBlob) // IE or EDGEhtml
+			{
+				console.error("IE and EDGEhtml cannot save images");
+				var blob = this.ui._canvas.msToBlob();
+                window.navigator.msSaveBlob(blob, fName);
+			}
+			else // every other browser
+			{
+				var a  = document.createElement('a');		
+				a.href = this.screenshotData;
+				a.download = fName;
+				a.target="_blank";
+				a.click();
+			}
 		}
 	}
 },
@@ -2944,6 +2956,11 @@ toggleDebugMode : function () {
 
 repaint : function () {
 	this.ui.postDrawEvent();
+},
+
+saveScreenshot : function () {
+	this.isCapturingScreenshot = true;
+	this.repaint();
 },
 
 //------entities-------------------

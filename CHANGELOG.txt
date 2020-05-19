@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-05 May 2020
+19 May 2020
 
 #### TEAM
 ---------
@@ -23,11 +23,12 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
+* Fixed GL_FRONTFACING bug;
+* Fixed 16 BIT ALIGNMENT critical bug;
 * Added EMSCRIPTEN version of CORTO;
 * Added 3DHOP SCREENSHOT functionality;
 * Added ENTITIES functionality;
 * Added NEXUS verbose debug system;
-* Fixed 16 BIT ALIGNMENT critical bug;
 * Updated 3DHOP PANELS creation;
 * Updated 3DHOP SCENE SETUP for easier dynamic creation;
 * Updated 3DHOP WATERMARK positioning;
@@ -43,9 +44,9 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Files Added/Modified**
 
+* Added new resources to "skins" folder;
 * Added "corto.em.js" file;
 * Added "helpers.js" file;
-* Added "grey_gradient.jpg" file;
 * Added "3dhop_panels.css" file;
 * Removed "3DHpanels.css" file;
 * Updated "HOWTO_6.0_animations.html" file;
