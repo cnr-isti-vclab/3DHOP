@@ -4,7 +4,7 @@
 <meta content="charset=UTF-8"/>
 <title>3DHOP - 3D Heritage Online Presenter</title>
 <!--STYLESHEET-->
-<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>  
+<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>
 <!--SPIDERGL-->
 <script type="text/javascript" src="js/spidergl.js"></script>
 <!--JQUERY-->
@@ -45,20 +45,26 @@ function setup3dhop() {
 
 	presenter.setScene({
 		meshes: {
-			"Laurana" : { url: "models/singleres/laurana.ply" }
+			"Laurana" : { url: "models/laurana.ply" }
 		},
 		modelInstances : {
 			"Model1" : { mesh : "Laurana" } 
 		},
 		trackball: {
-			type : TurnTableTrackball,
-			trackOptions : {
-				startPhi: 0.0,
-				startTheta: 0.0,
-				startDistance: 2.5,
-				minMaxPhi: [-180, 180],
-				minMaxTheta: [-10.0, 50.0],
-				minMaxDist: [0.5, 3.0]
+			type: TurntablePanTrackball,
+			trackOptions: {
+				startPhi      : 0.0,
+				startTheta    : 0.0,
+				startDistance : 2.5,
+				startPanX     : 0.0,
+				startPanY     : 0.0,
+				startPanZ     : 0.0,
+				minMaxPhi     : [-180, 180],
+				minMaxTheta   : [-10.0, 50.0],
+				minMaxDist    : [0.5, 3.0],
+				minMaxPanX    : [-0.5, 0.5],
+				minMaxPanY    : [-0.6, 0.6],
+				minMaxPanZ    : [-0.3, 0.3],
 			}
 		}
 	});

@@ -4,7 +4,7 @@
 <meta content="charset=UTF-8"/>
 <title>3DHOP - 3D Heritage Online Presenter</title>
 <!--STYLESHEET-->
-<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>  
+<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>
 <!--SPIDERGL-->
 <script type="text/javascript" src="js/spidergl.js"></script>
 <!--JQUERY-->
@@ -30,12 +30,12 @@
   <img id="zoomout"    title="Zoom Out"              src="skins/dark/zoomout.png"         /><br/>
   <img id="light_on"   title="Disable Light Control" src="skins/dark/lightcontrol_on.png" style="position:absolute; visibility:hidden;"/>
   <img id="light"      title="Enable Light Control"  src="skins/dark/lightcontrol.png"    /><br/>
-  <img id="measure_on" title="Disable Measure Tool"  src="skins/dark/measure_on.png"      style="position:absolute; visibility:hidden;"/>
-  <img id="measure"    title="Enable Measure Tool"   src="skins/dark/measure.png"         /><br/>
+  <img id="pick_on"    title="Disable PickPoint Mode"src="skins/dark/pick_on.png"         style="position:absolute; visibility:hidden;"/>
+  <img id="pick"       title="Enable PickPoint Mode" src="skins/dark/pick.png"            /><br/>
   <img id="full_on"    title="Exit Full Screen"      src="skins/dark/full_on.png"         style="position:absolute; visibility:hidden;"/>
   <img id="full"       title="Full Screen"           src="skins/dark/full.png"            />
  </div>
- <div id="measure-box" class="output-box">Measured length<hr/><span id="measure-output" class="output-text" onmousedown="event.stopPropagation()">0.0</span></div>
+ <div id="pickpoint-box" class="output-box">XYZ picked point<hr/><span id="pickpoint-output" class="output-text" onmousedown="event.stopPropagation()">[ 0 , 0 , 0 ]</span></div>
  <canvas id="draw-canvas" style="background-image: url(skins/backgrounds/light.jpg)"/>
 </div> 
 </body>
@@ -48,8 +48,8 @@ function setup3dhop() {
 
 	presenter.setScene({
 		meshes: {
-			"Gargoyle" : { url: "models/multires/gargo.nxz" },
-			"Cube" : { url: "models/singleres/cube.ply" }
+			"Gargoyle" : { url: "models/gargo.nxz" },
+			"Cube" : { url: "models/cube.ply" }
 		},
 		modelInstances : {
 			"Gargo" : {
@@ -80,7 +80,7 @@ function setup3dhop() {
 		}
 	});
 
-	presenter._onEndMeasurement = onEndMeasure;
+	presenter._onEndPickingPoint = onEndPick;
 }
 
 function actionsToolbar(action) {
@@ -88,14 +88,16 @@ function actionsToolbar(action) {
 	else if(action=='zoomin') presenter.zoomIn();
 	else if(action=='zoomout') presenter.zoomOut(); 
 	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
-	else if(action=='measure' || action=='measure_on') { presenter.enableMeasurementTool(!presenter.isMeasurementToolEnabled()); measureSwitch(); } 
+	else if(action=='pick' || action=='pick_on') { presenter.enablePickpointMode(!presenter.isPickpointModeEnabled()); pickpointSwitch(); } 
 	else if(action=='full' || action=='full_on') fullscreenSwitch(); 
 }
 
-function onEndMeasure(measure) {
-	// measure.toFixed(2) sets the number of decimals when displaying the measure
-	// depending on the model measure units, use "mm","m","km" or whatever you have
-	$('#measure-output').html(measure.toFixed(2) + " mm");
+function onEndPick(point) {
+	// point.toFixed(2) sets the number of decimals when displaying the picked point
+	var x = point[0].toFixed(2);
+	var y = point[1].toFixed(2);
+	var z = point[2].toFixed(2);
+	$('#pickpoint-output').html("[ "+x+" , "+y+" , "+z+" ]");
 }
 
 $(document).ready(function(){

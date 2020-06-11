@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-19 May 2020
+11 June 2020
 
 #### TEAM
 ---------
@@ -44,15 +44,17 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Files Added/Modified**
 
+* Added new "HOWTO_3.6_screenshot_tool.html" file;
 * Added new resources to "skins" folder;
 * Added "corto.em.js" file;
 * Added "helpers.js" file;
 * Added "3dhop_panels.css" file;
 * Removed "3DHpanels.css" file;
-* Updated "HOWTO_6.0_animations.html" file;
-* Updated "HOWTO_7.0_hotspots_events.html" file;
+* Updated "HOWTO_3.1_animations.html" file;
+* Updated "HOWTO_3.2_hotspots_events.html" file;
 * Updated all "*.js" files;
 * Updated all "*.css" files;
+* Renamed all "*.html" files;
 
 
 *Version 4.2*  

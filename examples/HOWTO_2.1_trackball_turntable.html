@@ -4,7 +4,7 @@
 <meta content="charset=UTF-8"/>
 <title>3DHOP - 3D Heritage Online Presenter</title>
 <!--STYLESHEET-->
-<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>  
+<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>
 <!--SPIDERGL-->
 <script type="text/javascript" src="js/spidergl.js"></script>
 <!--JQUERY-->
@@ -45,15 +45,20 @@ function setup3dhop() {
 
 	presenter.setScene({
 		meshes: {
-			"Gargoyle" : { url: "models/multires/gargo.nxz" },
-			"Cage" : { url: "models/singleres/cage.ply" }
+			"Laurana" : { url: "models/laurana.ply" }
 		},
 		modelInstances : {
-			"Model1" : {
-				mesh : "Cage"
-			},
-			"Model2" : {
-				mesh : "Gargoyle"
+			"Model1" : { mesh : "Laurana" } 
+		},
+		trackball: {
+			type : TurnTableTrackball,
+			trackOptions : {
+				startPhi: 0.0,
+				startTheta: 0.0,
+				startDistance: 2.5,
+				minMaxPhi: [-180, 180],
+				minMaxTheta: [-10.0, 50.0],
+				minMaxDist: [0.5, 3.0]
 			}
 		}
 	});
@@ -73,5 +78,4 @@ $(document).ready(function(){
 	setup3dhop();
 });
 </script>
-
 </html>

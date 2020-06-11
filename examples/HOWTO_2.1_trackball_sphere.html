@@ -4,7 +4,7 @@
 <meta content="charset=UTF-8"/>
 <title>3DHOP - 3D Heritage Online Presenter</title>
 <!--STYLESHEET-->
-<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>  
+<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>
 <!--SPIDERGL-->
 <script type="text/javascript" src="js/spidergl.js"></script>
 <!--JQUERY-->
@@ -45,39 +45,17 @@ function setup3dhop() {
 
 	presenter.setScene({
 		meshes: {
-			"Laurana" : { url: "models/singleres/laurana.ply" },
-			"Gargoyle" : { url: "models/multires/gargo.nxz" },
-			"Box" : { 
-				url: "models/singleres/cube.ply",
-				transform : { matrix: SglMat4.scaling([13.0, 0.5, 10.0]) },
-			}
+			"Laurana" : { url: "models/laurana.ply" }
 		},
 		modelInstances : {
-			"Base" : {
-				mesh : "Box"
-			},
-			"Center" : {
-				mesh : "Laurana",
-				transform : { matrix: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 250.0, -50.0, 1.0] },
-			},
-			"Left" : {
-				mesh : "Gargoyle",
-				transform : { 
-					translation : [-120.0, 12.5, 150.0],
-					rotation : [0.0, 90, 0.0],
-					scale : [1.5, 1.5, 1.5]
-				}
-			},
-			"Right" : {
-				mesh : "Gargoyle",
-				transform : { matrix: SglMat4.mul(SglMat4.translation([120.0, 12.5, 150.0]), SglMat4.rotationAngleAxis(sglDegToRad(-90.0), [0.0, 1.0, 0.0])) }
-			}
+			"Model1" : { mesh : "Laurana" }
 		},
-		space : {
-			centerMode : "explicit",
-			explicitCenter : [0.0, 100.0, 0.0],
-			radiusMode : "specific",
-			whichInstanceRadius  : "Base"
+		trackball: {
+			type : SphereTrackball,
+			trackOptions : {
+				startDistance: 2.5,
+				minMaxDist: [0.5, 3.0]
+			}
 		}
 	});
 }
@@ -96,5 +74,4 @@ $(document).ready(function(){
 	setup3dhop();
 });
 </script>
-
 </html>

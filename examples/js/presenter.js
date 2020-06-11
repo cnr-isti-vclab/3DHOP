@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.17";
+const HOP_VERSION             = "4.2.18";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -2068,11 +2068,11 @@ _drawScene : function () {
 			{
 				console.error("IE and EDGEhtml cannot save images");
 				var blob = this.ui._canvas.msToBlob();
-                window.navigator.msSaveBlob(blob, fName);
+				window.navigator.msSaveBlob(blob, fName);
 			}
 			else // every other browser
 			{
-				var a  = document.createElement('a');		
+				var a  = document.createElement('a');
 				a.href = this.screenshotData;
 				a.download = fName;
 				a.target="_blank";
@@ -2607,9 +2607,9 @@ onInitialize : function () {
 	this.screenshotData = null;
 	
 	// nexus parameters
-	this._nexusTargetFps   = 15.0;
 	this._nexusTargetError = 1.0;
-	this._nexusCacheSize   = 50000000;
+	this._nexusMinFps      = 15.0;
+	this._nexusCacheSize   = 512*(1<<20); //512MB
 
 	// shaders
 	this.installDefaultShaders();
@@ -2924,7 +2924,7 @@ setScene : function (options) {
 
 	// nexus parameters init
 	Nexus.setTargetError(gl, this._nexusTargetError);
-	Nexus.setTargetFps(gl, this._nexusTargetFps);
+	Nexus.setTargetFps(gl, this._nexusMinFps);
 	Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
 
 	// mesh models creation
@@ -3015,15 +3015,6 @@ deleteEntity : function (eName) {
 //-----------------------------------------------------------------------------
 // nexus
 
-setNexusTargetFps: function(fps) {
-	this._nexusTargetFps = fps;
-	Nexus.setTargetFps(this.ui.gl, fps);
-},
-
-getNexusTargetFps: function() {
-	return this._nexusTargetFps;
-},
-
 setNexusTargetError: function(error) {
 	this._nexusTargetError = error;
 	Nexus.setTargetError(this.ui.gl, error);
@@ -3031,6 +3022,15 @@ setNexusTargetError: function(error) {
 
 getNexusTargetError: function() {
 	return this._nexusTargetError;
+},
+
+setNexusMinFps: function(fps) {
+	this._nexusMinFps = fps;
+	Nexus.setTargetFps(this.ui.gl, fps);
+},
+
+getNexusMinFps: function() {
+	return this._nexusMinFps;
 },
 
 setNexusCacheSize: function(size) {

@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-5 May 2020
+11 June 2020
 
 #### TEAM
 ---------
@@ -29,7 +29,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
   - *models*           -> folder with the 3D model
   - *skins*            -> folder with the toolbar and background graphic elements files
   - *stylesheet*       -> folder with the 3DHOP CSS file
-  - *index_ ... .html* -> 3DHOP templates HTML files  
+  - *3DHOP_ ... .html* -> 3DHOP templates HTML files  
 
 
 - **examples folder**  -> all the 3DHOP examples/howto shown in the 3DHOP website
@@ -37,7 +37,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
   - *models*           -> folder with the single- and multi-resolution 3D models
   - *skins*            -> folder with the toolbar and background graphic elements files
   - *stylesheet*       -> folder with the 3DHOP CSS file
-  - *HOWTO_ ... .html* -> 3DHOP HOW-TOs HTML files
+  - *HOWTO_ ... .html* -> 3DHOP examples HTML files
 
 
 - **text files**       -> basic info texts

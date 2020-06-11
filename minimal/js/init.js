@@ -105,7 +105,7 @@ function init3dhop() {
 	}
 
 	$(window).on('resize', function () {
-//		if (!presenter._resizable) return;
+		if (!presenter._resizable) return;
 
 		var width, height;
 
@@ -118,7 +118,10 @@ function init3dhop() {
 			height = $('#3dhop').parent().height();
 		}
 
-		resizeCanvas(width,height);
+		$('#draw-canvas').attr('width', width);
+		$('#draw-canvas').attr('height',height);
+		$('#3dhop').css('width', width);
+		$('#3dhop').css('height', height);
 
 		presenter.ui.postDrawEvent();
 	});
@@ -132,7 +135,10 @@ function init3dhop() {
 		$('.close').css("display", "inline");
 	});
 
-	resizeCanvas($('#3dhop').parent().width(),$('#3dhop').parent().height());
+	$('#draw-canvas').attr('width', $('#3dhop').parent().width());
+	$('#draw-canvas').attr('height',$('#3dhop').parent().height());
+	$('#3dhop').css('width', $('#3dhop').parent().width());
+	$('#3dhop').css('height', $('#3dhop').parent().height());
 
 	anchorPanels();
 
@@ -465,8 +471,8 @@ function enterFullscreen() {
 
   presenter._nativeWidth  = presenter.ui.width;
   presenter._nativeHeight = presenter.ui.height;
-//  presenter._nativeResizable = presenter._resizable;
-//  presenter._resizable = true;
+  presenter._nativeResizable = presenter._resizable;
+  presenter._resizable = true;
 
   var viewer = $('#3dhop')[0];
   if (viewer.msRequestFullscreen) viewer.msRequestFullscreen();
@@ -482,8 +488,11 @@ function exitFullscreen() {
 
   if (isIOS()) return; //IOS DEVICES CHECK
 
-  resizeCanvas(presenter._nativeWidth,presenter._nativeHeight)
-//  presenter._resizable = presenter._nativeResizable;
+  $('#draw-canvas').attr('width', presenter._nativeWidth);
+  $('#draw-canvas').attr('height',presenter._nativeHeight);
+  $('#3dhop').css('width', presenter._nativeWidth);
+  $('#3dhop').css('height', presenter._nativeHeight);
+  presenter._resizable = presenter._nativeResizable;
 
   if (document.msExitFullscreen) document.msExitFullscreen();
   else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
@@ -554,14 +563,7 @@ function resizeCanvas(w,h) {
   $('#3dhop').css('width', w);
   $('#3dhop').css('height', h);
 
-//  if (!presenter) return;
-
-//  var width, height;
-//  width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-//  (isIOS()) ? (height = document.documentElement.clientHeight) : (height = window.innerHeight); //IOS DEVICES CHECK
-
-//  if (width != w || height != h) presenter._resizable = false;
-//  else presenter._resizable = true;
+  presenter._resizable = false;
 }
 
 function anchorPanels() {
