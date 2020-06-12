@@ -1814,7 +1814,7 @@ _drawScene : function () {
 		
 		var entityUniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uPointSize"                 : 8.0,//config.pointSize,
+			"uPointSize"                 : config.pointSize,
 			"uColorID"                   : entity.color,
 			"uZOff"                      : entity.zOff,
 		};		
@@ -2964,7 +2964,7 @@ saveScreenshot : function () {
 },
 
 //------entities-------------------
-createEntity : function (eName, type, positionList) {
+createEntity : function (eName, type, verticesList) {
 	// type "points", "lines", "triangles"
 	var nEntity = {};
 	nEntity.visible = true;
@@ -2987,13 +2987,13 @@ createEntity : function (eName, type, positionList) {
 	modelDescriptor.vertices.position = [];
 	modelDescriptor.vertices.normal = [];
 	modelDescriptor.vertices.color = {value : [ 1.0, 0.0, 1.0, 1.0 ]};
-	var numVerts = positionList.length;
+	var numVerts = verticesList.length;
 
 	for (vInd = 0; vInd < numVerts; vInd++)
 	{
-		modelDescriptor.vertices.position.push(positionList[vInd][0]);
-		modelDescriptor.vertices.position.push(positionList[vInd][1]);
-		modelDescriptor.vertices.position.push(positionList[vInd][2]);
+		modelDescriptor.vertices.position.push(verticesList[vInd][0]);
+		modelDescriptor.vertices.position.push(verticesList[vInd][1]);
+		modelDescriptor.vertices.position.push(verticesList[vInd][2]);
 		
 		modelDescriptor.vertices.normal.push(0.0);
 		modelDescriptor.vertices.normal.push(0.0);
@@ -3006,10 +3006,17 @@ createEntity : function (eName, type, positionList) {
 	this._scene.entities[eName] = {};
 	this._scene.entities[eName] = nEntity;
 	return this._scene.entities[eName];
+	this.repaint();	
 },
 
 deleteEntity : function (eName) {
 	delete this._scene.entities[eName];
+	this.repaint();	
+},
+
+clearEntities : function () {
+	this._scene.entities = {};
+	this.repaint();
 },
 
 //-----------------------------------------------------------------------------
