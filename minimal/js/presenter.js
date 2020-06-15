@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.18";
+const HOP_VERSION             = "4.3";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -219,7 +219,7 @@ _parseConfig : function (options) {
 		showClippingBorder  : false,
 		clippingBorderSize  : 0.5,
 		clippingBorderColor : [0.0, 1.0, 1.0],
-		pointSize           : 1.0,
+		pointSize           : 3.0,
 		pointSizeMinMax     : [1.0, 5.0],
 		autoSaveScreenshot  : true,
 		screenshotBaseName  : "screenshot",
@@ -993,9 +993,7 @@ _objectLoaded : function () {
 
 _testReady : function () {
 	if (this._objectsToLoad != 0) return;
-
 	this._sceneReady = this._scenePrepare();
-
 	this.repaint();
 },
 
@@ -3959,9 +3957,7 @@ rotateLight: function(x, y) {
 
 enableLightTrackball: function(on) {
 	this._movingLight = on;
-
 	if(on && !this._scene.space.sceneLighting) this._scene.space.sceneLighting = on;
-
 	this.repaint();
 },
 

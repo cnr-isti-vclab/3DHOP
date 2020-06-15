@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2.18";
+const HOP_VERSION             = "4.3";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -219,7 +219,7 @@ _parseConfig : function (options) {
 		showClippingBorder  : false,
 		clippingBorderSize  : 0.5,
 		clippingBorderColor : [0.0, 1.0, 1.0],
-		pointSize           : 1.0,
+		pointSize           : 3.0,
 		pointSizeMinMax     : [1.0, 5.0],
 		autoSaveScreenshot  : true,
 		screenshotBaseName  : "screenshot",
@@ -993,9 +993,7 @@ _objectLoaded : function () {
 
 _testReady : function () {
 	if (this._objectsToLoad != 0) return;
-
 	this._sceneReady = this._scenePrepare();
-
 	this.repaint();
 },
 
@@ -1814,7 +1812,7 @@ _drawScene : function () {
 		
 		var entityUniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uPointSize"                 : 8.0,//config.pointSize,
+			"uPointSize"                 : config.pointSize,
 			"uColorID"                   : entity.color,
 			"uZOff"                      : entity.zOff,
 		};		
@@ -2964,7 +2962,7 @@ saveScreenshot : function () {
 },
 
 //------entities-------------------
-createEntity : function (eName, type, positionList) {
+createEntity : function (eName, type, verticesList) {
 	// type "points", "lines", "triangles"
 	var nEntity = {};
 	nEntity.visible = true;
@@ -2987,13 +2985,13 @@ createEntity : function (eName, type, positionList) {
 	modelDescriptor.vertices.position = [];
 	modelDescriptor.vertices.normal = [];
 	modelDescriptor.vertices.color = {value : [ 1.0, 0.0, 1.0, 1.0 ]};
-	var numVerts = positionList.length;
+	var numVerts = verticesList.length;
 
 	for (vInd = 0; vInd < numVerts; vInd++)
 	{
-		modelDescriptor.vertices.position.push(positionList[vInd][0]);
-		modelDescriptor.vertices.position.push(positionList[vInd][1]);
-		modelDescriptor.vertices.position.push(positionList[vInd][2]);
+		modelDescriptor.vertices.position.push(verticesList[vInd][0]);
+		modelDescriptor.vertices.position.push(verticesList[vInd][1]);
+		modelDescriptor.vertices.position.push(verticesList[vInd][2]);
 		
 		modelDescriptor.vertices.normal.push(0.0);
 		modelDescriptor.vertices.normal.push(0.0);
@@ -3006,10 +3004,17 @@ createEntity : function (eName, type, positionList) {
 	this._scene.entities[eName] = {};
 	this._scene.entities[eName] = nEntity;
 	return this._scene.entities[eName];
+	this.repaint();	
 },
 
 deleteEntity : function (eName) {
 	delete this._scene.entities[eName];
+	this.repaint();	
+},
+
+clearEntities : function () {
+	this._scene.entities = {};
+	this.repaint();
 },
 
 //-----------------------------------------------------------------------------
@@ -3952,9 +3957,7 @@ rotateLight: function(x, y) {
 
 enableLightTrackball: function(on) {
 	this._movingLight = on;
-
 	if(on && !this._scene.space.sceneLighting) this._scene.space.sceneLighting = on;
-
 	this.repaint();
 },
 
