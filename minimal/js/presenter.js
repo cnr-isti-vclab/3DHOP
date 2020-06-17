@@ -2581,9 +2581,6 @@ _createQuadModels : function () {
 onInitialize : function () {
 	var gl = this.ui.gl;
 
-	// debug mode
-	this._isDebugging = HOP_DEBUGMODE;
-
 	gl.getExtension('EXT_frag_depth');
 	gl.clearColor(0.5, 0.5, 0.5, 1.0);
 	gl.clearStencil(0);
@@ -2600,17 +2597,20 @@ onInitialize : function () {
 	this.xform      = new SglTransformationStack();
 	this.viewMatrix = SglMat4.identity();
 
-	// screenshot support
-	this.isCapturingScreenshot = false;
-	this.screenshotData = null;
-	
 	// nexus parameters
-	this._nexusTargetError = 1.0;
-	this._nexusMinFps      = 15.0;
-	this._nexusCacheSize   = 512*(1<<20); //512MB
+	this.setNexusTargetError(1.0);
+	this.setNexusMinFps(15.0);
+	this.setNexusMaxCacheSize(512*(1<<20)); //512MB
+
+	// debug mode
+	this._isDebugging = HOP_DEBUGMODE;
 
 	// shaders
 	this.installDefaultShaders();
+
+	// screenshot support
+	this.isCapturingScreenshot = false;
+	this.screenshotData = null;
 
 	// handlers
 	this._onPickedInstance  = 0;
@@ -2629,9 +2629,7 @@ onInitialize : function () {
 	this.x 			= 0.0;
 	this.y 			= 0.0;
 
-	this._keycombo = false;
-
-	// SCENE DATA
+	// scene data
 	this._scene         = null;
 	this._sceneParsed   = false;
 	this._sceneReady    = false;
@@ -2665,6 +2663,8 @@ onInitialize : function () {
 	this._lastInstanceID = 0;
 	this._lastSpotID     = 0;
 	this._pickpoint      = [1, 1];
+
+	this._keycombo = false;
 
 	// global measurement data
 	this._isMeasuring = false;
@@ -2918,13 +2918,6 @@ setScene : function (options) {
 	this.trackball.setup(scene.trackball.trackOptions);
 	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 
-	var gl = this.ui.gl;
-
-	// nexus parameters init
-	Nexus.setTargetError(gl, this._nexusTargetError);
-	Nexus.setTargetFps(gl, this._nexusMinFps);
-	Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
-
 	// mesh models creation
 	this._createMeshModels();
 
@@ -3021,30 +3014,27 @@ clearEntities : function () {
 // nexus
 
 setNexusTargetError: function(error) {
-	this._nexusTargetError = error;
 	Nexus.setTargetError(this.ui.gl, error);
 },
 
 getNexusTargetError: function() {
-	return this._nexusTargetError;
+	return Nexus.getTargetError(this.ui.gl);
 },
 
 setNexusMinFps: function(fps) {
-	this._nexusMinFps = fps;
-	Nexus.setTargetFps(this.ui.gl, fps);
+	Nexus.setMinFps(this.ui.gl, fps);
 },
 
 getNexusMinFps: function() {
-	return this._nexusMinFps;
+	return Nexus.getMinFps(this.ui.gl);
 },
 
-setNexusCacheSize: function(size) {
-	this._nexusCacheSize = size;
+setNexusMaxCacheSize: function(size) {
 	Nexus.setMaxCacheSize(this.ui.gl, size);
 },
 
-getNexusCacheSize: function() {
-	return this._nexusCacheSize;
+getNexusMaxCacheSize: function() {
+	return Nexus.getMaxCacheSize(this.ui.gl);
 },
 
 //-----------------------------------------------------------------------------
