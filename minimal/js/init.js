@@ -1,7 +1,7 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
-All rights reserved.    
+Copyright (c) 2014-2020, Visual Computing Lab, ISTI - CNR
+All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,23 +18,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 function init3dhop() {
-	if (isIOS()) $('head').append('<meta name="viewport" content="width=device-width">'); //IOS DEVICES CHECK
+	if (isIOS()) jQuery('head').append('<meta name="viewport" content="width=device-width">'); //IOS DEVICES CHECK
 
 	var interval, id, ismousedown;
 	var button = 0;
 
-	$('#toolbar img')
+	jQuery('#toolbar img')
 		.mouseenter(function(e) {
-			id = $(this).attr('id');
-			if(!ismousedown) $(this).css("opacity","0.8");
-			else $(this).css("opacity","1.0");
+			id = jQuery(this).attr('id');
+			if(!ismousedown) jQuery(this).css("opacity","0.8");
+			else jQuery(this).css("opacity","1.0");
 		})
 		.mouseout(function(e) {
 			clearInterval(interval); 
-			$(this).css("opacity","0.5");
+			jQuery(this).css("opacity","0.5");
 		})
 		.mousedown(function(e) {
-			id = $(this).attr('id');
+			id = jQuery(this).attr('id');
 			ismousedown = true;
 			if(e.button==button){
 				actionsToolbar(id);
@@ -46,7 +46,7 @@ function init3dhop() {
 				else {
 					clearInterval(interval); 
 				}
-				$(this).css("opacity","1.0");
+				jQuery(this).css("opacity","1.0");
 				button=0;
 			}
 		})
@@ -54,7 +54,7 @@ function init3dhop() {
 			ismousedown = false;
 			if(e.button==button){
 				clearInterval(interval); 
-				$(this).css("opacity","0.8");
+				jQuery(this).css("opacity","0.8");
 				button=0;
 			}
 		})
@@ -65,64 +65,80 @@ function init3dhop() {
 			button=0;
 		});
 
-	$('.output-table td:has(.output-text,.output-input)').css("border-radius", "5px").css("background-color", "rgba(125,125,125,0.25)");
+	jQuery('.output-table td:has(.output-text,.output-input)').css("border-radius", "5px").css("background-color", "rgba(125,125,125,0.25)");
 
-	$('#3dhop')
+	jQuery('#3dhop')
 		.on('touchstart pointerdown', function(e) {
-			$('#toolbar img').css("opacity","0.5");
+			jQuery('#toolbar img').css("opacity","0.5");
 		})
 		.on('touchend pointerup', function(e) {
 			clearInterval(interval); 
 		})
 		.on('touchmove', function(e) {
 			clearInterval(interval); 
-			$('#toolbar img').css("opacity","0.5");
+			jQuery('#toolbar img').css("opacity","0.5");
 		});
 
-	$('#3dhop:not(#draw-canvas)').on('contextmenu', function(e) { return false; });
+	jQuery('#3dhop:not(#draw-canvas)').on('contextmenu', function(e) { return false; });
 
-	$('#draw-canvas')
+	jQuery('#draw-canvas')
 		.on('contextmenu', function(e) {
 			if (!isMobile()) return false; //MOBILE DEVICES CHECK
 		})
 		.on('touchstart pointerdown', function(e) {
-			$('#toolbar img').css("opacity","0.5");
+			jQuery('#toolbar img').css("opacity","0.5");
 		})
 		.mousedown(function(e) { 
-			$('#toolbar img').css("opacity","0.5"); 
+			jQuery('#toolbar img').css("opacity","0.5"); 
 			if(e.preventDefault) e.preventDefault(); 
 			if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
 			else if (document.selection && document.selection.createRange()!='') document.selection.empty();
 		});
 
-	$(document).on('MSFullscreenChange mozfullscreenchange webkitfullscreenchange', function(e) { //fullscreen handler 
+	jQuery(document).on('MSFullscreenChange mozfullscreenchange webkitfullscreenchange', function(e) { //fullscreen handler 
 		if(!document.msFullscreenElement&&!document.mozFullScreen&&!document.webkitIsFullScreen) exitFullscreen();
 	});
 
 	if (window.navigator.userAgent.indexOf('Trident/') > 0) { //IE fullscreen handler 
-		$('#full').click(function() {enterFullscreen();});
-		$('#full_on').click(function() {exitFullscreen();});
+		jQuery('#full').click(function() {enterFullscreen();});
+		jQuery('#full_on').click(function() {exitFullscreen();});
 	}
 
-	$(window).on('resize', function () {
+	jQuery(window).on('resize', function () {
 		if (!presenter._resizable) return;
 
 		var width, height;
-		width = Math.max(document.documentElement.clientWidth, window.innerWidth);
-		(isIOS()) ? (height = document.documentElement.clientHeight) : (height = window.innerHeight); //IOS DEVICES CHECK
 
-		resizeCanvas(width,height);
+		if(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement ) {
+			width = Math.max(document.documentElement.clientWidth, window.innerWidth);
+			height = window.innerHeight;
+		}
+		else {
+			width = jQuery('#3dhop').parent().width();
+			height = jQuery('#3dhop').parent().height();
+		}
+
+		jQuery('#draw-canvas').attr('width', width);
+		jQuery('#draw-canvas').attr('height',height);
+		jQuery('#3dhop').css('width', width);
+		jQuery('#3dhop').css('height', height);
 
 		presenter.ui.postDrawEvent();
 	});
 
-	$(window).on('load mouseup touchend pointerup dragend', function() { //focus handler
-		var x = window.scrollX, y = window.scrollY;
-		$('#draw-canvas').focus();
-		window.scrollTo(x, y);
+	jQuery('.close').mouseenter( function() {
+		jQuery('.close').css("display", "none");
+		jQuery('.close_on').css("display", "inline");
+	});
+	jQuery('.close_on').mouseleave( function() {
+		jQuery('.close_on').css("display", "none");
+		jQuery('.close').css("display", "inline");
 	});
 
-	resizeCanvas($('#3dhop').parent().width(),$('#3dhop').parent().height());
+	jQuery('#draw-canvas').attr('width', jQuery('#3dhop').parent().width());
+	jQuery('#draw-canvas').attr('height',jQuery('#3dhop').parent().height());
+	jQuery('#3dhop').css('width', jQuery('#3dhop').parent().width());
+	jQuery('#3dhop').css('height', jQuery('#3dhop').parent().height());
 
 	anchorPanels();
 
@@ -130,18 +146,19 @@ function init3dhop() {
 }
 
 function set3dhlg() {
-  $('#tdhlg').html("Powered by 3DHOP</br>&nbsp;C.N.R. &nbsp;&ndash;&nbsp; I.S.T.I.");
-  $('#tdhlg').mouseover(function() {
-	 $('#tdhlg').animate({ 
+  jQuery('#tdhlg').css({right:2, bottom:2});
+  jQuery('#tdhlg').html("Powered by 3DHOP</br>CNR &nbsp;&ndash;&nbsp; ISTI");
+  jQuery('#tdhlg').mouseover(function() {
+	 jQuery('#tdhlg').animate({ 
 		height: "25px"
 	  }, "fast" );
 	 })
 	.mouseout(function() {
-	 $('#tdhlg').animate({ 
+	 jQuery('#tdhlg').animate({ 
 		height: "13px"
 	  }, "slow" );
 	 });
-  $('#tdhlg').click(function() { window.open('http://vcg.isti.cnr.it/3dhop/', '_blank') });
+  jQuery('#tdhlg').click(function() { window.open('http://vcg.isti.cnr.it/3dhop/', '_blank') });
 }
 
 // +++ INTERFACE SWITCHING FUNCTIONS +++ //
@@ -150,14 +167,14 @@ function lightSwitch(on) {
   if(on === undefined) on = presenter.isLightTrackballEnabled();
 
   if(on){
-    $('#light').css("visibility", "hidden");
-    $('#light_on').css("visibility", "visible");
-    $('#lighting_off').css("visibility", "hidden");	//manage lighting combined interface
-    $('#lighting').css("visibility", "visible");	//manage lighting combined interface
+    jQuery('#light').css("visibility", "hidden");
+    jQuery('#light_on').css("visibility", "visible");
+    jQuery('#lighting_off').css("visibility", "hidden");	//manage lighting combined interface
+    jQuery('#lighting').css("visibility", "visible");	//manage lighting combined interface
   }
   else{
-    $('#light_on').css("visibility", "hidden");
-    $('#light').css("visibility", "visible");
+    jQuery('#light_on').css("visibility", "hidden");
+    jQuery('#light').css("visibility", "visible");
   }
 }
 
@@ -165,14 +182,14 @@ function lightingSwitch(on) {
   if(on === undefined) on = presenter.isSceneLightingEnabled();
 
   if(on){
-    $('#lighting_off').css("visibility", "hidden");
-    $('#lighting').css("visibility", "visible");
+    jQuery('#lighting_off').css("visibility", "hidden");
+    jQuery('#lighting').css("visibility", "visible");
   }
   else{
-    $('#lighting').css("visibility", "hidden");
-    $('#lighting_off').css("visibility", "visible");
-    $('#light_on').css("visibility", "hidden");	//manage light combined interface
-    $('#light').css("visibility", "visible");	//manage light combined interface
+    jQuery('#lighting').css("visibility", "hidden");
+    jQuery('#lighting_off').css("visibility", "visible");
+    jQuery('#light_on').css("visibility", "hidden");	//manage light combined interface
+    jQuery('#light').css("visibility", "visible");	//manage light combined interface
   }
 }
 
@@ -180,12 +197,12 @@ function hotspotSwitch(on) {
   if(on === undefined) on = presenter.isSpotVisibilityEnabled();
 
   if(on){
-    $('#hotspot').css("visibility", "hidden");
-    $('#hotspot_on').css("visibility", "visible");
+    jQuery('#hotspot').css("visibility", "hidden");
+    jQuery('#hotspot_on').css("visibility", "visible");
   }
   else{
-    $('#hotspot_on').css("visibility", "hidden");
-    $('#hotspot').css("visibility", "visible");
+    jQuery('#hotspot_on').css("visibility", "hidden");
+    jQuery('#hotspot').css("visibility", "visible");
   }
 }
 
@@ -193,19 +210,19 @@ function pickpointSwitch(on) {
   if(on === undefined) on = presenter.isPickpointModeEnabled();
 
   if(on){  
-    $('#pick').css("visibility", "hidden");
-    $('#pick_on').css("visibility", "visible");
-    $('#pickpoint-box').fadeIn().css("display","table");
-    $('#draw-canvas').css("cursor","crosshair");
+    jQuery('#pick').css("visibility", "hidden");
+    jQuery('#pick_on').css("visibility", "visible");
+    jQuery('#pickpoint-box').fadeIn().css("display","table");
+    jQuery('#draw-canvas').css("cursor","crosshair");
   }
   else{
     if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
     else if (document.selection && document.selection.createRange()!='') document.selection.empty();
-    $('#pick_on').css("visibility", "hidden");
-    $('#pick').css("visibility", "visible");
-    $('#pickpoint-box').css("display","none");
-    $('#pickpoint-output').html("[ 0 , 0 , 0 ]");
-    if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
+    jQuery('#pick_on').css("visibility", "hidden");
+    jQuery('#pick').css("visibility", "visible");
+    jQuery('#pickpoint-box').css("display","none");
+    jQuery('#pickpoint-output').html("[ 0 , 0 , 0 ]");
+    if (!presenter.isAnyMeasurementEnabled()) jQuery('#draw-canvas').css("cursor","default");
   }
 }
 
@@ -213,62 +230,76 @@ function measureSwitch(on) {
   if(on === undefined) on = presenter.isMeasurementToolEnabled();
 
   if(on){  
-    $('#measure').css("visibility", "hidden");
-    $('#measure_on').css("visibility", "visible");
-    $('#measure-box').fadeIn().css("display","table");
-    $('#draw-canvas').css("cursor","crosshair");
+    jQuery('#measure').css("visibility", "hidden");
+    jQuery('#measure_on').css("visibility", "visible");
+    jQuery('#measure-box').fadeIn().css("display","table");
+    jQuery('#draw-canvas').css("cursor","crosshair");
   }
   else{
     if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
     else if (document.selection && document.selection.createRange()!='') document.selection.empty();
-    $('#measure_on').css("visibility", "hidden");
-    $('#measure').css("visibility", "visible");
-    $('#measure-box').css("display","none");
-    $('#measure-output').html("0.0");
-    if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
+    jQuery('#measure_on').css("visibility", "hidden");
+    jQuery('#measure').css("visibility", "visible");
+    jQuery('#measure-box').css("display","none");
+    jQuery('#measure-output').html("0.0");
+    if (!presenter.isAnyMeasurementEnabled()) jQuery('#draw-canvas').css("cursor","default");
   }
 }
 
 function colorSwitch(on) {
-  if(on === undefined) on = $('#color').css("visibility")=="visible";
+  if(on === undefined) on = jQuery('#color').css("visibility")=="visible";
 
   if(on) {
-	$('#color').css("visibility", "hidden");
-	$('#color_on').css("visibility", "visible");
+	jQuery('#color').css("visibility", "hidden");
+	jQuery('#color_on').css("visibility", "visible");
   }
   else {
-	$('#color_on').css("visibility", "hidden");
-	$('#color').css("visibility", "visible");
+	jQuery('#color_on').css("visibility", "hidden");
+	jQuery('#color').css("visibility", "visible");
   }
 }
 
 function cameraSwitch(on) {
-  if(on === undefined) on = $('#perspective').css("visibility")=="visible";
+  if(on === undefined) on = jQuery('#perspective').css("visibility")=="visible";
 
   if(on){
-    $('#perspective').css("visibility", "hidden");
-    $('#orthographic').css("visibility", "visible");
+    jQuery('#perspective').css("visibility", "hidden");
+    jQuery('#orthographic').css("visibility", "visible");
   }
   else{
-    $('#orthographic').css("visibility", "hidden");
-    $('#perspective').css("visibility", "visible");
+    jQuery('#orthographic').css("visibility", "hidden");
+    jQuery('#perspective').css("visibility", "visible");
+  }
+}
+
+
+function helpSwitch(on) {
+  if(on === undefined) on = jQuery('#help').css("visibility")=="visible";
+
+  if(on) {
+	jQuery('#help').css("visibility", "hidden");
+	jQuery('#help_on').css("visibility", "visible");
+  }
+  else {
+	jQuery('#help_on').css("visibility", "hidden");
+	jQuery('#help').css("visibility", "visible");
   }
 }
 
 function sectiontoolSwitch(on) {
-  if(on === undefined) on = $('#sections').css("visibility")=="visible";
+  if(on === undefined) on = jQuery('#sections').css("visibility")=="visible";
 
   if(on){
-	$('#sections').css("visibility", "hidden");
-	$('#sections_on').css("visibility", "visible");
-	$('#sections-box').fadeIn().css("display","table");
-	$('#xplane, #yplane, #zplane').css("visibility", "visible");
+	jQuery('#sections').css("visibility", "hidden");
+	jQuery('#sections_on').css("visibility", "visible");
+	jQuery('#sections-box').fadeIn().css("display","table");
+	jQuery('#xplane, #yplane, #zplane').css("visibility", "visible");
   }
   else{
-	$('#sections_on').css("visibility", "hidden");
-	$('#sections').css("visibility", "visible");
-	$('#sections-box').css("display","none");
-	$('#sections-box img').css("visibility", "hidden");
+	jQuery('#sections_on').css("visibility", "hidden");
+	jQuery('#sections').css("visibility", "visible");
+	jQuery('#sections-box').css("display","none");
+	jQuery('#sections-box img').css("visibility", "hidden");
 	presenter.setClippingXYZ(0, 0, 0);
   }
 }
@@ -278,7 +309,7 @@ function sectiontoolInit() {
 	presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
 
 	// set sliders 
-	var xplaneSlider = $('#xplaneSlider')[0];
+	var xplaneSlider = jQuery('#xplaneSlider')[0];
 	xplaneSlider.min = 0.0;
 	xplaneSlider.max = 1.0;
 	xplaneSlider.step = 0.01;
@@ -286,7 +317,7 @@ function sectiontoolInit() {
 	xplaneSlider.oninput=function(){ sectionxSwitch(true); presenter.setClippingPointX(this.valueAsNumber);};
 	xplaneSlider.onchange=function(){ sectionxSwitch(true); presenter.setClippingPointX(this.valueAsNumber);};
 
-	var yplaneSlider = $('#yplaneSlider')[0];
+	var yplaneSlider = jQuery('#yplaneSlider')[0];
 	yplaneSlider.min = 0.0;
 	yplaneSlider.max = 1.0;
 	yplaneSlider.step = 0.01;
@@ -294,7 +325,7 @@ function sectiontoolInit() {
 	yplaneSlider.oninput=function(){ sectionySwitch(true); presenter.setClippingPointY(this.valueAsNumber);};
 	yplaneSlider.onchange=function(){ sectionySwitch(true); presenter.setClippingPointY(this.valueAsNumber);};
 
-	var zplaneSlider = $('#zplaneSlider')[0];
+	var zplaneSlider = jQuery('#zplaneSlider')[0];
 	zplaneSlider.min = 0.0;
 	zplaneSlider.max = 1.0;
 	zplaneSlider.step = 0.01;
@@ -303,7 +334,7 @@ function sectiontoolInit() {
 	zplaneSlider.onchange=function(){ sectionzSwitch(true); presenter.setClippingPointZ(this.valueAsNumber);};
 
 	// set checkboxes
-	var xplaneFlip = $('#xplaneFlip')[0];
+	var xplaneFlip = jQuery('#xplaneFlip')[0];
 	xplaneFlip.defaultChecked = false;
 	xplaneFlip.onchange=function(){
 		if(presenter.getClippingX()!=0){
@@ -312,7 +343,7 @@ function sectiontoolInit() {
 		}
 	};
 
-	var yplaneFlip = $('#yplaneFlip')[0];
+	var yplaneFlip = jQuery('#yplaneFlip')[0];
 	yplaneFlip.defaultChecked = false;
 	yplaneFlip.onchange=function(){
 		if(presenter.getClippingY()!=0){
@@ -321,7 +352,7 @@ function sectiontoolInit() {
 		}
 	};
 
-	var zplaneFlip = $('#zplaneFlip')[0];
+	var zplaneFlip = jQuery('#zplaneFlip')[0];
 	zplaneFlip.defaultChecked = false;
 	zplaneFlip.onchange=function(){
 		if(presenter.getClippingZ()!=0){
@@ -330,11 +361,11 @@ function sectiontoolInit() {
 		}
 	};
 	
-	var planesCheck = $('#showPlane')[0];
+	var planesCheck = jQuery('#showPlane')[0];
 	planesCheck.defaultChecked = presenter.getClippingRendermode()[0];
 	planesCheck.onchange = function(){ presenter.setClippingRendermode(this.checked, presenter.getClippingRendermode()[1]); };
 
-	var edgesCheck = $('#showBorder')[0];
+	var edgesCheck = jQuery('#showBorder')[0];
 	edgesCheck.defaultChecked = presenter.getClippingRendermode()[1];
 	edgesCheck.onchange=function(){ presenter.setClippingRendermode(presenter.getClippingRendermode()[0], this.checked); };
 }
@@ -344,30 +375,30 @@ function sectiontoolReset() {
 	presenter.setClippingPointXYZ(0.5, 0.5, 0.5);
 
 	// reset sliders 
-	var xplaneSlider = $('#xplaneSlider')[0];
+	var xplaneSlider = jQuery('#xplaneSlider')[0];
 	xplaneSlider.value = xplaneSlider.defaultValue;
 
-	var yplaneSlider = $('#yplaneSlider')[0];
+	var yplaneSlider = jQuery('#yplaneSlider')[0];
 	yplaneSlider.value = yplaneSlider.defaultValue;
 
-	var zplaneSlider = $('#zplaneSlider')[0]; 
+	var zplaneSlider = jQuery('#zplaneSlider')[0]; 
 	zplaneSlider.value = zplaneSlider.defaultValue;
 
 	// reset checkboxes
-	var xplaneFlip = $('#xplaneFlip')[0];
+	var xplaneFlip = jQuery('#xplaneFlip')[0];
 	xplaneFlip.checked = xplaneFlip.defaultChecked;
 
-	var yplaneFlip = $('#yplaneFlip')[0];
+	var yplaneFlip = jQuery('#yplaneFlip')[0];
 	yplaneFlip.checked = xplaneFlip.defaultChecked;
 
-	var zplaneFlip = $('#zplaneFlip')[0];
+	var zplaneFlip = jQuery('#zplaneFlip')[0];
 	zplaneFlip.checked = xplaneFlip.defaultChecked;
 
-	var planesCheck = $('#showPlane')[0];
+	var planesCheck = jQuery('#showPlane')[0];
 	planesCheck.checked = planesCheck.defaultChecked;
 	presenter.setClippingRendermode(planesCheck.checked, presenter.getClippingRendermode()[1]);
 
-	var edgesCheck = $('#showBorder')[0];
+	var edgesCheck = jQuery('#showBorder')[0];
 	edgesCheck.checked = edgesCheck.defaultChecked;
 	presenter.setClippingRendermode(presenter.getClippingRendermode()[0], edgesCheck.checked);
 }
@@ -376,15 +407,15 @@ function sectionxSwitch(on) {
   if(on === undefined) on = (presenter.getClippingX()==0);
 
 	if(on){
-		$('#xplane').css("visibility", "hidden");
-		$('#xplane_on').css("visibility", "visible");
-		var xplaneFlip = $('#xplaneFlip')[0]; 
+		jQuery('#xplane').css("visibility", "hidden");
+		jQuery('#xplane_on').css("visibility", "visible");
+		var xplaneFlip = jQuery('#xplaneFlip')[0]; 
 		if(xplaneFlip.checked) presenter.setClippingX(-1);
 		else presenter.setClippingX(1);
 	}
 	else {
-		$('#xplane_on').css("visibility", "hidden");
-		$('#xplane').css("visibility", "visible");
+		jQuery('#xplane_on').css("visibility", "hidden");
+		jQuery('#xplane').css("visibility", "visible");
 		presenter.setClippingX(0);
 	}
 }
@@ -393,15 +424,15 @@ function sectionySwitch(on) {
   if(on === undefined) on = (presenter.getClippingY()==0);
 
 	if(on){
-		$('#yplane').css("visibility", "hidden");
-		$('#yplane_on').css("visibility", "visible");
-		var yplaneFlip = $('#yplaneFlip')[0];
+		jQuery('#yplane').css("visibility", "hidden");
+		jQuery('#yplane_on').css("visibility", "visible");
+		var yplaneFlip = jQuery('#yplaneFlip')[0];
 		if(yplaneFlip.checked) presenter.setClippingY(-1);
 		else presenter.setClippingY(1);
 	}
 	else {
-		$('#yplane_on').css("visibility", "hidden");
-		$('#yplane').css("visibility", "visible");
+		jQuery('#yplane_on').css("visibility", "hidden");
+		jQuery('#yplane').css("visibility", "visible");
 		presenter.setClippingY(0);
 	}
 }
@@ -410,21 +441,21 @@ function sectionzSwitch(on) {
   if(on === undefined) on = (presenter.getClippingZ()==0);
 
 	if(on){
-		$('#zplane').css("visibility", "hidden");
-		$('#zplane_on').css("visibility", "visible");
-		var zplaneFlip = $('#zplaneFlip')[0];
+		jQuery('#zplane').css("visibility", "hidden");
+		jQuery('#zplane_on').css("visibility", "visible");
+		var zplaneFlip = jQuery('#zplaneFlip')[0];
 		if(zplaneFlip.checked) presenter.setClippingZ(-1);
 		else presenter.setClippingZ(1);
 	}
 	else {
-		$('#zplane_on').css("visibility", "hidden");
-		$('#zplane').css("visibility", "visible");
+		jQuery('#zplane_on').css("visibility", "hidden");
+		jQuery('#zplane').css("visibility", "visible");
 		presenter.setClippingZ(0);
 	}
 }
 
 function fullscreenSwitch() {
-  if($('#full').css("visibility")=="visible"){
+  if(jQuery('#full').css("visibility")=="visible"){
     if (window.navigator.userAgent.indexOf('Trident/') < 0) enterFullscreen();
   }
   else{
@@ -433,8 +464,8 @@ function fullscreenSwitch() {
 }
 
 function enterFullscreen() {
-  $('#full').css("visibility", "hidden");
-  $('#full_on').css("visibility", "visible");
+  jQuery('#full').css("visibility", "hidden");
+  jQuery('#full_on').css("visibility", "visible");
 
   if (isIOS()) return; //IOS DEVICES CHECK
 
@@ -443,7 +474,7 @@ function enterFullscreen() {
   presenter._nativeResizable = presenter._resizable;
   presenter._resizable = true;
 
-  var viewer = $('#3dhop')[0];
+  var viewer = jQuery('#3dhop')[0];
   if (viewer.msRequestFullscreen) viewer.msRequestFullscreen();
   else if (viewer.mozRequestFullScreen) viewer.mozRequestFullScreen();
   else if (viewer.webkitRequestFullscreen) viewer.webkitRequestFullscreen();
@@ -452,12 +483,15 @@ function enterFullscreen() {
 }
 
 function exitFullscreen() {
-  $('#full_on').css("visibility", "hidden");
-  $('#full').css("visibility", "visible");
+  jQuery('#full_on').css("visibility", "hidden");
+  jQuery('#full').css("visibility", "visible");
 
   if (isIOS()) return; //IOS DEVICES CHECK
 
-  resizeCanvas(presenter._nativeWidth,presenter._nativeHeight)
+  jQuery('#draw-canvas').attr('width', presenter._nativeWidth);
+  jQuery('#draw-canvas').attr('height',presenter._nativeHeight);
+  jQuery('#3dhop').css('width', presenter._nativeWidth);
+  jQuery('#3dhop').css('height', presenter._nativeHeight);
   presenter._resizable = presenter._nativeResizable;
 
   if (document.msExitFullscreen) document.msExitFullscreen();
@@ -467,87 +501,86 @@ function exitFullscreen() {
   presenter.ui.postDrawEvent(); 
 }
 
+function showPanel(id) {
+    jQuery('#cover').css("display", "table");
+    jQuery('.panel').css("display", "none");
+    jQuery('#'+id).css("display", "table");
+}
+
 /*DEPRECATED*/
 function measurementSwitch() {
   var on = presenter.isMeasurementToolEnabled();
 
   if(on){
-    $('#measure').css("visibility", "hidden");
-    $('#measure_on').css("visibility", "visible");
-    $('#measurebox').css("visibility","visible");
-    $('#draw-canvas').css("cursor","crosshair");
+    jQuery('#measure').css("visibility", "hidden");
+    jQuery('#measure_on').css("visibility", "visible");
+    jQuery('#measurebox').css("visibility","visible");
+    jQuery('#draw-canvas').css("cursor","crosshair");
   }
   else{
     if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
     else if (document.selection && document.selection.createRange()!='') document.selection.empty();
-    $('#measure_on').css("visibility", "hidden");
-    $('#measure').css("visibility", "visible");
-    $('#measurebox').css("visibility","hidden");
-    $('#measure-output').html("0.0");
-    if (!presenter.isAnyMeasurementEnabled()) $('#draw-canvas').css("cursor","default");
+    jQuery('#measure_on').css("visibility", "hidden");
+    jQuery('#measure').css("visibility", "visible");
+    jQuery('#measurebox').css("visibility","hidden");
+    jQuery('#measure-output').html("0.0");
+    if (!presenter.isAnyMeasurementEnabled()) jQuery('#draw-canvas').css("cursor","default");
   }
 }
 
 // +++ INTERFACE POSITIONING FUNCTIONS +++ //
 
 function moveToolbar(l,t) {
-	$('#toolbar').css('left', l);
-	$('#toolbar').css('top', t);
+	jQuery('#toolbar').css('left', l);
+	jQuery('#toolbar').css('top', t);
 	anchorPanels();
 }
 
 function movePickpointbox(l,t) {
-	$('#pickpoint-box').css('left', l);
-	$('#pickpoint-box').css('top', t);
+	jQuery('#pickpoint-box').css('left', l);
+	jQuery('#pickpoint-box').css('top', t);
 }
 
 function moveMeasurementbox(l,t) {
-	$('#measure-box').css('left', l);
-	$('#measure-box').css('top', t);
+	jQuery('#measure-box').css('left', l);
+	jQuery('#measure-box').css('top', t);
 }
 
 function moveSectionsbox(l,t) {
-	$('#sections-box').css('left', l);
-	$('#sections-box').css('top', t);
+	jQuery('#sections-box').css('left', l);
+	jQuery('#sections-box').css('top', t);
 }
 
 /*DEPRECATED*/
 function moveMeasurebox(r,t) {
-  $('#measurebox').css('right', r);
-  $('#measurebox').css('top', t);
+  jQuery('#measurebox').css('right', r);
+  jQuery('#measurebox').css('top', t);
 }
 
 function resizeCanvas(w,h) {
-  $('#draw-canvas').attr('width', w);
-  $('#draw-canvas').attr('height',h);
-  $('#3dhop').css('width', w);
-  $('#3dhop').css('height', h);
+  jQuery('#draw-canvas').attr('width', w);
+  jQuery('#draw-canvas').attr('height',h);
+  jQuery('#3dhop').css('width', w);
+  jQuery('#3dhop').css('height', h);
 
-  if (!presenter) return;
-
-  var width, height;
-  width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-  (isIOS()) ? (height = document.documentElement.clientHeight) : (height = window.innerHeight); //IOS DEVICES CHECK
-
-  if (width != w || height != h) presenter._resizable = false;
-  else presenter._resizable = true;
+  presenter._resizable = false;
 }
 
 function anchorPanels() {
-	if ($('#pickpoint-box')[0] && $('#pick')[0]) 
+	if (jQuery('#pickpoint-box')[0] && jQuery('#pick')[0]) 
 	{
-		$('#pickpoint-box').css('left', ($('#pick').position().left + $('#pick').width() + $('#toolbar').position().left + 5));
-		$('#pickpoint-box').css('top', ($('#pick').position().top + $('#toolbar').position().top));
+		jQuery('#pickpoint-box').css('left', (jQuery('#pick').position().left + jQuery('#pick').width() + jQuery('#toolbar').position().left + 5));
+		jQuery('#pickpoint-box').css('top', (jQuery('#pick').position().top + jQuery('#toolbar').position().top));
 	}
-	if ($('#measure-box')[0] && $('#measure')[0])
+	if (jQuery('#measure-box')[0] && jQuery('#measure')[0])
 	{
-		$('#measure-box').css('left', ($('#measure').position().left + $('#measure').width() + $('#toolbar').position().left + 5));
-		$('#measure-box').css('top', ($('#measure').position().top + $('#toolbar').position().top));
+		jQuery('#measure-box').css('left', (jQuery('#measure').position().left + jQuery('#measure').width() + jQuery('#toolbar').position().left + 5));
+		jQuery('#measure-box').css('top', (jQuery('#measure').position().top + jQuery('#toolbar').position().top));
 	}
-	if ($('#sections-box')[0] && $('#sections')[0]) 
+	if (jQuery('#sections-box')[0] && jQuery('#sections')[0]) 
 	{
-		$('#sections-box').css('left', ($('#sections').position().left + $('#sections').width() + $('#toolbar').position().left + 5));
-		$('#sections-box').css('top', ($('#sections').position().top + $('#toolbar').position().top));
+		jQuery('#sections-box').css('left', (jQuery('#sections').position().left + jQuery('#sections').width() + jQuery('#toolbar').position().left + 5));
+		jQuery('#sections-box').css('top', (jQuery('#sections').position().top + jQuery('#toolbar').position().top));
 	}
 }
 

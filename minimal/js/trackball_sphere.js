@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2020, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -95,7 +95,7 @@ SphereTrackball.prototype = {
 	},
 
 	_transformOnSphere : function(m, x, y) {
-		var z = this._projectOnSphere(x, y);
+		var z = this._projectOnSphere(x, y); //get z value
 		return this._transform(m, x, y, z);
 	},
 
@@ -201,17 +201,15 @@ SphereTrackball.prototype = {
 	},
 
 	rotate : function(m) {
-		if ((this._pts[0][0] == this._pts[1][0]) && (this._pts[0][1] == this._pts[1][1])) return;
+		if ((this._pts[0][0] == this._pts[1][0]) && (this._pts[0][1] == this._pts[1][1])) return; //if Xold == Xnew && Yold ==Ynew return
 
 		var mInv = SglMat4.inverse(m);
 
-		var v0 = this._transformOnSphere(mInv, this._pts[0][0], this._pts[0][1]);
-		var v1 = this._transformOnSphere(mInv, this._pts[1][0], this._pts[1][1]);
-		var v1 = this._transformOnSphere(mInv, this._pts[1][0], this._pts[1][1]);
-		var v1 = this._transformOnSphere(mInv, this._pts[1][0], this._pts[1][1]);
+		var v0 = this._transformOnSphere(mInv, this._pts[0][0], this._pts[0][1]); //project on sphere (Xold, Yold)
+		var v1 = this._transformOnSphere(mInv, this._pts[1][0], this._pts[1][1]); //project on sphere (Xnew, Ynew)
 
-		var axis   = SglVec3.cross(v0, v1);
-		var angle  = SglVec3.length(axis);
+		var axis   = SglVec3.cross(v0, v1); //axis of rotation
+		var angle  = SglVec3.length(axis); //angle of rotation
 		var rotMat = SglMat4.rotationAngleAxis(angle, axis);
 
 		this._sphereMatrix = SglMat4.mul(rotMat, this._sphereMatrix);

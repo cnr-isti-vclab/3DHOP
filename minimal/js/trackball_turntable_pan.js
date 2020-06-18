@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2020, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -350,7 +350,9 @@ TurntablePanTrackball.prototype = {
 					if(this._panX == this._targetPanX)
 						if(this._panY == this._targetPanY)
 							if(this._panZ == this._targetPanZ){
-								this._isAnimating = false; 
+								this._isAnimating = false;
+								if(typeof onTrackballArrived != "undefined")
+									onTrackballArrived(this.getState());
 								if(this._isAutoWalking) { this._pathPosNum++; this._isAutoWalking = false; this.animateToState(); }
 							}
 

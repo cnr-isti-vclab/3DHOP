@@ -1,0 +1,131 @@
+<!DOCTYPE>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta content="charset=UTF-8"/>
+<title>3DHOP - 3D Heritage Online Presenter</title>
+<!--STYLESHEET-->
+<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>
+<!--SPIDERGL-->
+<script type="text/javascript" src="js/spidergl.js"></script>
+<!--JQUERY-->
+<script type="text/javascript" src="js/jquery.js"></script>
+<!--PRESENTER-->
+<script type="text/javascript" src="js/presenter.js"></script>
+<!--3D MODELS LOADING AND RENDERING-->
+<script type="text/javascript" src="js/nexus.js"></script>
+<script type="text/javascript" src="js/ply.js"></script>
+<!--TRACKBALLS-->
+<script type="text/javascript" src="js/trackball_sphere.js"></script>
+<script type="text/javascript" src="js/trackball_turntable.js"></script>
+<script type="text/javascript" src="js/trackball_turntable_pan.js"></script>
+<script type="text/javascript" src="js/trackball_pantilt.js"></script>
+<!--UTILITY-->
+<script type="text/javascript" src="js/init.js"></script>
+</head>
+<body>
+<div id="3dhop" class="tdhop" onmousedown="if (event.preventDefault) event.preventDefault()"><div id="tdhlg"></div>
+ <div id="toolbar">
+  <img id="home"     title="Home"                  src="skins/dark/home.png"            /><br/>
+  <img id="zoomin"   title="Zoom In"               src="skins/dark/zoomin.png"          /><br/>
+  <img id="zoomout"  title="Zoom Out"              src="skins/dark/zoomout.png"         /><br/>
+  <img id="light_on" title="Disable Light Control" src="skins/dark/lightcontrol_on.png" style="position:absolute; visibility:hidden;"/>
+  <img id="light"    title="Enable Light Control"  src="skins/dark/lightcontrol.png"    /><br/>
+  <img id="full_on"  title="Exit Full Screen"      src="skins/dark/full_on.png"         style="position:absolute; visibility:hidden;"/>
+  <img id="full"     title="Full Screen"           src="skins/dark/full.png"            />
+ </div>
+ <canvas id="draw-canvas" style="background-image: url(skins/backgrounds/light.jpg)"/>
+</div>
+<div style="width:800px;">
+ <center>
+	<fieldset>
+	  <legend>Compose The Scene</legend>
+	  <input type="checkbox" checked="checked" style="cursor:hand;" onclick="presenter.toggleInstanceVisibilityByName('Base', true);"> Base </input>
+	  <input type="checkbox" checked="checked" style="cursor:hand;margin-left:40px;" onclick="presenter.toggleInstanceVisibilityByName('Cage', true);"> Cage </input>
+	  <input type="radio" name="model" checked="checked" style="cursor:hand;margin-left:40px;" onclick="presenter.setInstanceVisibility('Group', false, false); presenter.setInstanceVisibilityByName('GargoSingle', true, true);"> Gargoyle Fixed Resolution </input>
+	  <input type="radio" name="model" style="cursor:hand;margin-left:40px;" onclick="presenter.setInstanceVisibility('Group', false, false); presenter.setInstanceVisibilityByName('GargoMulti', true, true);"> Gargoyle Multi Resolution </input>
+	  <input type="radio" name="model" style="cursor:hand;margin-left:40px;" onclick="presenter.setInstanceVisibility('Group', false, false); presenter.setInstanceVisibilityByName('Lady', true, true);"> Statue </input>
+	</fieldset>
+ </center>
+</div>
+</body>
+
+<script type="text/javascript">
+var presenter = null;
+
+function setup3dhop() { 
+	presenter = new Presenter("draw-canvas");
+
+	presenter.setScene({
+		meshes: {
+			"Cube"           : { url: "models/cube.ply"    },
+			"Cage"           : { url: "models/cage.ply"    },
+			"Laurana"        : { url: "models/laurana.ply" },
+			"GargoyleSingle" : { url: "models/gargo.ply"   },
+			"GargoyleMulti"  : { url: "models/gargo.nxz"    }
+		},
+		modelInstances : {
+			"Base" : {
+				mesh : "Cube",
+				transform : { matrix: SglMat4.scaling([ 4.0, 0.2, 4.0]) },
+				useSolidColor : true,
+				color : [0.5, 0.7, 0.7]
+			},
+			"Cage" : {
+				mesh : "Cage",
+				transform : { matrix: SglMat4.mul(SglMat4.translation([0.0, 7.0, 0.0]), SglMat4.scaling([ 0.9, 1.0, 0.9])) },
+				useTransparency : true,
+				alpha : 0.5
+			},
+			"Lady" : {
+				mesh : "Laurana",
+				transform : { matrix: SglMat4.mul(SglMat4.translation([0.0, 75.0, 0.0]), SglMat4.scaling([ 0.3, 0.3, 0.3])) },
+				tags: ["Group"],
+				visible: false
+			},
+			"GargoSingle" : {
+				mesh : "GargoyleSingle",
+				transform : { matrix: SglMat4.translation([0.0, 117.0, 0.0]) },
+				tags: ["Group"]
+			},
+			"GargoMulti" : {
+				mesh : "GargoyleMulti",
+				transform : { matrix: SglMat4.translation([0.0, 5.0, 0.0]) },
+				tags: ["Group"],
+				visible: false
+			}
+		},
+		trackball: {
+			type : TurnTableTrackball,
+			trackOptions : {
+				startDistance : 2.0,
+				minMaxDist    : [1.25, 4.0],
+				minMaxTheta   : [-30.0, 80.0]
+			}
+		},
+		space : {
+			centerMode : "explicit",
+			radiusMode : "specific",
+			whichInstanceRadius  : "Base",
+			explicitCenter   : [0.0, 70.0, 0.0]
+		}
+	});
+}
+
+function actionsToolbar(action) {
+	if(action=='home') presenter.resetTrackball(); 
+	else if(action=='zoomin') presenter.zoomIn();
+	else if(action=='zoomout') presenter.zoomOut(); 
+	else if(action=='light' || action=='light_on') { presenter.enableLightTrackball(!presenter.isLightTrackballEnabled()); lightSwitch(); } 
+	else if(action=='full'  || action=='full_on') fullscreenSwitch(); 
+}
+
+$(document).ready(function(){
+	init3dhop();
+
+	setup3dhop();
+
+	resizeCanvas(800, 600);
+});
+</script>
+
+</html>

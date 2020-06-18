@@ -1,7 +1,7 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
-All rights reserved.    
+Copyright (c) 2014-2020, Visual Computing Lab, ISTI - CNR
+All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

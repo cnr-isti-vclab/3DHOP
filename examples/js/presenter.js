@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2020, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.2";
+const HOP_VERSION             = "4.3";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -64,12 +64,12 @@ _parseScene : function (options) {
 },
 
 _parseBackground : function (options) {
-	options = options || { };
 	var r = sglGetDefaultObject({
 		image         : null,
 		isEnvironment : false,
 		color         : [ 0.0, 0.0, 0.0, 0.0 ]
 	}, options);
+	if (r.image) { this._objectsToProcess++; this._objectsToLoad++; }
 	return r;
 },
 
@@ -84,9 +84,11 @@ _parseMeshes : function (options) {
 _parseMesh : function (options) {
 	var r = sglGetDefaultObject({
 		url       : null,
+		mType     : null,
 		transform : null
 	}, options);
 	r.transform = this._parseTransform(r.transform);
+	if (r.url) { this._objectsToProcess++; this._objectsToLoad++; }
 	return r;
 },
 
@@ -99,7 +101,11 @@ _parseTexturedQuads : function (options) {
 },
 
 _parseTexturedQuad : function (options) {
-	return options;
+	var r = sglGetDefaultObject({
+		url       : null
+	}, options);
+	if (r.url) { this._objectsToProcess++; this._objectsToLoad++; }
+	return r;
 },
 
 _parseModelInstances : function (options) {
@@ -127,15 +133,16 @@ _parseModelInstance : function (options) {
 		visible         : true,
 		tags            : [ ],
 		clippable       : true,
+		measurable      : true,
 	}, options);
-	r.transform = this._parseTransform(r.transform);
-	r.ID = this._instancesProgressiveID;
 	if (r.color[3]) //3DHOP 2.0 backward compatibility
 	{
 		r.alpha = r.color[3];
 		r.color = [r.color[0], r.color[1], r.color[2]]
 	}
-	this._instancesProgressiveID += 1;
+	r.transform = this._parseTransform(r.transform);
+	r.ID = this._instancesProgressiveID;
+	this._instancesProgressiveID++;
 	return r;
 },
 
@@ -154,6 +161,7 @@ _parseSpot : function (options) {
 		color           : [ 0.0, 0.25, 1.0 ],
 		useSolidColor   : true,
 		alpha           : 0.5,
+		alphaHigh       : 0.8,
 		useTransparency : true,
 		useStencil      : false,
 		cursor          : "pointer",
@@ -162,14 +170,14 @@ _parseSpot : function (options) {
 		visible         : true,
 		tags            : [ ]
 	}, options);
-	r.transform = this._parseTransform(r.transform);
-	r.ID = this._spotsProgressiveID;
 	if (r.color[3]) //3DHOP 2.0 backward compatibility
 	{
 		r.alpha = r.color[3];
 		r.color = [r.color[0], r.color[1], r.color[2]]
 	}
-	this._spotsProgressiveID += 1;
+	r.transform = this._parseTransform(r.transform);
+	r.ID = this._spotsProgressiveID;
+	this._spotsProgressiveID++;
 	return r;
 },
 
@@ -183,7 +191,6 @@ _parseTrackball : function (options) {
 },
 
 _parseSpace : function (options) {
-	options = options || { };
 	var r = sglGetDefaultObject({
 		centerMode       : "first",
 		radiusMode       : "first",
@@ -200,13 +207,11 @@ _parseSpace : function (options) {
 	r.transform = this._parseTransform(r.transform);
 	if(r.cameraFOV < 2.0)  r.cameraFOV = 2.0;
 	if(r.cameraFOV > 88.0) r.cameraFOV = 88.0;
-	if((r.cameraType != "perspective") && (r.cameraType != "orthographic"))
-		r.cameraType = "perspective";
+	if((r.cameraType != "perspective") && (r.cameraType != "orthographic")) r.cameraType = "perspective";
 	return r;
 },
 
 _parseConfig : function (options) {
-	options = options || { };
 	var r = sglGetDefaultObject({
 		pickedpointColor    : [1.0, 0.0, 1.0],
 		measurementColor    : [0.5, 1.0, 0.5],
@@ -214,8 +219,10 @@ _parseConfig : function (options) {
 		showClippingBorder  : false,
 		clippingBorderSize  : 0.5,
 		clippingBorderColor : [0.0, 1.0, 1.0],
-		pointSize           : 1.0,
+		pointSize           : 3.0,
 		pointSizeMinMax     : [1.0, 5.0],
+		autoSaveScreenshot  : true,
+		screenshotBaseName  : "screenshot",
 	}, options);
 	return r;
 },
@@ -260,10 +267,10 @@ _parseTransform : function (options) {
 //----------------------------------------------------------------------------------------
 //SHADERS RELATED FUNCTIONS
 //----------------------------------------------------------------------------------------
-// standard program for NXS rendering, points and faces
-_createStandardPointNXSProgram : function () {
+// standard program for points rendering
+_createStandardPointsProgram : function () {
 	var gl = this.ui.gl;
-	var nxsVertexShader = new SglVertexShader(gl, "\
+	var pointsVertexShader = new SglVertexShader(gl, "\
 		precision highp float;													\n\
 																				\n\
 		uniform   mat4 uWorldViewProjectionMatrix;								\n\
@@ -294,9 +301,9 @@ _createStandardPointNXSProgram : function () {
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD POINT Vertex Shader Log:\n" + nxsVertexShader.log);
+		console.log("STD POINTS Vertex Shader Log:\n" + pointsVertexShader.log);
 
-	var nxsFragmentShader = new SglFragmentShader(gl, "\
+	var pointsFragmentShader = new SglFragmentShader(gl, "\
 		#extension GL_EXT_frag_depth : enable									\n\
 		precision highp float;													\n\
 																				\n\
@@ -328,10 +335,9 @@ _createStandardPointNXSProgram : function () {
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
 			}																	\n\
 																				\n\
-			float a = pow(2.0*(gl_PointCoord.x - 0.5), 2.0);					\n\
-			float b = pow(2.0*(gl_PointCoord.y - 0.5), 2.0);					\n\
-			float c = 1.0 - (a + b);											\n\
-			if(c < 0.0) { discard; }											\n\
+			vec2 cxy = 2.0 * gl_PointCoord - 1.0;								\n\
+			float r = dot(cxy, cxy);											\n\
+			if (r > 1.0) { discard; }											\n\
 																				\n\
 			vec3  renderColor = vec3(1.0, 1.0, 1.0);							\n\
 			vec3  diffuse = vColor.rgb;											\n\
@@ -366,17 +372,17 @@ _createStandardPointNXSProgram : function () {
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + (uClipAxis[2]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
 			}																	\n\
 																				\n\
-			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
-			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(1.0-pow(c, 2.0));		\n\
+			gl_FragColor = vec4(renderColor, uAlpha);							\n\
+			gl_FragDepthEXT = gl_FragCoord.z + 0.0001*(pow(r, 2.0));			\n\
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD POINT Fragment Shader Log:\n" + nxsFragmentShader.log);
+		console.log("STD POINTS	Fragment Shader Log:\n" + pointsFragmentShader.log);
 
 	var program = new SglProgram(gl, {
 		shaders    : [
-			nxsVertexShader,
-			nxsFragmentShader
+			pointsVertexShader,
+			pointsFragmentShader
 		],
 		attributes : {
 			"aPosition" : 0,
@@ -404,14 +410,15 @@ _createStandardPointNXSProgram : function () {
 		}
 	});
 	if(this._isDebugging)
-		console.log("STD POINT Program Log:\n" + program.log);
+		console.log("STD POINTS Program Log:\n" + program.log);
 
 	return program;
 },
 
-_createStandardFaceNXSProgram : function () {
+// standard program for faces rendering
+_createStandardFacesProgram : function () {
 	var gl = this.ui.gl;
-	var nxsVertexShader = new SglVertexShader(gl, "\
+	var facesVertexShader = new SglVertexShader(gl, "\
 		precision highp float;													\n\
 																				\n\
 		uniform   mat4 uWorldViewProjectionMatrix;								\n\
@@ -442,9 +449,9 @@ _createStandardFaceNXSProgram : function () {
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD FACE Vertex Shader Log:\n" + nxsVertexShader.log);
+		console.log("STD FACES Vertex Shader Log:\n" + facesVertexShader.log);
 
-	var nxsFragmentShader = new SglFragmentShader(gl, "\
+	var facesFragmentShader = new SglFragmentShader(gl, "\
 		precision highp float;													\n\
 																				\n\
 		uniform   vec3 uViewSpaceLightDirection;								\n\
@@ -506,11 +513,12 @@ _createStandardFaceNXSProgram : function () {
 			}																	\n\
 																				\n\
 			renderColor = (diffuse * lambert) + specular;						\n\
-			if(!gl_FrontFacing)													\n\
+			if(gl_FrontFacing==false)											\n\
 			{																	\n\
-				if(uBackFaceColor[3]==0.0) renderColor = renderColor * uBackFaceColor.rgb;	\n\
+				if (uBackFaceColor[3]==0.0) renderColor = renderColor * uBackFaceColor.rgb;	\n\
 				else if(uBackFaceColor[3]==1.0) renderColor = uBackFaceColor.rgb;			\n\
 				else if(uBackFaceColor[3]==2.0) discard;									\n\
+				else if(uBackFaceColor[3]==3.0) renderColor = (uBackFaceColor.rgb * lambert)+specular;\n\
 			}																	\n\
 																				\n\
 			if((length(uClipPlane.xyz) > 0.0)&&(uClipColorSize>0.0))			\n\
@@ -522,16 +530,16 @@ _createStandardFaceNXSProgram : function () {
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2] + (uClipAxis[2]*uClipColorSize)) > 0.0) renderColor = uClipColor;	\n\
 			}																	\n\
 																				\n\
-			gl_FragColor  = vec4(renderColor, uAlpha);							\n\
+			gl_FragColor = vec4(renderColor, uAlpha);							\n\
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("STD FACE Fragment Shader Log:\n" + nxsFragmentShader.log);
+		console.log("STD FACES Fragment Shader Log:\n" + facesFragmentShader.log);
 
 	var program = new SglProgram(gl, {
 		shaders    : [
-			nxsVertexShader,
-			nxsFragmentShader
+			facesVertexShader,
+			facesFragmentShader
 		],
 		attributes : {
 			"aPosition"     : 0,
@@ -565,10 +573,10 @@ _createStandardFaceNXSProgram : function () {
 	return program;
 },
 
-// Depth to color nexus rendering, point and faces
-_createXYZNXSProgram : function () {
+// utils program for XYZ picking and color coded rendering
+_createUtilsProgram : function () {
 	var gl = this.ui.gl;
-	var nxsVertexShader = new SglVertexShader(gl, "\
+	var utilsVertexShader = new SglVertexShader(gl, "\
 		precision highp float;                                                \n\
 																			  \n\
 		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
@@ -577,7 +585,7 @@ _createXYZNXSProgram : function () {
 																			  \n\
 		attribute vec3 aPosition;                                             \n\
 		attribute vec3 aNormal;                                               \n\
-		attribute vec3 aColor;                                                \n\
+		attribute vec4 aColor;                                                \n\
 		attribute float aPointSize;                                           \n\
 																			  \n\
 		varying   vec4 vModelPos;                                             \n\
@@ -590,15 +598,17 @@ _createXYZNXSProgram : function () {
 		}                                                                     \n\
 	");
 	if(this._isDebugging)
-		console.log("XYZ Vertex Shader Log:\n" + nxsVertexShader.log);
+		console.log("UTILS Vertex Shader Log:\n" + utilsVertexShader.log);
 
-	var nxsFragmentShader = new SglFragmentShader(gl, "\
+	var utilsFragmentShader = new SglFragmentShader(gl, "\
 		precision highp float;													\n\
 																				\n\
 		uniform   vec3 uClipPoint;												\n\
 		uniform   vec3 uClipAxis;												\n\
 		uniform   vec4 uClipPlane;												\n\
 		uniform   vec4 uBackFaceColor;											\n\
+		uniform   vec4 uColorID;												\n\
+		uniform   float uMode;													\n\
 																				\n\
 		varying   vec4 vModelPos;												\n\
 																				\n\
@@ -621,20 +631,24 @@ _createXYZNXSProgram : function () {
 				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
 				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
 			}																	\n\
-			if((!gl_FrontFacing) &&	(uBackFaceColor[3]==2.0)) discard;			\n\
+			if((gl_FrontFacing==false) && (uBackFaceColor[3]==2.0)) discard;	\n\
 																				\n\
-			vec4 myColor;														\n\
-			myColor = pack_depth(gl_FragCoord.z);								\n\
-			gl_FragColor  = myColor;											\n\
+			vec4 outColor;														\n\
+			if(uMode == 1.0)	//xyx picking									\n\
+				outColor = pack_depth(gl_FragCoord.z);							\n\
+			else if(uMode == 2.0)	//color coded								\n\
+				outColor = uColorID;											\n\
+																				\n\
+			gl_FragColor = outColor;											\n\
 		}																		\n\
 	");
 	if(this._isDebugging)
-		console.log("XYZ Fragment Shader Log:\n" + nxsFragmentShader.log);
+		console.log("UTILS Fragment Shader Log:\n" + utilsFragmentShader.log);
 
-	var program = new SglProgram(gl, {
+	var utilsProgram = new SglProgram(gl, {
 		shaders    : [
-			nxsVertexShader,
-			nxsFragmentShader
+			utilsVertexShader,
+			utilsFragmentShader
 		],
 		attributes : {
 			"aPosition" : 0,
@@ -644,105 +658,26 @@ _createXYZNXSProgram : function () {
 		},
 		uniforms   : {
 			"uWorldViewProjectionMatrix" : SglMat4.identity(),
-			"uModelMatrix" 				 : SglMat4.identity(),
+			"uModelMatrix"               : SglMat4.identity(),
 			"uClipPoint"                 : [0.0, 0.0, 0.0],
 			"uClipAxis"                  : [0.0, 0.0, 0.0],
 			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uBackFaceColor"             : [0.4, 0.3, 0.3, 0.0],
-			"uPointSize"                 : 1.0
-		}
-	});
-	if(this._isDebugging)
-		console.log("XYZ Program Log:\n" + program.log);
-
-	return program;
-},
-
-// color coded ID program for NXS rendering, points and faces
-_createColorCodedIDNXSProgram : function () {
-	var gl = this.ui.gl;
-	var nxsVertexShader = new SglVertexShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
-		uniform   mat4 uModelMatrix;                                          \n\
-		uniform   float uPointSize;                                           \n\
-																			  \n\
-		attribute vec3 aPosition;                                             \n\
-		attribute vec3 aNormal;                                               \n\
-		attribute vec3 aColor;                                                \n\
-		attribute float aPointSize;                                           \n\
-																			  \n\
-		varying   vec4 vModelPos;                                             \n\
-																			  \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			vModelPos = uModelMatrix * vec4(aPosition, 1.0);                  \n\
-			gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-			gl_PointSize = uPointSize * aPointSize;							  \n\
-		}                                                                     \n\
-	");
-	if(this._isDebugging)
-		console.log("COLORCODED ID Vertex Shader Log:\n" + nxsVertexShader.log);
-
-	var nxsFragmentShader = new SglFragmentShader(gl, "\
-		precision highp float;                                                \n\
-																			  \n\
-		uniform   vec4 uColorID;                                              \n\
-		uniform   vec3 uClipPoint;                                            \n\
-		uniform   vec3 uClipAxis;                                             \n\
-		uniform   vec4 uClipPlane;                                            \n\
-                                                                              \n\
-		varying   vec4 vModelPos;                                             \n\
-                                                                              \n\
-		void main(void)                                                       \n\
-		{                                                                     \n\
-			if(length(uClipPlane.xyz) > 0.0)                                  \n\
-				if( dot(vModelPos, uClipPlane) > 0.0) discard;                \n\
-			if(length(uClipAxis) > 0.0)                                       \n\
-			{                                                                 \n\
-				if( uClipAxis[0] * (vModelPos[0] - uClipPoint[0]) > 0.0) discard;	\n\
-				if( uClipAxis[1] * (vModelPos[1] - uClipPoint[1]) > 0.0) discard;	\n\
-				if( uClipAxis[2] * (vModelPos[2] - uClipPoint[2]) > 0.0) discard;	\n\
-			}                                                                 \n\
-                                                                              \n\
-			gl_FragColor  = uColorID;                                         \n\
-		}                                                                     \n\
-	");
-	if(this._isDebugging)
-		console.log("COLORCODED ID Fragment Shader Log:\n" + nxsFragmentShader.log);
-
-	var program = new SglProgram(gl, {
-		shaders    : [
-			nxsVertexShader,
-			nxsFragmentShader
-		],
-		attributes : {
-			"aPosition" : 0,
-			"aNormal"   : 1,
-			"aColor"    : 2,
-			"aPointSize": 4
-		},
-		uniforms   : {
-			"uWorldViewProjectionMatrix" : SglMat4.identity(),
-			"uModelMatrix" 				 : SglMat4.identity(),
-			"uClipPoint"                 : [0.0, 0.0, 0.0],
-			"uClipAxis"                  : [0.0, 0.0, 0.0],
-			"uClipPlane"                 : [0.0, 0.0, 0.0, 0.0],
 			"uColorID"                   : [1.0, 0.5, 0.0, 1.0],
-			"uPointSize"                 : 1.0
+			"uPointSize"                 : 1.0,
+			"uMode"                      : 1.0
 		}
 	});
 	if(this._isDebugging)
-		console.log("COLORCODED ID Program Log:\n" + program.log);
+		console.log("UTILS Program Log:\n" + utilsProgram.log);
 
-	return program;
+	return utilsProgram;
 },
 
-// single-color barely-shaded program for NXS rendering, points and faces
-_createColorShadedNXSProgram : function () {
+// single-color barely-shaded program for spot and planes rendering
+_createColorShadedProgram : function () {
 	var gl = this.ui.gl;
-	var nxsVertexShader = new SglVertexShader(gl, "\
+	var colorShadedVertexShader = new SglVertexShader(gl, "\
 		precision highp float;                                                \n\
 																			  \n\
 		uniform   mat4 uWorldViewProjectionMatrix;                            \n\
@@ -764,9 +699,9 @@ _createColorShadedNXSProgram : function () {
 		}                                                                     \n\
 	");
 	if(this._isDebugging)
-		console.log("COLOR SHADED Vertex Shader Log:\n" + nxsVertexShader.log);
+		console.log("COLOR SHADED Vertex Shader Log:\n" + colorShadedVertexShader.log);
 
-	var nxsFragmentShader = new SglFragmentShader(gl, "\
+	var colorShadedFragmentShader = new SglFragmentShader(gl, "\
 		precision highp float;                                                \n\
 																			  \n\
 		uniform   vec3 uViewSpaceLightDirection;                              \n\
@@ -776,6 +711,7 @@ _createColorShadedNXSProgram : function () {
 																			  \n\
 		void main(void)                                                       \n\
 		{                                                                     \n\
+			if(uColorID[3] == 0.0) discard;                                   \n\
 			vec3  diffuse = vec3(uColorID[0], uColorID[1], uColorID[2]);      \n\
 																			  \n\
 			if(vNormal[0] != 0.0 || vNormal[1] != 0.0 || vNormal[2] != 0.0) { \n\
@@ -785,16 +721,16 @@ _createColorShadedNXSProgram : function () {
 																			  \n\
 				diffuse = (diffuse * 0.5) + (diffuse * lambert * 0.5);        \n\
 			}                                                                 \n\
-			gl_FragColor  = vec4(diffuse, uColorID[3]);                       \n\
+			gl_FragColor = vec4(diffuse, uColorID[3]);                       \n\
 		}                                                                     \n\
 	");
 	if(this._isDebugging)
-		console.log("COLOR SHADED Fragment Shader Log:\n" + nxsFragmentShader.log);
+		console.log("COLOR SHADED Fragment Shader Log:\n" + colorShadedFragmentShader.log);
 
 	var program = new SglProgram(gl, {
 		shaders    : [
-			nxsVertexShader,
-			nxsFragmentShader
+			colorShadedVertexShader,
+			colorShadedFragmentShader
 		],
 		attributes : {
 			"aPosition" : 0,
@@ -815,13 +751,13 @@ _createColorShadedNXSProgram : function () {
 	return program;
 },
 
-//standard technique for PLY rendering, points and faces
-_createStandardPointPLYtechnique : function () {
+// standard technique for PLY points rendering
+_createStandardPointsTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
-		program  : this._createStandardPointNXSProgram(),
+		program  : this._createStandardPointsProgram(),
 		vertexStreams : {
-			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
+			"aNormal"    : [ 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
 			"aPointSize" : 1.0
 		},
@@ -849,13 +785,15 @@ _createStandardPointPLYtechnique : function () {
 	return technique;
 },
 
-_createStandardFacePLYtechnique : function () {
+// standard technique for PLY faces rendering
+_createStandardFacesTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
-		program  : this._createStandardFaceNXSProgram(),
+		program  : this._createStandardFacesProgram(),
 		vertexStreams : {
-			"aNormal"       : [ 0.0, 0.0, 0.0, 0.0 ],
-			"aColor"        : [ 0.8, 0.8, 0.8, 1.0 ]
+			"aNormal"       : [ 0.0, 0.0, 0.0 ],
+			"aColor"        : [ 0.8, 0.8, 0.8, 1.0 ],
+			"aTextureCoord" : [ 0.0, 0.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -881,61 +819,39 @@ _createStandardFacePLYtechnique : function () {
 	return technique;
 },
 
-// depth to color technique for PLY rendering
-_createXYZPLYtechnique : function () {
+// utils technique for PLY picking and color coded rendering
+_createUtilsTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
-		program  : this._createXYZNXSProgram(),
+		program  : this._createUtilsProgram(),
 		vertexStreams : {
-			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
+			"aNormal"    : [ 0.0, 0.0, 0.0 ],
 			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
 			"aPointSize" : 1.0,
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
 			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
-			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
+			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
+			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
+			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] },
 			"uBackFaceColor"             : { semantic : "uBackFaceColor",             value : [0.4, 0.3, 0.3, 0.0] },
-			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
-			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
-			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] }
-		}
-	});
-
-	return technique;
-},
-
-// color coded ID technique for PLY rendering
-_createColorCodedIDPLYtechnique : function () {
-	var gl = this.ui.gl;
-	var technique = new SglTechnique(gl, {
-		program  : this._createColorCodedIDNXSProgram(),
-		vertexStreams : {
-			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
-			"aColor"     : [ 0.8, 0.8, 0.8, 1.0 ],
-			"aPointSize" : 1.0,
-		},
-		globals : {
-			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
-			"uModelMatrix"               : { semantic : "uModelMatrix",               value : SglMat4.identity() },
-			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
+			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.0, 1.0] },
 			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
-			"uClipPoint"                 : { semantic : "uClipPoint",                 value : [ 0.0, 0.0, 0.0 ] },
-			"uClipAxis"                  : { semantic : "uClipAxis",                  value : [ 0.0, 0.0, 0.0 ] },
-			"uClipPlane"                 : { semantic : "uClipPlane",                 value : [ 0.0, 0.0, 0.0, 0.0 ] }
+			"uMode"                      : { semantic : "uMode",                      value : 1.0 }
 		}
 	});
 
 	return technique;
 },
 
-// single-color barely-shaded technique for PLY rendering
-_createColorShadedPLYtechnique : function () {
+// single-color barely-shaded technique for PLY spot and planes rendering
+_createColorShadedTechnique : function () {
 	var gl = this.ui.gl;
 	var technique = new SglTechnique(gl, {
-		program  : this._createColorShadedNXSProgram(),
+		program  : this._createColorShadedProgram(),
 		vertexStreams : {
-			"aNormal"    : [ 0.0, 0.0, 0.0, 0.0 ],
+			"aNormal"    : [ 0.0, 0.0, 0.0 ],
 			"aPointSize" : 1.0
 		},
 		globals : {
@@ -963,7 +879,7 @@ _createSimpleLinetechnique : function () {
 																				  \n\
 			attribute vec3 aPosition;                                             \n\
 			attribute vec3 aNormal;                                               \n\
-			attribute vec3 aColor;                                                \n\
+			attribute vec4 aColor;                                                \n\
 																				  \n\
 			void main(void)                                                       \n\
 			{                                                                     \n\
@@ -983,12 +899,12 @@ _createSimpleLinetechnique : function () {
 																				  \n\
 			void main(void)                                                       \n\
 			{                                                                     \n\
-				gl_FragColor    = uLineColor;                                     \n\
+				gl_FragColor = uLineColor;                                     \n\
 			}                                                                     \n\
 		",
 		vertexStreams : {
-			"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 0.0, 1.0 ]
+			"aNormal" : [ 0.0, 0.0, 0.0 ],
+			"aColor"  : [ 0.8, 0.8, 0.8, 1.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
@@ -1009,6 +925,7 @@ _createMultiLinesPointstechnique : function () {
 			precision highp float;                                                \n\
 																				  \n\
 			uniform   mat4 uWorldViewProjectionMatrix;                            \n\
+			uniform   float uPointSize;  				                          \n\
 																				  \n\
 			attribute vec3 aPosition;                                             \n\
 			attribute vec3 aNormal;                                               \n\
@@ -1021,25 +938,33 @@ _createMultiLinesPointstechnique : function () {
 			{                                                                     \n\
 				vColor      = aColor;                                             \n\
 				gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);  \n\
-				gl_PointSize = 8.0;	                 							  \n\
+				gl_PointSize = uPointSize;				 					 	  \n\
 			}                                                                     \n\
 		",
 		fragmentShader : "\
-			precision highp float;                                                \n\
+		#extension GL_EXT_frag_depth : enable									  \n\
+		precision highp float;													  \n\
+																				  \n\
+			uniform   vec4 uColorID;											  \n\
+			uniform   float uZOff;												  \n\
 																				  \n\
 			varying   vec4 vColor;                                                \n\
 																				  \n\
 			void main(void)                                                       \n\
 			{                                                                     \n\
-				gl_FragColor = vColor;                                            \n\
+				gl_FragColor = uColorID;                                          \n\
+				gl_FragDepthEXT = gl_FragCoord.z - uZOff;						  \n\
 			}                                                                     \n\
 		",
 		vertexStreams : {
-			"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ],
-			"aColor"  : [ 1.0, 0.0, 1.0, 1.0 ]
+			"aNormal" : [ 0.0, 0.0, 0.0 ],
+			"aColor"  : [ 0.8, 0.8, 0.8, 1.0 ]
 		},
 		globals : {
 			"uWorldViewProjectionMatrix" : { semantic : "uWorldViewProjectionMatrix", value : SglMat4.identity() },
+			"uColorID"                   : { semantic : "uColorID",                   value : [1.0, 0.5, 0.25, 1.0] },
+			"uPointSize"                 : { semantic : "uPointSize",                 value : 1.0 },
+			"uZOff"                      : { semantic : "uZOff",                      value : 0.0 },
 		}
 	});
 
@@ -1068,10 +993,7 @@ _objectLoaded : function () {
 
 _testReady : function () {
 	if (this._objectsToLoad != 0) return;
-	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
-
 	this._sceneReady = this._scenePrepare();
-
 	this.repaint();
 },
 
@@ -1113,8 +1035,6 @@ _pickingRefresh: function(x,y) {
 					if (spots[spt].ID == ID) {
 						this._pickedSpot = spt;
 						if(this._onHover){
-							if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
-							spots[this._pickedSpot].alpha += 0.3;
 							cursor = spots[spt].cursor;
 							if(/*!this._movingLight ||*/ !this._isMeasuring){
 								this._lastCursor = document.getElementById(this.ui.canvas.id).style.cursor;
@@ -1133,7 +1053,6 @@ _pickingRefresh: function(x,y) {
 			else{
 				this._pickedSpot = null;
 				if(this._onHover){
-					if(spots[this._lastPickedSpot]) spots[this._lastPickedSpot].alpha -= 0.3;
 					if(/*!this._movingLight ||*/ !this._isMeasuring) document.getElementById(this.ui.canvas.id).style.cursor = "default";
 					if(this._onLeaveSpot && this._lastPickedSpot!=null) this._onLeaveSpot(this._lastPickedSpot);
 					//if(this._onEnterSpot) this._onEnterSpot(this._pickedSpot);
@@ -1585,15 +1504,17 @@ _drawScene : function () {
 	var height   = this.ui.height;
 	var xform    = this.xform;
 	var renderer = this.renderer;
-	var CurrFaceProgram    = this.faceNXSProgram;
-	var CurrPointProgram   = this.pointNXSProgram;
-	var CurrFaceTechnique  = this.facePLYTechnique;
-	var CurrPointTechnique = this.pointPLYTechnique;
-	var CCProgram          = this.colorShadedNXSProgram;
-	var CCTechnique        = this.colorShadedPLYTechnique;
+	var CurrFacesProgram    = this.facesProgram;
+	var CurrPointsProgram   = this.pointsProgram;
+	var CurrFacesTechnique  = this.faceTechnique;
+	var CurrPointsTechnique = this.pointTechnique;
+	var CCProgram          = this.colorShadedProgram;
+	var CCTechnique        = this.colorShadedTechnique;
 	var lineTechnique      = this.simpleLineTechnique;
+	var entitiesTechnique  = this.multiLinesPointsTechnique;
 	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
+	var entities  = this._scene.entities;
 	var spots     = this._scene.spots;
 	var space     = this._scene.space;
 	var config    = this._scene.config;
@@ -1606,7 +1527,7 @@ _drawScene : function () {
 	gl.clearColor(bkg[0], bkg[1], bkg[2], bkg[3]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	gl.enable(gl.DEPTH_TEST);
-
+	
 	// draw non-transparent geometries
 	for (var inst in instances) {
 		var instance = instances[inst];
@@ -1651,7 +1572,7 @@ _drawScene : function () {
 			"uClipColorSize"             : thisClipBordersize
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
@@ -1659,21 +1580,21 @@ _drawScene : function () {
 
 			var program;
 			if(instance.rendermode=="FILL")
-				program = CurrFaceProgram;
+				program = CurrFacesProgram;
 			else
-				program = CurrPointProgram;
-			program.bind();
+				program = CurrPointsProgram;
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mType === "ply") {
 			var technique;
 			if(instance.rendermode=="FILL")
-				technique = CurrFaceTechnique;
+				technique = CurrFacesTechnique;
 			else
-				technique = CurrPointTechnique;
+				technique = CurrPointsTechnique;
 			renderer.begin();
 				renderer.setTechnique(technique);
 				renderer.setDefaultGlobals();
@@ -1738,7 +1659,7 @@ _drawScene : function () {
 			"uClipColorSize"             : thisClipBordersize
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 
 			var nexus = renderable;
@@ -1746,21 +1667,21 @@ _drawScene : function () {
 
 			var program;
 			if(instance.rendermode=="FILL")
-				program = CurrFaceProgram;
+				program = CurrFacesProgram;
 			else
-				program = CurrPointProgram;
-			program.bind();
+				program = CurrPointsProgram;
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mType === "ply") {
 			var technique;
 			if(instance.rendermode=="FILL")
-				technique = CurrFaceTechnique;
+				technique = CurrFacesTechnique;
 			else
-				technique = CurrPointTechnique;
+				technique = CurrPointsTechnique;
 			renderer.begin();
 				renderer.setTechnique(technique);
 				renderer.setDefaultGlobals();
@@ -1802,12 +1723,7 @@ _drawScene : function () {
 			renderer.renderModel();
 		renderer.end();
 
-		lineUniforms = {
-			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uLineColor"                 : [config.pickedpointColor[0] * 0.4, config.pickedpointColor[1] * 0.5, config.pickedpointColor[2] * 0.6, 0.5],
-			"uPointA"                    : this._pickedPoint,
-			"uPointB"                    : this._pickedPoint
-		};
+		lineUniforms["uLineColor"] = [config.pickedpointColor[0] * 0.4, config.pickedpointColor[1] * 0.5, config.pickedpointColor[2] * 0.6, 0.5];
 
 		gl.depthFunc(gl.GREATER);
 		gl.depthMask(false);
@@ -1857,12 +1773,7 @@ _drawScene : function () {
 			renderer.renderModel();
 		renderer.end();
 
-		lineUniforms = {
-			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uLineColor"                 : [config.measurementColor[0] * 0.4, config.measurementColor[1] * 0.5, config.measurementColor[2] * 0.6, 0.5],
-			"uPointA"                    : this._pointA,
-			"uPointB"                    : (this._measurementStage==2)?this._pointA:this._pointB,
-		};
+		lineUniforms["uLineColor"] = [config.measurementColor[0] * 0.4, config.measurementColor[1] * 0.5, config.measurementColor[2] * 0.6, 0.5];
 
 		gl.depthFunc(gl.GREATER);
 		gl.depthMask(false);
@@ -1886,6 +1797,52 @@ _drawScene : function () {
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
 		gl.depthFunc(gl.LESS);
+		xform.model.pop();
+	}
+
+	// draw entities
+	for (var ent in entities) {
+		var entity = entities[ent];
+		if (!entity.visible) continue;
+		if (!entity.renderable) continue;
+			
+		xform.model.push();
+		xform.model.multiply(space.transform.matrix);
+		xform.model.multiply(entity.transform.matrix);
+		
+		var entityUniforms = {
+			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
+			"uPointSize"                 : config.pointSize,
+			"uColorID"                   : entity.color,
+			"uZOff"                      : entity.zOff,
+		};		
+
+		if(entity.useTransparency)
+		{
+			gl.depthMask(false);
+			gl.enable(gl.BLEND);
+			gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+		}
+		//drawing entity
+		renderer.begin();
+			renderer.setTechnique(entitiesTechnique);
+			if (entity.type == "lines")
+				renderer.setPrimitiveMode("LINE");
+			else if (entity.type == "points")
+				renderer.setPrimitiveMode("POINT");
+			else if (entity.type == "triangles")
+				renderer.setPrimitiveMode("FILL");
+			renderer.setDefaultGlobals();
+			renderer.setGlobals(entityUniforms);
+			renderer.setModel(entity.renderable);
+			renderer.renderModel();
+		renderer.end();
+		
+		if(entity.useTransparency)
+		{
+			gl.depthMask(true);
+			gl.disable(gl.BLEND);
+		}
 		xform.model.pop();
 	}
 
@@ -1913,22 +1870,22 @@ _drawScene : function () {
 			"uViewSpaceNormalMatrix"     : xform.viewSpaceNormalMatrix,
 			"uViewSpaceLightDirection"   : this._lightDirection,
 			"uPointSize"                 : config.pointSize,
-			"uColorID"                   : [spot.color[0], spot.color[1], spot.color[2], spot.alpha]
+			"uColorID"                   : [spot.color[0], spot.color[1], spot.color[2], (spt == this._pickedSpot)?spot.alphaHigh:spot.alpha]
 		}
 
-		if(mesh.isNexus) {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
 
 			var program = CCProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(spot.rendermode);
 				nexus.render();
 			program.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setTechnique(CCTechnique);
 				renderer.setDefaultGlobals();
@@ -1943,14 +1900,12 @@ _drawScene : function () {
 					gl.enable(gl.STENCIL_TEST);
 					gl.stencilFunc(gl.ALWAYS, 0, 255);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
-
 					renderer.renderModel();
 
 					//second pass
 					gl.colorMask(true, true, true, true);
 					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT); // Don't change the stencil buffer...
 					gl.stencilFunc(gl.EQUAL, 1, 0x01); // The stencil buffer contains the shadow values...
-
 					renderer.renderModel();
 
 					gl.disable(gl.STENCIL_TEST);
@@ -1993,7 +1948,7 @@ _drawScene : function () {
 			xform.model.push();
 			xform.model.translate(planepoint);
 			xform.model.multiply(rotm);
-			xform.model.scale([psize, psize, psize ]);
+			xform.model.scale([psize, psize, psize]);
 
 			var QuadUniforms = {
 				"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
@@ -2080,7 +2035,6 @@ _drawScene : function () {
 				"uColorID"                   : [0.0, 0.0, 1.0, 0.25]
 			};
 
-
 			renderer.begin();
 				renderer.setTechnique(CCTechnique);
 				renderer.setDefaultGlobals();
@@ -2098,6 +2052,32 @@ _drawScene : function () {
 		gl.depthMask(true);
 	}
 	Nexus.endFrame(this.ui.gl);
+
+	// saving image, if necessary
+	if(this.isCapturingScreenshot){
+	    this.isCapturingScreenshot = false;
+		this.screenshotData = this.ui._canvas.toDataURL('image/png',1).replace("image/png", "image/octet-stream");
+		if(this._scene.config.autoSaveScreenshot)
+		{
+			var currentdate = new Date();
+			var fName = this._scene.config.screenshotBaseName + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds() + ".png";
+			
+			if(this.ui._canvas.msToBlob) // IE or EDGEhtml
+			{
+				console.error("IE and EDGEhtml cannot save images");
+				var blob = this.ui._canvas.msToBlob();
+				window.navigator.msSaveBlob(blob, fName);
+			}
+			else // every other browser
+			{
+				var a  = document.createElement('a');
+				a.href = this.screenshotData;
+				a.download = fName;
+				a.target="_blank";
+				a.click();
+			}
+		}
+	}
 },
 
 _drawScenePickingXYZ : function () {
@@ -2106,8 +2086,8 @@ _drawScenePickingXYZ : function () {
 	var height   = this.ui.height;
 	var xform    = this.xform;
 	var renderer = this.renderer;
-	var CurrProgram   = this.colorCodedXYZNXSProgram;
-	var CurrTechnique = this.colorCodedXYZPLYTechnique;
+	var CurrProgram   = this.utilsProgram;
+	var CurrTechnique = this.utilsTechnique;
 	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
 	var space = this._scene.space;
@@ -2133,6 +2113,7 @@ _drawScenePickingXYZ : function () {
 		var renderable = mesh.renderable;
 		if (!renderable) continue;
 		if (!instance.visible) continue;
+		if (!instance.measurable) continue;
 
 		// GLstate setup
 		xform.model.push();
@@ -2154,10 +2135,11 @@ _drawScenePickingXYZ : function () {
 			"uClipPoint"                 : this._clipPoint,
 			"uClipAxis"                  : thisClipAxis,
 			"uClipPlane"                 : thisClipPlane,
-			"uPointSize"                 : this._scene.config.pointSize
+			"uPointSize"                 : this._scene.config.pointSize,
+			"uMode"                      : 1.0
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2165,15 +2147,15 @@ _drawScenePickingXYZ : function () {
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2207,7 +2189,7 @@ _drawScenePickingXYZ : function () {
 
 	var ppointc;
 
-	if((rr==0.0) && (gg==0.0) && (bb==00))
+	if((rr==0.0) && (gg==0.0) && (bb==0.0))
 		return(null);
 	else
 		ppointc = xform.unproject([this._pickpoint[0]/width,this._pickpoint[1]/height,depth]);
@@ -2221,8 +2203,8 @@ _drawScenePickingInstances : function () {
 	var height   = this.ui.height;
 	var xform    = this.xform;
 	var renderer = this.renderer;
-	var CurrProgram   = this.colorCodedIDNXSProgram;
-	var CurrTechnique = this.colorCodedIDPLYTechnique;
+	var CurrProgram   = this.utilsProgram;
+	var CurrTechnique = this.utilsTechnique;
 	var meshes    = this._scene.meshes;
 	var instances = this._scene.modelInstances;
 	var space = this._scene.space;
@@ -2270,10 +2252,11 @@ _drawScenePickingInstances : function () {
 			"uClipAxis"                  : thisClipAxis,
 			"uClipPlane"                 : thisClipPlane,
 			"uPointSize"                 : this._scene.config.pointSize,
-			"uColorID"                   : colorID
+			"uColorID"                   : colorID,
+			"uMode"                      : 2.0
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2281,15 +2264,15 @@ _drawScenePickingInstances : function () {
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2324,8 +2307,8 @@ _drawScenePickingSpots : function () {
 	var height   = this.ui.height;
 	var xform    = this.xform;
 	var renderer = this.renderer;
-	var CurrProgram   = this.colorCodedIDNXSProgram;
-	var CurrTechnique = this.colorCodedIDPLYTechnique;
+	var CurrProgram   = this.utilsProgram;
+	var CurrTechnique = this.utilsTechnique;
 	var meshes    = this._scene.meshes;
 	var spots = this._scene.spots;
 	var instances = this._scene.modelInstances;
@@ -2363,10 +2346,11 @@ _drawScenePickingSpots : function () {
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uPointSize"                 : this._scene.config.pointSize,
-			"uColorID"                   : [0.0, 0.0, 0.0, 0.0]
+			"uColorID"                   : [0.0, 0.0, 0.0, 0.0],
+			"uMode"                      : 2.0
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2374,15 +2358,15 @@ _drawScenePickingSpots : function () {
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(instance.rendermode);
 				nexus.render();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2418,10 +2402,11 @@ _drawScenePickingSpots : function () {
 		var uniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
 			"uPointSize"                 : this._scene.config.pointSize,
-			"uColorID"                   : colorID
+			"uColorID"                   : colorID,
+			"uMode"                      : 2.0
 		};
 
-		if(mesh.isNexus) {
+		if(mesh.mType === "nexus") {
 			if (!renderable.isReady) continue;
 			var nexus = renderable;
 			nexus.updateView([0, 0, width, height], xform.projectionMatrix, xform.modelViewMatrix);
@@ -2429,15 +2414,15 @@ _drawScenePickingSpots : function () {
 			this.pickFramebuffer.bind();
 
 			var program = CurrProgram;
-			program.bind();
 			program.setUniforms(uniforms);
+			program.bind();
 				nexus.setPrimitiveMode(spot.rendermode);
 				nexus.render();
 			program.unbind();
 
 			this.pickFramebuffer.unbind();
 		}
-		else { //drawing ply
+		else if(mesh.mType === "ply") {
 			renderer.begin();
 				renderer.setFramebuffer(this.pickFramebuffer);
 				renderer.setTechnique(CurrTechnique);
@@ -2473,78 +2458,121 @@ _drawNull : function () {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 },
 
+// creates mesh models
+_createMeshModels : function () {
+	var that = this;
+	var gl = this.ui.gl;
+
+	for(var keys = Object.keys(this._scene.meshes), i = keys.length-1; i >= 0; i--) {
+		var m = keys[i];
+
+		var mesh = this._scene.meshes[m];
+
+		if (!mesh.url) continue;
+
+		if (this._objectsToProcess == 0) this._testReady();
+		else {
+			this._objectsToProcess--;
+
+			if(mesh.mType == null)
+			{
+				var ext = mesh.url.split('.').pop().split(/\#|\?/)[0].toLowerCase();
+				if((ext === "nxs") || (ext === "nxz")) 
+					mesh.mType = "nexus";
+				else if(ext === "ply")
+					mesh.mType = "ply";
+			}
+
+			if(mesh.mType === "nexus") {
+				var nexus_instance = new Nexus.Renderer(gl);
+				nexus_instance.onLoad = function () { that._onMeshReady(); };
+				nexus_instance.onUpdate = this.ui.postDrawEvent;
+
+				mesh.renderable = nexus_instance;
+				nexus_instance.open(mesh.url);
+			}
+			else if(mesh.mType === "ply") {
+				mesh.renderable = null;
+				sglRequestBinary(mesh.url, {
+					onSuccess : (function(m){ return function (req) { that._onPlyLoaded(req, m, gl); }; })(mesh)
+				});
+			}
+		}
+	}
+},
+
 // creates simple 2-point line model
 _createLineModel : function () {
 	var gl = this.ui.gl;
 	this.simpleLineModel = new SglModel(gl, {
-				vertices : {
-					position : [ 0,0,0,
-								 1,1,1 ],
-					normal : [ 0,0,0,
-							   0,0,0 ],
-					color : {value : [ 1.0, 0.0, 0.0 ]}
-				},
-				primitives : ["lines","points"]
-			});
+		vertices : {
+			position : [ 0,0,0,
+						 1,1,1 ],
+			normal : [ 0,0,0,
+					   0,0,0 ],
+			color : {value : [ 1.0, 0.0, 0.0 ]}
+		},
+		primitives : ["lines","points"]
+	});
 },
 
 // creates simple quad model
 _createQuadModels : function () {
 	var gl = this.ui.gl;
 	this.simpleQuadXModel = new SglModel(gl, {
-				vertices : {
-					position : [ 0.0, 0.5, 0.5,
-								 0.0,-0.5, 0.5,
-								 0.0,-0.5,-0.5,
-								 0.0, 0.5,-0.5,
-								 0.0,-0.5,-0.5,
-								 0.0, 0.5, 0.5],
-					normal : [ 1.0,0.0,0.0,
-							   1.0,0.0,0.0,
-							   1.0,0.0,0.0,
-							   1.0,0.0,0.0,
-							   1.0,0.0,0.0,
-							   1.0,0.0,0.0 ],
-					color : {value : [ 1.0, 0.0, 0.0 ]}
-				},
-				primitives : ["triangles"]
-			});
+		vertices : {
+			position : [ 0.0, 0.5, 0.5,
+						 0.0,-0.5, 0.5,
+						 0.0,-0.5,-0.5,
+						 0.0, 0.5,-0.5,
+						 0.0,-0.5,-0.5,
+						 0.0, 0.5, 0.5],
+			normal : [ 1.0,0.0,0.0,
+					   1.0,0.0,0.0,
+					   1.0,0.0,0.0,
+					   1.0,0.0,0.0,
+					   1.0,0.0,0.0,
+					   1.0,0.0,0.0 ],
+			color : {value : [ 1.0, 0.0, 0.0 ]}
+		},
+		primitives : ["triangles"]
+	});
 	this.simpleQuadYModel = new SglModel(gl, {
-				vertices : {
-					position : [  0.5, 0.0, 0.5,
-								 -0.5, 0.0, 0.5,
-								 -0.5, 0.0,-0.5,
-								  0.5, 0.0,-0.5,
-								 -0.5, 0.0,-0.5,
-								  0.5, 0.0, 0.5],
-					normal : [ 0.0,1.0,0.0,
-							   0.0,1.0,0.0,
-							   0.0,1.0,0.0,
-							   0.0,1.0,0.0,
-							   0.0,1.0,0.0,
-							   0.0,1.0,0.0 ],
-					color : {value : [ 0.0, 1.0, 0.0 ]}
-				},
-				primitives : ["triangles"]
-			});
+		vertices : {
+			position : [  0.5, 0.0, 0.5,
+						 -0.5, 0.0, 0.5,
+						 -0.5, 0.0,-0.5,
+						  0.5, 0.0,-0.5,
+						 -0.5, 0.0,-0.5,
+						  0.5, 0.0, 0.5],
+			normal : [ 0.0,1.0,0.0,
+					   0.0,1.0,0.0,
+					   0.0,1.0,0.0,
+					   0.0,1.0,0.0,
+					   0.0,1.0,0.0,
+					   0.0,1.0,0.0 ],
+			color : {value : [ 0.0, 1.0, 0.0 ]}
+		},
+		primitives : ["triangles"]
+	});
 	this.simpleQuadZModel = new SglModel(gl, {
-				vertices : {
-					position : [  0.5, 0.5, 0.0,
-								 -0.5, 0.5, 0.0,
-								 -0.5,-0.5, 0.0,
-								  0.5,-0.5, 0.0,
-								 -0.5,-0.5, 0.0,
-								  0.5, 0.5, 0.0],
-					normal : [ 0.0,0.0,1.0,
-							   0.0,0.0,1.0,
-							   0.0,0.0,1.0,
-							   0.0,0.0,1.0,
-							   0.0,0.0,1.0,
-							   0.0,0.0,1.0 ],
-					color : {value : [ 0.0, 0.0, 1.0 ]}
-				},
-				primitives : ["triangles"]
-			});
+		vertices : {
+			position : [  0.5, 0.5, 0.0,
+						 -0.5, 0.5, 0.0,
+						 -0.5,-0.5, 0.0,
+						  0.5,-0.5, 0.0,
+						 -0.5,-0.5, 0.0,
+						  0.5, 0.5, 0.0],
+			normal : [ 0.0,0.0,1.0,
+					   0.0,0.0,1.0,
+					   0.0,0.0,1.0,
+					   0.0,0.0,1.0,
+					   0.0,0.0,1.0,
+					   0.0,0.0,1.0 ],
+			color : {value : [ 0.0, 0.0, 1.0 ]}
+		},
+		primitives : ["triangles"]
+	});
 },
 
 //----------------------------------------------------------------------------------------
@@ -2553,13 +2581,16 @@ _createQuadModels : function () {
 onInitialize : function () {
 	var gl = this.ui.gl;
 
-	// debug mode
-	this._isDebugging = HOP_DEBUGMODE;
-
 	gl.getExtension('EXT_frag_depth');
 	gl.clearColor(0.5, 0.5, 0.5, 1.0);
 	gl.clearStencil(0);
 	gl.depthFunc(gl.LESS);
+
+	// vertex attrib defaults
+	gl.vertexAttrib3f(1.0, 0.0, 0.0, 0.0);		//1 aNormal
+	gl.vertexAttrib4f(2.0, 0.8, 0.8, 0.8, 1.0);	//2 aColor
+	gl.vertexAttrib2f(3.0, 0.0, 0.0);			//3 aTextureCoord
+	gl.vertexAttrib1f(4.0, 1.0);				//4 aPointSize
 
 	// scene rendering support data
 	this.renderer   = new SglModelRenderer(gl);
@@ -2567,25 +2598,19 @@ onInitialize : function () {
 	this.viewMatrix = SglMat4.identity();
 
 	// nexus parameters
-	this._nexusTargetFps   = 15.0;
-	this._nexusTargetError = 1.0;
-	this._nexusCacheSize   = 50000000;
+	this.setNexusTargetError(1.0);
+	this.setNexusMinFps(15.0);
+	this.setNexusMaxCacheSize(512*(1<<20)); //512MB
+
+	// debug mode
+	this._isDebugging = HOP_DEBUGMODE;
 
 	// shaders
-	this.faceNXSProgram = this._createStandardFaceNXSProgram();
-	this.pointNXSProgram = this._createStandardPointNXSProgram();
-	this.colorShadedNXSProgram = this._createColorShadedNXSProgram();
-	this.colorCodedIDNXSProgram = this._createColorCodedIDNXSProgram();
-	this.colorCodedXYZNXSProgram = this._createXYZNXSProgram();
+	this.installDefaultShaders();
 
-	this.facePLYTechnique = this._createStandardFacePLYtechnique();
-	this.pointPLYTechnique = this._createStandardPointPLYtechnique();
-	this.colorShadedPLYTechnique = this._createColorShadedPLYtechnique();
-	this.colorCodedIDPLYTechnique = this._createColorCodedIDPLYtechnique();
-	this.colorCodedXYZPLYTechnique = this._createXYZPLYtechnique();
-
-	this.simpleLineTechnique = this._createSimpleLinetechnique();
-	this.multiLinesPointsTechnique = this._createMultiLinesPointstechnique();
+	// screenshot support
+	this.isCapturingScreenshot = false;
+	this.screenshotData = null;
 
 	// handlers
 	this._onPickedInstance  = 0;
@@ -2604,12 +2629,11 @@ onInitialize : function () {
 	this.x 			= 0.0;
 	this.y 			= 0.0;
 
-	this._keycombo = false;
-
-	// SCENE DATA
+	// scene data
 	this._scene         = null;
 	this._sceneParsed   = false;
 	this._sceneReady    = false;
+	this._objectsToProcess = 0;
 	this._objectsToLoad = 0;
 
 	this._instancesProgressiveID = 1;
@@ -2640,6 +2664,8 @@ onInitialize : function () {
 	this._lastSpotID     = 0;
 	this._pickpoint      = [1, 1];
 
+	this._keycombo = false;
+
 	// global measurement data
 	this._isMeasuring = false;
 
@@ -2665,6 +2691,21 @@ onInitialize : function () {
 	this._sceneBboxDiag = 0.0;
 },
 
+installDefaultShaders : function () {
+	this.facesProgram = this._createStandardFacesProgram();
+	this.pointsProgram = this._createStandardPointsProgram();
+	this.utilsProgram = this._createUtilsProgram();
+	this.colorShadedProgram = this._createColorShadedProgram();
+
+	this.faceTechnique = this._createStandardFacesTechnique();
+	this.pointTechnique = this._createStandardPointsTechnique();
+	this.utilsTechnique = this._createUtilsTechnique();
+	this.colorShadedTechnique = this._createColorShadedTechnique();
+
+	this.simpleLineTechnique = this._createSimpleLinetechnique();
+	this.multiLinesPointsTechnique = this._createMultiLinesPointstechnique();
+},
+
 onDrag : function (button, x, y, e) {
 	var ui = this.ui;
 
@@ -2679,7 +2720,7 @@ onDrag : function (button, x, y, e) {
 
 	// if locked trackball, just return. we check AFTER the light-trackball test
 	if (this._scene.trackball.locked) return;
-	
+
 	if(ui.dragDeltaX(button) != 0) this.x += (ui.cursorDeltaX/500);
 	if(ui.dragDeltaY(button) != 0) this.y += (ui.cursorDeltaY/500);
 
@@ -2700,7 +2741,7 @@ onDrag : function (button, x, y, e) {
 	for(var i=0; i<testMatrix.length; i++) {
 		if(testMatrix[i]!=this.trackball._matrix[i]) {diff=true; break;}
 	}
-	if(diff) ui.postDrawEvent();
+	if(diff) this.repaint();
 },
 
 onMouseMove : function (x, y, e) {
@@ -2750,6 +2791,17 @@ onClick : function (button, x, y, e) {
 		if(this._isMeasuringDistance) this._measureRefresh(0, x, y, e);
 	}
 	this._clickable = false;
+},
+
+onKeyDown : function (key, e) {
+	if (e.ctrlKey) {
+		if (e.key == 'p') // ctrl-p to save screenshot
+		{
+			e.preventDefault();
+			this.isCapturingScreenshot = true;
+			this.repaint();
+		}
+	}
 },
 
 onKeyPress : function (key, e) {
@@ -2847,6 +2899,7 @@ setScene : function (options) {
 		this._sceneReady    = false;
 		this._instancesProgressiveID = 1;
 		this._spotsProgressiveID     = 1;
+		this._objectsToProcess = 0;
 		this._objectsToLoad = 0;
 		this._stopMeasurement();
 		this._stopPickPoint();
@@ -2855,91 +2908,27 @@ setScene : function (options) {
 		this.enableLightTrackball(false);
 	}
 
+	// scene parsing
 	var scene = this._parseScene(options);
 	if (!scene) return;
 	this._scene = scene;
 
-	this._objectsToLoad = 0;
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
-		if (mesh.url) {
-			this._objectsToLoad++;
-		}
-	}
+	// trackball creation
+	this.trackball  = new scene.trackball.type();
+	this.trackball.setup(scene.trackball.trackOptions);
+	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 
-	for (var t in scene.texturedQuads) {
-		var tex = scene.texturedQuads[t];
-		if (tex.url) {
-			this._objectsToLoad++;
-		}
-	}
+	// mesh models creation
+	this._createMeshModels();
 
-	if (scene.background.image) {
-		this._objectsToLoad++;
-	}
-
-	// creating the desired trackball
-	this.trackball  = new this._scene.trackball.type();
-	this.trackball.setup(this._scene.trackball.trackOptions);
-
-	var that = this;
-	var gl = this.ui.gl;
-
-	for (var m in scene.meshes) {
-		var mesh = scene.meshes[m];
-
-		if (!mesh.url) continue;
-		if((String(mesh.url).lastIndexOf(".nxs") == (String(mesh.url).length - 4))||(String(mesh.url).lastIndexOf(".nxz") == (String(mesh.url).length - 4))) {
-			Nexus.setTargetError(gl, this._nexusTargetError);
-			Nexus.setTargetFps(gl, this._nexusTargetFps);
-			Nexus.setMaxCacheSize(gl, this._nexusCacheSize);
-
-			var nexus_instance = new Nexus.Renderer(gl);
-			nexus_instance.onLoad = function () { that._onMeshReady(); };
-			nexus_instance.onUpdate = this.ui.postDrawEvent;
-
-			mesh.renderable = nexus_instance;
-			mesh.isNexus = true;
-
-			nexus_instance.open(mesh.url);
-		}
-		else {
-			mesh.renderable = null;
-			mesh.isNexus = false;
-			sglRequestBinary(mesh.url, {
-				onSuccess : (function(m){ return function (req) { that._onPlyLoaded(req, m, gl); }; })(mesh)
-			});
-		}
-	}
-
-	for (var t in scene.texturedQuads) {
-		var quad = scene.texturedQuads[t];
-		if (!tex.url) continue;
-		scene.quad.texture = new SglTexture2D(gl, {
-			internalFormat : gl.RGBA,
-			format         : gl.RGBA,
-			type           : gl.UNSIGNED_BYTE,
-			generateMipmap : true,
-			onSuccess      : function () { that._onTextureReady(); },
-			url            : tex.url
-		});
-	}
-
-	if (scene.background.image) {
-		scene.background.texture = new SglTexture2D(gl, {
-			internalFormat : gl.RGBA,
-			format         : gl.RGBA,
-			type           : gl.UNSIGNED_BYTE,
-			generateMipmap : true,
-			onSuccess      : function () { that._onBackgroundReady(); },
-			url            : scene.background.image
-		});
-	}
-
-	// create point-to-point line model
+	// point-to-point line model creation
 	this._createLineModel();
-	// create quad models
+
+	// quad models creation
 	this._createQuadModels();
+
+	// create a space for other entities
+	this._scene.entities = {};
 
 	this._sceneParsed = true;
 },
@@ -2960,34 +2949,92 @@ repaint : function () {
 	this.ui.postDrawEvent();
 },
 
+saveScreenshot : function () {
+	this.isCapturingScreenshot = true;
+	this.repaint();
+},
+
+//------entities-------------------
+createEntity : function (eName, type, verticesList) {
+	// type "points", "lines", "triangles"
+	var nEntity = {};
+	nEntity.visible = true;
+	nEntity.type = type;
+	nEntity.renderable = null;
+	nEntity.transform = {};
+	nEntity.transform.matrix = SglMat4.identity();
+	nEntity.color = [1.0, 0.0, 1.0, 1.0];
+	nEntity.useTransparency = false;
+	nEntity.zOff = 0.0;
+
+	var modelDescriptor = {};
+	if(type == "points")
+		modelDescriptor.primitives = ["points"];
+	else if(type == "lines")
+		modelDescriptor.primitives = ["lines"];
+	else if(type == "triangles")
+		modelDescriptor.primitives = ["triangles"];	
+	modelDescriptor.vertices = {};
+	modelDescriptor.vertices.position = [];
+	modelDescriptor.vertices.normal = [];
+	modelDescriptor.vertices.color = {value : [ 1.0, 0.0, 1.0, 1.0 ]};
+	var numVerts = verticesList.length;
+
+	for (vInd = 0; vInd < numVerts; vInd++)
+	{
+		modelDescriptor.vertices.position.push(verticesList[vInd][0]);
+		modelDescriptor.vertices.position.push(verticesList[vInd][1]);
+		modelDescriptor.vertices.position.push(verticesList[vInd][2]);
+		
+		modelDescriptor.vertices.normal.push(0.0);
+		modelDescriptor.vertices.normal.push(0.0);
+		modelDescriptor.vertices.normal.push(0.0);
+	}
+	var gl = this.ui.gl;
+	nEntity.renderable = new SglModel(gl, modelDescriptor);
+	
+	// setting
+	this._scene.entities[eName] = {};
+	this._scene.entities[eName] = nEntity;
+	return this._scene.entities[eName];
+	this.repaint();	
+},
+
+deleteEntity : function (eName) {
+	delete this._scene.entities[eName];
+	this.repaint();	
+},
+
+clearEntities : function () {
+	this._scene.entities = {};
+	this.repaint();
+},
+
 //-----------------------------------------------------------------------------
 // nexus
 
-setNexusTargetFps: function(fps) {
-	this._nexusTargetFps = fps;
-	Nexus.setTargetFps(this.ui.gl, fps);
-},
-
-getNexusTargetFps: function() {
-	return this._nexusTargetFps;
-},
-
 setNexusTargetError: function(error) {
-	this._nexusTargetError = error;
 	Nexus.setTargetError(this.ui.gl, error);
 },
 
 getNexusTargetError: function() {
-	return this._nexusTargetError;
+	return Nexus.getTargetError(this.ui.gl);
 },
 
-setNexusCacheSize: function(size) {
-	this._nexusCacheSize = size;
+setNexusMinFps: function(fps) {
+	Nexus.setMinFps(this.ui.gl, fps);
+},
+
+getNexusMinFps: function() {
+	return Nexus.getMinFps(this.ui.gl);
+},
+
+setNexusMaxCacheSize: function(size) {
 	Nexus.setMaxCacheSize(this.ui.gl, size);
 },
 
-getNexusCacheSize: function() {
-	return this._nexusCacheSize;
+getNexusMaxCacheSize: function() {
+	return Nexus.getMaxCacheSize(this.ui.gl);
 },
 
 //-----------------------------------------------------------------------------
@@ -3900,9 +3947,7 @@ rotateLight: function(x, y) {
 
 enableLightTrackball: function(on) {
 	this._movingLight = on;
-
 	if(on && !this._scene.space.sceneLighting) this._scene.space.sceneLighting = on;
-
 	this.repaint();
 },
 

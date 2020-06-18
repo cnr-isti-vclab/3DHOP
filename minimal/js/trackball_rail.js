@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2020, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -509,8 +509,11 @@ RailTrackball.prototype = {
 
 			if(this._phi == this._targetPhi)
 				if(this._theta == this._targetTheta)
-					if(this._pathOffset == this._targetOffset)
+					if(this._pathOffset == this._targetOffset){
 						this._isAnimating = false;
+						if(typeof onTrackballArrived != "undefined")
+							onTrackballArrived(this.getState());
+					}
 		}
 
 		this._computeMatrix();

@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2018, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2020, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@ body { width:100%; height:100%; margin:0px; }
 
 .tdhop { position:relative; width:100%; height:100%; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
-#tdhlg { position:absolute; right:2; bottom:2; width:105px; height:13px; overflow:hidden; cursor:pointer; color:#909090; text-decoration:none; font-family:verdana; font-style:italic; font-size:10px; line-height:13px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+#tdhlg { position:absolute; width:105px; height:13px; overflow:hidden; cursor:pointer; color:#909090; text-align:center; text-decoration:none; font-family:verdana; font-style:italic; font-size:10px; line-height:13px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
 #toolbar { position:absolute; left:10px; top:10px; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
@@ -41,7 +41,7 @@ body { width:100%; height:100%; margin:0px; }
 
 .output-box hr {  margin:0 0 3px 0; border:0; height:1px; background-image:linear-gradient(to right, rgba(0, 0, 0, 0), rgba(225, 225, 225, 0.75), rgba(0, 0, 0, 0)); }
 
-#draw-canvas { width:100%; height:100%; background-repeat:no-repeat; background-position:center top; -webkit-background-size:cover; -moz-background-size:cover; -o-background-size:cover; background-size:cover; outline:none; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
+#draw-canvas { width:100%; height:100%; background-repeat:no-repeat; background-position:center center; -webkit-background-size:cover; -moz-background-size:cover; -o-background-size:cover; background-size:cover; outline:none; -webkit-user-select:none; -webkit-touch-callout:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; touch-action:none; -ms-touch-action:none; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-tap-highlight-color: transparent; }
 
 /*IE*/
 input[type=range].output-input { padding: 0; width: 125px; } .output-input::-ms-tooltip { display: none; }
