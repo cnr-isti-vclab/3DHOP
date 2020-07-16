@@ -66,7 +66,7 @@ Once installed the Web server there are just a few step to run 3DHOP:
 
 2. **Browser Tweaking**   
 The simplest way to test the 3DHOP features on your PC _without_ installing any other software, is to allow your browser to access local files on your file system (this practice is disabled by default due to security risk).
-The trick to solve this issue is simple, but is restricted only to Chromium based browsers (CHROME, EDGE or OPERA). Here are the instructions (more detailed info about the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/download/3DHOPsite_deployment.pdf)).
+The trick to solve this issue is simple, but is restricted only to Chromium based browsers (CHROME, EDGE or OPERA). Here are the instructions (more detailed info about the deployment of 3DHOP can be found in this [pdf](http://3dhop.net/documentation/3DHOP_Environment_Deployment.pdf)).
    
    For Windows: 
    + browse to google CHROME (or EDGE, or OPERA) folder in your local file system; 
