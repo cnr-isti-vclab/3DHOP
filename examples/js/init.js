@@ -25,7 +25,6 @@ function init3dhop() {
 
 	jQuery('#toolbar img')
 		.mouseenter(function(e) {
-			id = jQuery(this).attr('id');
 			if(!ismousedown) jQuery(this).css("opacity","0.8");
 			else jQuery(this).css("opacity","1.0");
 		})

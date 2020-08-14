@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-16 June 2020
+14 Aug 2020
 
 #### TEAM
 ---------
@@ -18,6 +18,19 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 #### CHANGELOG FILE
 -------------------
+
+*Development Version*  
+
+**Main Changes**
+
+* Fixed WEBGL2 IOS bug;
+
+**Files Added/Modified**
+
+* Updated "presenter.js" file;
+* Updated "nexus.js" file;
+* Updated "init.js" file;
+
 
 *Version 4.3*  
 
