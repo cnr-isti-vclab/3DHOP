@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.3.1";
+const HOP_VERSION             = "4.3.2";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -2797,7 +2797,7 @@ onKeyDown : function (key, e) {
 	if (e.ctrlKey) {
 		if (e.key == 'p') // ctrl-p to save screenshot
 		{
-			e.preventDefault();
+			if(e.preventDefault) e.preventDefault();
 			this.isCapturingScreenshot = true;
 			this.repaint();
 		}
@@ -2821,7 +2821,7 @@ onKeyPress : function (key, e) {
 
 onKeyUp : function (key, e) {
 	if(this._keycombo && e.keyCode == '18') {
-		e.preventDefault();
+		if(e.preventDefault) e.preventDefault();
 		this._keycombo = false;
 	}
 },

@@ -40,7 +40,7 @@ function init3dhop() {
 				if(id == "zoomin" || id == "zoomout"){
 					interval = setInterval(function(){
 						actionsToolbar(id);
-					}, 100);
+					}, 150);
 				}
 				else {
 					clearInterval(interval); 
@@ -67,6 +67,9 @@ function init3dhop() {
 	jQuery('.output-table td:has(.output-text,.output-input)').css("border-radius", "5px").css("background-color", "rgba(125,125,125,0.25)");
 
 	jQuery('#3dhop')
+//		.mousedown(function(e) { 
+//			if(e.preventDefault) e.preventDefault(); 
+//		})
 		.on('touchstart pointerdown', function(e) {
 			jQuery('#toolbar img').css("opacity","0.5");
 		})
@@ -89,7 +92,7 @@ function init3dhop() {
 		})
 		.mousedown(function(e) { 
 			jQuery('#toolbar img').css("opacity","0.5"); 
-			if(e.preventDefault) e.preventDefault(); 
+//			if(e.preventDefault) e.preventDefault(); 
 			if (window.getSelection && window.getSelection()!='') window.getSelection().removeAllRanges();
 			else if (document.selection && document.selection.createRange()!='') document.selection.empty();
 		});

@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-14 Aug 2020
+19 Aug 2020
 
 #### TEAM
 ---------
@@ -30,6 +30,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 * Updated "presenter.js" file;
 * Updated "nexus.js" file;
 * Updated "init.js" file;
+* Updated all "*.css" files;
 
 
 *Version 4.3*  
