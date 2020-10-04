@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.3.2";
+const HOP_VERSION             = "4.3.3";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode

@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-19 Aug 2020
+04 Oct 2020
 
 #### TEAM
 ---------
@@ -27,6 +27,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Files Added/Modified**
 
+* Updated "HOWTO_3.5_planes_sections.html" file;
 * Updated "presenter.js" file;
 * Updated "nexus.js" file;
 * Updated "init.js" file;
