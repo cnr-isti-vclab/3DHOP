@@ -125,13 +125,22 @@ SphereTrackball.prototype = {
 	},
 
 	recenter : function (newpoint) {
-		var newpanX = (newpoint[0]-this.myPresenter.sceneCenter[0]) * this.myPresenter.sceneRadiusInv;
-		var newpanY = (newpoint[1]-this.myPresenter.sceneCenter[1]) * this.myPresenter.sceneRadiusInv;
-		var newpanZ = (newpoint[2]-this.myPresenter.sceneCenter[2]) * this.myPresenter.sceneRadiusInv;
+		var newPan=[0.0, 0.0, 0.0, 0.0];
+		newPan[0] = (newpoint[0]-this.myPresenter.sceneCenter[0]) * this.myPresenter.sceneRadiusInv;
+		newPan[1] = (newpoint[1]-this.myPresenter.sceneCenter[1]) * this.myPresenter.sceneRadiusInv;
+		newPan[2] = (newpoint[2]-this.myPresenter.sceneCenter[2]) * this.myPresenter.sceneRadiusInv;
+		newPan[3] = 0.0;
+		
+		this._sphereMatrix[12] = 0;
+		this._sphereMatrix[13] = 0;
+		this._sphereMatrix[14] = 0;
+		
+		newPan = SglMat4.mul4(this._sphereMatrix, newPan);
 
-		this._sphereMatrix[12] = -newpanX;
-		this._sphereMatrix[13] = -newpanY;
-		this._sphereMatrix[14] = -newpanZ;
+		this._sphereMatrix[12] = -newPan[0];
+		this._sphereMatrix[13] = -newPan[1];
+		this._sphereMatrix[14] = -newPan[2];
+
 		this._distance *= 0.6;
 		this._distance = this.clamp(this._distance, this._minMaxDist[0], this._minMaxDist[1]);
 		this._computeMatrix();

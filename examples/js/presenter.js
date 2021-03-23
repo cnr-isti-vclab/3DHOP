@@ -23,15 +23,13 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.3.3";
+const HOP_VERSION             = "4.3.4";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
 const HOP_DEBUGMODE           = false;
 // default light direction
 const HOP_DEFAULTLIGHT        = [0, 0, -1];
-// default points size
-const HOP_DEFAULTPOINTSIZE    = 1.0;
 // sgltrackball
 const SGL_TRACKBALL_NO_ACTION = 0;
 const SGL_TRACKBALL_ROTATE    = 1;
@@ -219,8 +217,8 @@ _parseConfig : function (options) {
 		showClippingBorder  : false,
 		clippingBorderSize  : 0.5,
 		clippingBorderColor : [0.0, 1.0, 1.0],
-		pointSize           : 3.0,
-		pointSizeMinMax     : [1.0, 5.0],
+		pointSize           : 1.0,
+		pointSizeMinMax     : [0.0, 2.0],
 		autoSaveScreenshot  : true,
 		screenshotBaseName  : "screenshot",
 	}, options);
@@ -1527,7 +1525,7 @@ _drawScene : function () {
 	gl.clearColor(bkg[0], bkg[1], bkg[2], bkg[3]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	gl.enable(gl.DEPTH_TEST);
-	
+
 	// draw non-transparent geometries
 	for (var inst in instances) {
 		var instance = instances[inst];
@@ -1815,7 +1813,7 @@ _drawScene : function () {
 			"uPointSize"                 : config.pointSize,
 			"uColorID"                   : entity.color,
 			"uZOff"                      : entity.zOff,
-		};		
+		};
 
 		if(entity.useTransparency)
 		{
@@ -2915,7 +2913,7 @@ setScene : function (options) {
 
 	// trackball creation
 	this.trackball  = new scene.trackball.type();
-	this.trackball.setup(scene.trackball.trackOptions,this);
+	this.trackball.setup(scene.trackball.trackOptions, this);
 	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 
 	// mesh models creation
