@@ -26,7 +26,7 @@ function SphereTrackball() {
 
 SphereTrackball.prototype = {
 
-	setup : function (options) {
+	setup : function (options,myPresenter) {
 		options = options || {};
 		var opt = sglGetDefaultObject({
 			startCenter   : [ 0.0, 0.0, 0.0 ],
@@ -38,6 +38,8 @@ SphereTrackball.prototype = {
 		this._new_action = true;
 		this._matrix = SglMat4.identity();
 		this._sphereMatrix = SglMat4.identity();
+
+		this.myPresenter = myPresenter;// parent presenter
 
 		// starting/default parameters
 		this._startDistance = opt.startDistance; //distance
@@ -123,9 +125,9 @@ SphereTrackball.prototype = {
 	},
 
 	recenter : function (newpoint) {
-		var newpanX = (newpoint[0]-presenter.sceneCenter[0]) * presenter.sceneRadiusInv;
-		var newpanY = (newpoint[1]-presenter.sceneCenter[1]) * presenter.sceneRadiusInv;
-		var newpanZ = (newpoint[2]-presenter.sceneCenter[2]) * presenter.sceneRadiusInv;
+		var newpanX = (newpoint[0]-this.myPresenter.sceneCenter[0]) * this.myPresenter.sceneRadiusInv;
+		var newpanY = (newpoint[1]-this.myPresenter.sceneCenter[1]) * this.myPresenter.sceneRadiusInv;
+		var newpanZ = (newpoint[2]-this.myPresenter.sceneCenter[2]) * this.myPresenter.sceneRadiusInv;
 
 		this._sphereMatrix[12] = -newpanX;
 		this._sphereMatrix[13] = -newpanY;

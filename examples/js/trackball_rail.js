@@ -26,7 +26,7 @@ function RailTrackball() {
 
 RailTrackball.prototype = {
 
-	setup : function (options) {
+	setup : function (options,myPresenter) {
 		options = options || {};
 		var opt = sglGetDefaultObject({
 			startPhi          : 0.0,
@@ -47,6 +47,8 @@ RailTrackball.prototype = {
 		this._action = SGL_TRACKBALL_NO_ACTION;
 		this._new_action = true;
 		this._matrix = SglMat4.identity();
+
+		this.myPresenter = myPresenter;// parent presenter
 
 		// path
 		this._pathPoints = opt.pathPoints;
@@ -94,8 +96,8 @@ RailTrackball.prototype = {
 		this._minMaxTheta[1] = sglDegToRad(this._minMaxTheta[1]);
 
 		// scene center/radius
-		this._sceneRadiusInv = presenter.sceneRadiusInv;
-		this._sceneCenter = presenter.sceneCenter;
+		this._sceneRadiusInv = this.myPresenter.sceneRadiusInv;
+		this._sceneCenter = this.myPresenter.sceneCenter;
 
 		this._start = [0.0, 0.0];
 		this.reset();
@@ -142,8 +144,8 @@ RailTrackball.prototype = {
 		if (!this._pathPoints[0]) return [0.0, 0.0, 0.0];
 
 		// update scene radius
-		this._sceneRadiusInv = presenter.sceneRadiusInv;
-		this._sceneCenter = presenter.sceneCenter;
+		this._sceneRadiusInv = this.myPresenter.sceneRadiusInv;
+		this._sceneCenter = this.myPresenter.sceneCenter;
 
 		// interpolating
 		var pp = 0;
@@ -163,7 +165,7 @@ RailTrackball.prototype = {
 
 		if(this._useSpaceTransform)
 		{
-			var spaceTr = presenter._scene.space.transform.matrix;
+			var spaceTr = this.myPresenter._scene.space.transform.matrix;
 			var spacePp = SglVec3.to4(mypoint,1);
 			spacePp = SglMat4.mul4(spaceTr, spacePp);
 			mypoint = SglVec4.to3(spacePp);

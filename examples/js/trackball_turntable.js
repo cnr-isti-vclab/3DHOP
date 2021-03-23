@@ -26,7 +26,7 @@ function TurnTableTrackball() {
 
 TurnTableTrackball.prototype = {
 
-	setup : function (options) {
+	setup : function (options,myPresenter) {
 		options = options || {};
 		var opt = sglGetDefaultObject({
 			startCenter   : [ 0.0, 0.0, 0.0 ],
