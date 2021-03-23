@@ -2915,7 +2915,7 @@ setScene : function (options) {
 
 	// trackball creation
 	this.trackball  = new scene.trackball.type();
-	this.trackball.setup(scene.trackball.trackOptions);
+	this.trackball.setup(scene.trackball.trackOptions,this);
 	this.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
 
 	// mesh models creation
