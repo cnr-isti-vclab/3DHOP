@@ -2623,10 +2623,12 @@ onInitialize : function () {
 	// animation
 	this.ui.animateRate = 0;
 
-	// current cursor XY position
-	this.x 			= 0.0;
-	this.y 			= 0.0;
-
+	// current cursor XY position normalized [-1 1] on canvas size, and delta
+	this.x	= 0.0;
+	this.y	= 0.0;
+	this.dx	= 0.0;
+	this.dy	= 0.0;
+	
 	// scene data
 	this._scene         = null;
 	this._sceneParsed   = false;
@@ -2706,12 +2708,14 @@ installDefaultShaders : function () {
 
 onDrag : function (button, x, y, e) {
 	var ui = this.ui;
+	this.x = (x / (ui.width  - 1)) * 2.0 - 1.0;
+	this.y = (y / (ui.height - 1)) * 2.0 - 1.0;
 
 	if(this._clickable) this._clickable = false;
 
 	if(this._movingLight && ui.isMouseButtonDown(0)){
-		var dxl = (x / (ui.width  - 1)) * 2.0 - 1.0;
-		var dyl = (y / (ui.height - 1)) * 2.0 - 1.0;
+		var dxl = this.x;
+		var dyl = this.y;
 		this.rotateLight(dxl/2, dyl/2);
 		return;
 	}
@@ -2719,8 +2723,8 @@ onDrag : function (button, x, y, e) {
 	// if locked trackball, just return. we check AFTER the light-trackball test
 	if (this._scene.trackball.locked) return;
 
-	if(ui.dragDeltaX(button) != 0) this.x += (ui.cursorDeltaX/500);
-	if(ui.dragDeltaY(button) != 0) this.y += (ui.cursorDeltaY/500);
+	if(ui.dragDeltaX(button) != 0) this.dx += (ui.cursorDeltaX/ui.width);
+	if(ui.dragDeltaY(button) != 0) this.dy += (ui.cursorDeltaY/ui.height);
 
 	var action = SGL_TRACKBALL_NO_ACTION;
 	if ((ui.isMouseButtonDown(0) && ui.isKeyDown(17)) || ui.isMouseButtonDown(1) || ui.isMouseButtonDown(2)) {
@@ -2733,13 +2737,17 @@ onDrag : function (button, x, y, e) {
 	var testMatrix = this.trackball._matrix.slice();
 
 	this.trackball.action = action;
-	this.trackball.track(this.viewMatrix, this.x, this.y, 0.0);
+	this.trackball.track(this.viewMatrix, this.dx, this.dy, 0.0);
 
 	var diff;
 	for(var i=0; i<testMatrix.length; i++) {
 		if(testMatrix[i]!=this.trackball._matrix[i]) {diff=true; break;}
 	}
 	if(diff) this.repaint();
+},
+
+onMouseButtonUp : function (x, y, e) {
+	this.trackball.action = SGL_TRACKBALL_NO_ACTION;	
 },
 
 onMouseMove : function (x, y, e) {
