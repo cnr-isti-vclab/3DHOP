@@ -2714,9 +2714,7 @@ onDrag : function (button, x, y, e) {
 	if(this._clickable) this._clickable = false;
 
 	if(this._movingLight && ui.isMouseButtonDown(0)){
-		var dxl = this.x;
-		var dyl = this.y;
-		this.rotateLight(dxl/2, dyl/2);
+		this.rotateLight(this.x/2.0, this.y/2.0);
 		return;
 	}
 
