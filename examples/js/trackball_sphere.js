@@ -51,7 +51,7 @@ SphereTrackball.prototype = {
 		this._minMaxDist  = opt.minMaxDist;
 
 		this._pts    = [ [0.0, 0.0], [0.0, 0.0] ];
-		this._start = [0.0, 0.0];
+		this._past = [0.0, 0.0];
 		this.reset();
 	},
 
@@ -77,9 +77,9 @@ SphereTrackball.prototype = {
 
 	_projectOnSphere : function(x, y) {
 		var r = 1.0;
-
 		var z = 0.0;
 		var d = sglSqrt(x*x + y*y);
+
 		if (d < (r * 0.70710678118654752440)) {
 			/* Inside sphere */
 			z = sglSqrt(r*r - d*d);
@@ -150,7 +150,7 @@ SphereTrackball.prototype = {
 		return false;
 	},
 
-	set action(a) { if(this._action != a) this._new_action = true; this._action = a; },
+	set action(a) { if(this._action != a) this._new_action = true; this._action = a;},
 
 	get action()  { return this._action; },
 
@@ -172,22 +172,20 @@ SphereTrackball.prototype = {
 	},
 
 	track : function(m, x, y, z) {
-
+		
 		if(this._new_action) {
-			this._start[0] = x;
-			this._start[1] = y;
+			this._past[0] = this.myPresenter.x;
+			this._past[1] = this.myPresenter.y;
 			this._new_action = false;
 		}
+		
+		this._pts[0][0] = this._past[0];
+		this._pts[0][1] = this._past[1];
+		this._pts[1][0] = this.myPresenter.x;
+		this._pts[1][1] = this.myPresenter.y;		
 
-		var dx = this._start[0] - x;
-		var dy = this._start[1] - y;
-		this._start[0] = x;
-		this._start[1] = y;
-
-		this._pts[0][0] = this._pts[1][0] + dx;
-		this._pts[0][1] = this._pts[1][1] + dy;
-		this._pts[1][0] = dx;
-		this._pts[1][1] = dy;
+		this._past[0] = this.myPresenter.x;
+		this._past[1] = this.myPresenter.y;	
 
 		switch (this._action) {
 			case SGL_TRACKBALL_ROTATE:

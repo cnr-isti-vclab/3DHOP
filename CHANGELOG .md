@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-23 Mar 2021
+26 Apr 2021
 
 #### TEAM
 ---------
@@ -23,6 +23,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
+* Fixed TURNTABLE TRACKBALLS rotation bug;
 * Fixed WEBGL2 IOS bug;
 * Updated NEXUS TRAVERSAL ROUTINE for avoiding http requests issues;
 * Updated NEXUS parameters for POINT SIZE CONTROL in point cloud rendering;
