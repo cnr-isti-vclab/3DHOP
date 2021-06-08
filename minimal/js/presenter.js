@@ -221,6 +221,7 @@ _parseConfig : function (options) {
 		pointSizeMinMax     : [0.0, 2.0],
 		autoSaveScreenshot  : true,
 		screenshotBaseName  : "screenshot",
+		screenshotTime      : true,
 	}, options);
 	return r;
 },
@@ -2058,23 +2059,29 @@ _drawScene : function () {
 		if(this._scene.config.autoSaveScreenshot)
 		{
 			var currentdate = new Date();
-			var fName = this._scene.config.screenshotBaseName + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds() + ".png";
+			var fName = this._scene.config.screenshotBaseName;
+			if(this._scene.config.screenshotTime) fName += "_" + String(currentdate.getHours()).padStart(2, '0') + String(currentdate.getMinutes()).padStart(2, '0') + String(currentdate.getSeconds()).padStart(2, '0');
+			fName += ".png";
 			
-			if(this.ui._canvas.msToBlob) // IE or EDGEhtml
-			{
-				console.error("IE and EDGEhtml cannot save images");
-				var blob = this.ui._canvas.msToBlob();
-				window.navigator.msSaveBlob(blob, fName);
-			}
-			else // every other browser
-			{
-				var a  = document.createElement('a');
-				a.href = this.screenshotData;
-				a.download = fName;
-				a.target="_blank";
-				a.click();
-			}
+			this._saveImage(fName);
 		}
+	}
+},
+
+_saveImage : function(fName){
+	if(this.ui._canvas.msToBlob) // IE or EDGEhtml
+	{
+		console.error("IE and EDGEhtml cannot save images");
+		var blob = this.ui._canvas.msToBlob();
+		window.navigator.msSaveBlob(blob, fName);
+	}
+	else // every other browser
+	{
+		var a  = document.createElement('a');
+		a.href = this.screenshotData;
+		a.download = fName;
+		a.target="_blank";
+		a.click();
 	}
 },
 
