@@ -1810,7 +1810,7 @@ _drawScene : function () {
 		
 		var entityUniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uPointSize"                 : config.pointSize,
+			"uPointSize"                 : entity.pointSize,
 			"uColorID"                   : entity.color,
 			"uZOff"                      : entity.zOff,
 		};
@@ -2969,6 +2969,7 @@ createEntity : function (eName, type, verticesList) {
 	nEntity.transform.matrix = SglMat4.identity();
 	nEntity.color = [1.0, 0.0, 1.0, 1.0];
 	nEntity.useTransparency = false;
+	nEntity.pointSize = 6.0;
 	nEntity.zOff = 0.0;
 
 	var modelDescriptor = {};
