@@ -2742,7 +2742,7 @@ onDrag : function (button, x, y, e) {
 	var testMatrix = this.trackball._matrix.slice();
 
 	this.trackball.action = action;
-	this.trackball.track(this.viewMatrix, this.dx, this.dy, 0.0);
+	this.trackball.track(this.viewMatrix, this.x, this.y, 0.0);
 
 	var diff;
 	for(var i=0; i<testMatrix.length; i++) {
