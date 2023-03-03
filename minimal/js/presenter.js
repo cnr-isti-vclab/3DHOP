@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.3.5";
+const HOP_VERSION             = "4.3.6";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -183,7 +183,8 @@ _parseTrackball : function (options) {
 	var r = sglGetDefaultObject({
 		type         : TurnTableTrackball,
 		trackOptions : {},
-		locked       : false
+		locked       : false,
+		dragSpeed    : 1.0
 	}, options);
 	return r;
 },
@@ -2633,8 +2634,8 @@ onInitialize : function () {
 	// current cursor XY position normalized [-1 1] on canvas size, and delta
 	this.x	= 0.0;
 	this.y	= 0.0;
-	this.dx	= 0.0;
-	this.dy	= 0.0;
+//	this.dx	= 0.0;
+//	this.dy	= 0.0;
 	
 	// scene data
 	this._scene         = null;
@@ -2728,8 +2729,8 @@ onDrag : function (button, x, y, e) {
 	// if locked trackball, just return. we check AFTER the light-trackball test
 	if (this._scene.trackball.locked) return;
 
-	if(ui.dragDeltaX(button) != 0) this.dx += (ui.cursorDeltaX/ui.width);
-	if(ui.dragDeltaY(button) != 0) this.dy += (ui.cursorDeltaY/ui.height);
+//	if(ui.dragDeltaX(button) != 0) this.dx += (ui.cursorDeltaX/ui.width);
+//	if(ui.dragDeltaY(button) != 0) this.dy += (ui.cursorDeltaY/ui.height);
 
 	var action = SGL_TRACKBALL_NO_ACTION;
 	if ((ui.isMouseButtonDown(0) && ui.isKeyDown(17)) || ui.isMouseButtonDown(1) || ui.isMouseButtonDown(2)) {
@@ -2742,7 +2743,7 @@ onDrag : function (button, x, y, e) {
 	var testMatrix = this.trackball._matrix.slice();
 
 	this.trackball.action = action;
-	this.trackball.track(this.viewMatrix, this.x, this.y, 0.0);
+	this.trackball.track(this.viewMatrix, this.x*this._scene.trackball.dragSpeed, this.y*this._scene.trackball.dragSpeed, 0.0);
 
 	var diff;
 	for(var i=0; i<testMatrix.length; i++) {

@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.3.5";
+const HOP_VERSION             = "4.3.6";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -183,7 +183,8 @@ _parseTrackball : function (options) {
 	var r = sglGetDefaultObject({
 		type         : TurnTableTrackball,
 		trackOptions : {},
-		locked       : false
+		locked       : false,
+		dragSpeed    : 1.0
 	}, options);
 	return r;
 },
@@ -221,6 +222,7 @@ _parseConfig : function (options) {
 		pointSizeMinMax     : [0.0, 2.0],
 		autoSaveScreenshot  : true,
 		screenshotBaseName  : "screenshot",
+		screenshotTime      : true,
 	}, options);
 	return r;
 },
@@ -1810,7 +1812,7 @@ _drawScene : function () {
 		
 		var entityUniforms = {
 			"uWorldViewProjectionMatrix" : xform.modelViewProjectionMatrix,
-			"uPointSize"                 : config.pointSize,
+			"uPointSize"                 : entity.pointSize,
 			"uColorID"                   : entity.color,
 			"uZOff"                      : entity.zOff,
 		};
@@ -2058,23 +2060,29 @@ _drawScene : function () {
 		if(this._scene.config.autoSaveScreenshot)
 		{
 			var currentdate = new Date();
-			var fName = this._scene.config.screenshotBaseName + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds() + ".png";
+			var fName = this._scene.config.screenshotBaseName;
+			if(this._scene.config.screenshotTime) fName += "_" + String(currentdate.getHours()).padStart(2, '0') + String(currentdate.getMinutes()).padStart(2, '0') + String(currentdate.getSeconds()).padStart(2, '0');
+			fName += ".png";
 			
-			if(this.ui._canvas.msToBlob) // IE or EDGEhtml
-			{
-				console.error("IE and EDGEhtml cannot save images");
-				var blob = this.ui._canvas.msToBlob();
-				window.navigator.msSaveBlob(blob, fName);
-			}
-			else // every other browser
-			{
-				var a  = document.createElement('a');
-				a.href = this.screenshotData;
-				a.download = fName;
-				a.target="_blank";
-				a.click();
-			}
+			this._saveImage(fName);
 		}
+	}
+},
+
+_saveImage : function(fName){
+	if(this.ui._canvas.msToBlob) // IE or EDGEhtml
+	{
+		console.error("IE and EDGEhtml cannot save images");
+		var blob = this.ui._canvas.msToBlob();
+		window.navigator.msSaveBlob(blob, fName);
+	}
+	else // every other browser
+	{
+		var a  = document.createElement('a');
+		a.href = this.screenshotData;
+		a.download = fName;
+		a.target="_blank";
+		a.click();
 	}
 },
 
@@ -2626,8 +2634,8 @@ onInitialize : function () {
 	// current cursor XY position normalized [-1 1] on canvas size, and delta
 	this.x	= 0.0;
 	this.y	= 0.0;
-	this.dx	= 0.0;
-	this.dy	= 0.0;
+//	this.dx	= 0.0;
+//	this.dy	= 0.0;
 	
 	// scene data
 	this._scene         = null;
@@ -2721,8 +2729,8 @@ onDrag : function (button, x, y, e) {
 	// if locked trackball, just return. we check AFTER the light-trackball test
 	if (this._scene.trackball.locked) return;
 
-	if(ui.dragDeltaX(button) != 0) this.dx += (ui.cursorDeltaX/ui.width);
-	if(ui.dragDeltaY(button) != 0) this.dy += (ui.cursorDeltaY/ui.height);
+//	if(ui.dragDeltaX(button) != 0) this.dx += (ui.cursorDeltaX/ui.width);
+//	if(ui.dragDeltaY(button) != 0) this.dy += (ui.cursorDeltaY/ui.height);
 
 	var action = SGL_TRACKBALL_NO_ACTION;
 	if ((ui.isMouseButtonDown(0) && ui.isKeyDown(17)) || ui.isMouseButtonDown(1) || ui.isMouseButtonDown(2)) {
@@ -2735,7 +2743,7 @@ onDrag : function (button, x, y, e) {
 	var testMatrix = this.trackball._matrix.slice();
 
 	this.trackball.action = action;
-	this.trackball.track(this.viewMatrix, this.dx, this.dy, 0.0);
+	this.trackball.track(this.viewMatrix, this.x*this._scene.trackball.dragSpeed, this.y*this._scene.trackball.dragSpeed, 0.0);
 
 	var diff;
 	for(var i=0; i<testMatrix.length; i++) {
@@ -2969,6 +2977,7 @@ createEntity : function (eName, type, verticesList) {
 	nEntity.transform.matrix = SglMat4.identity();
 	nEntity.color = [1.0, 0.0, 1.0, 1.0];
 	nEntity.useTransparency = false;
+	nEntity.pointSize = 6.0;
 	nEntity.zOff = 0.0;
 
 	var modelDescriptor = {};
