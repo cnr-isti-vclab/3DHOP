@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-26 Apr 2021
+08 Mar 2023
 
 #### TEAM
 ---------
@@ -23,22 +23,24 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
-* Fixed TURNTABLE TRACKBALLS rotation bug;
 * Fixed WEBGL2 IOS bug;
+* Fixed TURNTABLE TRACKBALLS rotation bug;
+* New SPHERE TRACKBALL;
+* Updated TRACKBALLS sensitivity;
+* Updated TRACKBALLS setup to enable parent element generalization;
+* Updated SCREENSHOOT naming system;
 * Updated NEXUS TRAVERSAL ROUTINE for avoiding http requests issues;
 * Updated NEXUS parameters for POINT SIZE CONTROL in point cloud rendering;
-* Updated SPHERE TRACKBALL recentering behaviour;
-* Updated TRACKBALLS setup to enable parent element generalization;
 
 **Files Added/Modified**
 
-* Updated "HOWTO_3.5_planes_sections.html" file;
 * Updated "presenter.js" file;
 * Updated "nexus.js" file;
 * Updated "nexus.monitor.js" file;
 * Updated "init.js" file;
 * Updated all "trackball_*.js" files;
 * Updated all "*.css" files;
+* Updated all "HOWTO_*.html" files;
 
 
 *Version 4.3*  
