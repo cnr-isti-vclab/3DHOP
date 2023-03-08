@@ -139,7 +139,7 @@ TurntablePanTrackball.prototype = {
 		this._matrix = m;
 
 		if(typeof onTrackballUpdate != "undefined")
-			onTrackballUpdate(this.getState());							  
+			onTrackballUpdate(this.getState());
 	},
 
 	getState : function () {

@@ -29,7 +29,7 @@ SphereTrackball.prototype = {
 	setup : function (options,myPresenter) {
 		options = options || {};
 		var opt = sglGetDefaultObject({
-			startCenter   : [ 0.0, 0.0, 0.0 ],			
+			startCenter   : [ 0.0, 0.0, 0.0 ],
 			startMatrix   : [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ],
 			startPanX     : 0.0,
 			startPanY     : 0.0,
@@ -85,7 +85,7 @@ SphereTrackball.prototype = {
 		this._speedPanX = 1.0;
 		this._speedPanY = 1.0;
 		this._speedPanZ = 1.0;
-		this._speedDistance = 2.0;		
+		this._speedDistance = 2.0;
 		
 		this._pts    = [ [0.0, 0.0], [0.0, 0.0] ];
 		this._past = [0.0, 0.0];
@@ -156,7 +156,7 @@ SphereTrackball.prototype = {
 	},
 
 	setState : function (newstate) {
-		this._rotMatrix = newstate[0];	
+		this._rotMatrix = newstate[0];
 		this._panX = this._clamp(newstate[1], this._minMaxPanX[0], this._minMaxPanX[1]);
 		this._panY = this._clamp(newstate[2], this._minMaxPanY[0], this._minMaxPanY[1]);
 		this._panZ = this._clamp(newstate[3], this._minMaxPanZ[0], this._minMaxPanZ[1]);
@@ -173,7 +173,7 @@ SphereTrackball.prototype = {
 		this._targetPanX = this._clamp(newstate[1], this._minMaxPanX[0], this._minMaxPanX[1]);
 		this._targetPanY = this._clamp(newstate[2], this._minMaxPanY[0], this._minMaxPanY[1]);
 		this._targetPanZ = this._clamp(newstate[3], this._minMaxPanZ[0], this._minMaxPanZ[1]);
-		this._targetDistance = this._clamp(newstate[4], this._minMaxDist[0], this._minMaxDist[1]);		
+		this._targetDistance = this._clamp(newstate[4], this._minMaxDist[0], this._minMaxDist[1]);
 		
 		// setting base velocities
 		this._speedRot = Math.PI;
@@ -186,7 +186,7 @@ SphereTrackball.prototype = {
 		let timeDistance = Math.abs((this._targetDistance - this._distance) / this._speedDistance);
 		let timePanX     = Math.abs((this._targetPanX - this._panX) / this._speedPanX);
 		let timePanY     = Math.abs((this._targetPanY - this._panY) / this._speedPanY);
-		let timePanZ     = Math.abs((this._targetPanZ - this._panZ) / this._speedPanZ);		
+		let timePanZ     = Math.abs((this._targetPanZ - this._panZ) / this._speedPanZ);
 		
 		let animationtime = 1.0;
 		if(newtime) 
@@ -200,10 +200,10 @@ SphereTrackball.prototype = {
 		this._speedDistance *= timeDistance / animationtime;
 		this._speedPanX     *= timePanX / animationtime;
 		this._speedPanY     *= timePanY / animationtime;
-		this._speedPanZ     *= timePanZ / animationtime;		
-				
+		this._speedPanZ     *= timePanZ / animationtime;
+		
 		//start
-		this._animationStage = 0.0;		
+		this._animationStage = 0.0;
 		this._isAnimating = true;
 	},
 
@@ -214,26 +214,26 @@ SphereTrackball.prototype = {
 		var newpanY = (newpoint[1]-this.myPresenter.sceneCenter[1]) * this.myPresenter.sceneRadiusInv;
 		var newpanZ = (newpoint[2]-this.myPresenter.sceneCenter[2]) * this.myPresenter.sceneRadiusInv;
 
-		this.animateToState([this._rotMatrix, newpanX, newpanY, newpanZ, (this._distance * 0.6)]);		
+		this.animateToState([this._rotMatrix, newpanX, newpanY, newpanZ, (this._distance * 0.6)]);
 	},
 
 	tick : function (dt) {
 		if(!this._isAnimating) return false;
 		
-		var deltaRot      = this._speedRot * dt;		
+		var deltaRot      = this._speedRot * dt;
 		var deltaDistance = this._speedDistance * dt;
 		var deltaPanX     = this._speedPanX * dt;
 		var deltaPanY     = this._speedPanY * dt;
-		var deltaPanZ     = this._speedPanZ * dt;		
+		var deltaPanZ     = this._speedPanZ * dt;
 		
 		var diffDistance = this._targetDistance - this._distance;
 		var diffPanX     = this._targetPanX - this._panX;
 		var diffPanY     = this._targetPanY - this._panY;
-		var diffPanZ     = this._targetPanZ - this._panZ;		
+		var diffPanZ     = this._targetPanZ - this._panZ;
 	
 		this._animationStage += deltaRot;
 		let quatNow = this._slerp(this._quatBegin, this._quatEnd, this._animationStage);
-		this._rotMatrix = SglQuat.to44(quatNow);	
+		this._rotMatrix = SglQuat.to44(quatNow);
 	
 		if (diffDistance > deltaDistance)
 			this._distance += deltaDistance;
@@ -261,13 +261,13 @@ SphereTrackball.prototype = {
 		else if (diffPanZ < -deltaPanZ)
 			this._panZ -= deltaPanZ;
 		else
-			this._panZ = this._targetPanZ;	
+			this._panZ = this._targetPanZ;
 		
 		if(this._distance == this._targetDistance)
 			if(this._panX == this._targetPanX)
 				if(this._panY == this._targetPanY)
 					if(this._panZ == this._targetPanZ)
-						if(this._animationStage >= 1.0)	{
+						if(this._animationStage >= 1.0) {
 							this._isAnimating = false;
 							if(typeof onTrackballArrived != "undefined")
 								onTrackballArrived(this.getState());
@@ -283,7 +283,7 @@ SphereTrackball.prototype = {
 		return sglRadToDeg(2.0 * Math.acos(cosHalfTheta));
 	},
 
-	_slerp : function(qa, qb, value) {	
+	_slerp : function(qa, qb, value) {
 		if (value<=0.0) return qa;
 		if (value>=1.0) return qb;
 		
@@ -339,7 +339,7 @@ SphereTrackball.prototype = {
 	},
 
 	track : function(m, x, y, z) {
-		this._isAnimating = false; //stopping animation		
+		this._isAnimating = false; //stopping animation
 		if(this._new_action) {
 			this._past[0] = this.myPresenter.x;
 			this._past[1] = this.myPresenter.y;
@@ -349,10 +349,10 @@ SphereTrackball.prototype = {
 		this._pts[0][0] = this._past[0];
 		this._pts[0][1] = this._past[1];
 		this._pts[1][0] = this.myPresenter.x;
-		this._pts[1][1] = this.myPresenter.y;		
+		this._pts[1][1] = this.myPresenter.y;
 
 		this._past[0] = this.myPresenter.x;
-		this._past[1] = this.myPresenter.y;	
+		this._past[1] = this.myPresenter.y;
 
 		switch (this._action) {
 			case SGL_TRACKBALL_ROTATE:
@@ -390,7 +390,7 @@ SphereTrackball.prototype = {
 
 	pan : function(m) {
 		var dx = this._pts[0][0] - this._pts[1][0];
-		var dy = this._pts[0][1] - this._pts[1][1];		
+		var dy = this._pts[0][1] - this._pts[1][1];
 		
 		//determining current X, Y and Z axis
 		var Xvec = SglMat4.mul4(this._rotMatrix, [1.0, 0.0, 0.0, 1.0]);
@@ -407,7 +407,7 @@ SphereTrackball.prototype = {
 		this._panY = this._clamp(this._panY, this._minMaxPanY[0], this._minMaxPanY[1]);
 		this._panZ = this._clamp(this._panZ, this._minMaxPanZ[0], this._minMaxPanZ[1]);
 
-		this._computeMatrix();	
+		this._computeMatrix();
 	},
 
 	scale : function(m, s) {
