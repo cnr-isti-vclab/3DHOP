@@ -66,11 +66,28 @@ function hsvToRgb(h, s, v) {
 }
 
 //-----------------------------------------
+// RGBA [0-1] to hex html color code and back
+//-----------------------------------------
+function rgbaToHex(r, g, b, a=1.0) {
+    return "#" + ((1 << 24) + (Math.round(r*255) << 16) + (Math.round(g*255) << 8) + Math.round(b*255) + Math.round(a*255)).toString(16).slice(1);   
+}
+function hexToRgba(hex) {
+    var bigint = parseInt(hex.replace("#", ""), 16);
+    var r = (bigint >> 24) & 255;
+    var g = (bigint >> 16) & 255;
+    var b = (bigint >> 8) & 255;
+    var a = bigint & 255;
+    return [r/255, g/255, b/255, a/255];
+}
+
+//-----------------------------------------
 // return relative mouse coordinates of an event
 // i.e. the coordinates in the canvas space
 //
 // to start using this function, install it like this:
 // HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
+//
+// DEPRECATED. use event.offsetX and event.offsetY instead
 //
 //----------------------------------------
 function relMouseCoords(event){
