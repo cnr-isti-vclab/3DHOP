@@ -1,6 +1,6 @@
 /*
 Corto
-Copyright (c) 2017-2020, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2017-2023, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
