@@ -284,7 +284,7 @@ PanTiltTrackball.prototype = {
 			this._distance = this._targetDistance;
 
 		if(this._panX == this._targetPanX)
-			if(this._panX == this._targetPanX)
+			if(this._panY == this._targetPanY)
 				if(this._angleX == this._targetAngleX)
 					if(this._angleY == this._targetAngleY)
 						if(this._distance == this._targetDistance){
