@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.3.6";
+const HOP_VERSION             = "4.3.7";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -2376,6 +2376,7 @@ _drawScenePickingSpots : function () {
 		if (!instance.visible) continue;
 
 		// GLstate setup
+		if (instance.backfaceColor[3]==2.0) gl.depthMask(false);
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
@@ -2419,6 +2420,7 @@ _drawScenePickingSpots : function () {
 
 		// GLstate cleanup
 		xform.model.pop();
+		if (instance.backfaceColor[3]==2.0) gl.depthMask(true);
 	}
 
 	// second pass, draw color coded spots, for picking
@@ -2431,6 +2433,7 @@ _drawScenePickingSpots : function () {
 		if (!spot.visible) continue;
 
 		// GLstate setup
+		gl.depthMask(false);
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(spot.transform.matrix);

@@ -8,7 +8,7 @@
 
 Contact Us @ info@3dhop.net
 
-08 Mar 2023
+18 Jul 2025
 
 #### TEAM
 ---------
@@ -23,6 +23,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Main Changes**
 
+* Fixed HOTSPOTS detection when BACKFACE CULLING is active;
 * Fixed WEBGL2 IOS bug;
 * Fixed TURNTABLE TRACKBALLS rotation bug;
 * New SPHERE TRACKBALL;
@@ -34,11 +35,7 @@ Marco Potenziani     @ marco.potenziani@isti.cnr.it
 
 **Files Added/Modified**
 
-* Updated "presenter.js" file;
-* Updated "nexus.js" file;
-* Updated "nexus.monitor.js" file;
-* Updated "init.js" file;
-* Updated all "trackball_*.js" files;
+* Updated all "*.js" files (except spidergl and jquery);
 * Updated all "*.css" files;
 * Updated all "HOWTO_*.html" files;
 

@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2020, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2025, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -284,7 +284,7 @@ PanTiltTrackball.prototype = {
 			this._distance = this._targetDistance;
 
 		if(this._panX == this._targetPanX)
-			if(this._panX == this._targetPanX)
+			if(this._panY == this._targetPanY)
 				if(this._angleX == this._targetAngleX)
 					if(this._angleY == this._targetAngleY)
 						if(this._distance == this._targetDistance){

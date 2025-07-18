@@ -1,6 +1,6 @@
 /*
 3DHOP - 3D Heritage Online Presenter
-Copyright (c) 2014-2020, Visual Computing Lab, ISTI - CNR
+Copyright (c) 2014-2023, Visual Computing Lab, ISTI - CNR
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ SpiderGL.openNamespace();
 // CONSTANTS
 //----------------------------------------------------------------------------------------
 // version
-const HOP_VERSION             = "4.3.6";
+const HOP_VERSION             = "4.3.7";
 // selectors
 const HOP_ALL                 = 256;
 // starting debug mode
@@ -1823,20 +1823,52 @@ _drawScene : function () {
 			gl.enable(gl.BLEND);
 			gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 		}
+		else
+			entityUniforms["uColorID"][3] = 1.0;	// if no transparency, use full alpha, otherwise the entity cancels the background
+
 		//drawing entity
 		renderer.begin();
 			renderer.setTechnique(entitiesTechnique);
-			if (entity.type == "lines")
-				renderer.setPrimitiveMode("LINE");
-			else if (entity.type == "points")
+			if (entity.type == "points")
 				renderer.setPrimitiveMode("POINT");
-			else if (entity.type == "triangles")
+			else if (entity.type == "lines" || entity.type == "lineStrip" || entity.type == "lineLoop")
+				renderer.setPrimitiveMode("LINE");
+			else if (entity.type == "triangles" || entity.type == "triangleStrip" || entity.type == "triangleFan")
 				renderer.setPrimitiveMode("FILL");
 			renderer.setDefaultGlobals();
 			renderer.setGlobals(entityUniforms);
 			renderer.setModel(entity.renderable);
 			renderer.renderModel();
 		renderer.end();
+
+		if(entity.useSeethrough)	// draw seethrough
+		{
+			gl.depthFunc(gl.GREATER);
+			gl.depthMask(false);
+			gl.enable(gl.BLEND);
+			gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+	
+			entityUniforms["uColorID"] = [entity.color[0] * 0.4, entity.color[1] * 0.4, entity.color[2] * 0.4,  entity.color[3] * 0.4];	// seethrough color
+	
+			renderer.begin();
+				renderer.setTechnique(entitiesTechnique);
+				if (entity.type == "points")
+					renderer.setPrimitiveMode("POINT");
+				else if (entity.type == "lines" || entity.type == "lineStrip" || entity.type == "lineLoop")
+					renderer.setPrimitiveMode("LINE");
+				else if (entity.type == "triangles" || entity.type == "triangleStrip" || entity.type == "triangleFan")
+					renderer.setPrimitiveMode("FILL");
+				renderer.setDefaultGlobals();
+				renderer.setGlobals(entityUniforms);
+				renderer.setModel(entity.renderable);
+				renderer.renderModel();
+			renderer.end();
+	
+			// GLstate cleanup
+			gl.disable(gl.BLEND);
+			gl.depthMask(true);
+			gl.depthFunc(gl.LESS);
+		}
 		
 		if(entity.useTransparency)
 		{
@@ -2344,6 +2376,7 @@ _drawScenePickingSpots : function () {
 		if (!instance.visible) continue;
 
 		// GLstate setup
+		if (instance.backfaceColor[3]==2.0) gl.depthMask(false);
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(instance.transform.matrix);
@@ -2387,6 +2420,7 @@ _drawScenePickingSpots : function () {
 
 		// GLstate cleanup
 		xform.model.pop();
+		if (instance.backfaceColor[3]==2.0) gl.depthMask(true);
 	}
 
 	// second pass, draw color coded spots, for picking
@@ -2399,6 +2433,7 @@ _drawScenePickingSpots : function () {
 		if (!spot.visible) continue;
 
 		// GLstate setup
+		gl.depthMask(false);
 		xform.model.push();
 		xform.model.multiply(space.transform.matrix);
 		xform.model.multiply(spot.transform.matrix);
@@ -2634,8 +2669,6 @@ onInitialize : function () {
 	// current cursor XY position normalized [-1 1] on canvas size, and delta
 	this.x	= 0.0;
 	this.y	= 0.0;
-//	this.dx	= 0.0;
-//	this.dy	= 0.0;
 	
 	// scene data
 	this._scene         = null;
@@ -2728,9 +2761,6 @@ onDrag : function (button, x, y, e) {
 
 	// if locked trackball, just return. we check AFTER the light-trackball test
 	if (this._scene.trackball.locked) return;
-
-//	if(ui.dragDeltaX(button) != 0) this.dx += (ui.cursorDeltaX/ui.width);
-//	if(ui.dragDeltaY(button) != 0) this.dy += (ui.cursorDeltaY/ui.height);
 
 	var action = SGL_TRACKBALL_NO_ACTION;
 	if ((ui.isMouseButtonDown(0) && ui.isKeyDown(17)) || ui.isMouseButtonDown(1) || ui.isMouseButtonDown(2)) {
@@ -2968,7 +2998,7 @@ saveScreenshot : function () {
 
 //------entities-------------------
 createEntity : function (eName, type, verticesList) {
-	// type "points", "lines", "triangles"
+	// type: points, lines, lineStrip, lineLoop, triangles, triangleStrip, triangleFan.
 	var nEntity = {};
 	nEntity.visible = true;
 	nEntity.type = type;
@@ -2977,16 +3007,12 @@ createEntity : function (eName, type, verticesList) {
 	nEntity.transform.matrix = SglMat4.identity();
 	nEntity.color = [1.0, 0.0, 1.0, 1.0];
 	nEntity.useTransparency = false;
+	nEntity.useSeethrough = false;
 	nEntity.pointSize = 6.0;
 	nEntity.zOff = 0.0;
 
 	var modelDescriptor = {};
-	if(type == "points")
-		modelDescriptor.primitives = ["points"];
-	else if(type == "lines")
-		modelDescriptor.primitives = ["lines"];
-	else if(type == "triangles")
-		modelDescriptor.primitives = ["triangles"];	
+	modelDescriptor.primitives = [type];
 	modelDescriptor.vertices = {};
 	modelDescriptor.vertices.position = [];
 	modelDescriptor.vertices.normal = [];
@@ -3008,9 +3034,9 @@ createEntity : function (eName, type, verticesList) {
 	
 	// setting
 	this._scene.entities[eName] = {};
-	this._scene.entities[eName] = nEntity;
-	return this._scene.entities[eName];
+	this._scene.entities[eName] = nEntity;;
 	this.repaint();	
+	return this._scene.entities[eName];
 },
 
 deleteEntity : function (eName) {
@@ -3945,16 +3971,23 @@ zoomOut: function() {
 // light
 
 rotateLight: function(x, y) {
-	x *= 2;
-	y *= 2;
-	var r = Math.sqrt(x*x + y*y);
+	var dx = x * 2.0;
+	var dy = y * 2.0;
+	var dz = 0.0;
+	var r = Math.sqrt(dx*dx + dy*dy);
 	if(r >= 1) {
-		x /= r;
-		y /= r;
-		r = 0.999;
+		dx /= r;
+		dy /= r;
+		dz = 0.0;
+	} else {
+		dz = Math.sqrt(1 - r*r);
 	}
-	var z = Math.sqrt(1 - r*r);
-	this._lightDirection = [-x, -y, -z];
+	this._lightDirection = [-dx, -dy, -dz];
+	this.repaint();
+},
+
+setLight: function(dir) {
+	this._lightDirection = SglVec3.normalize([-dir[0], -dir[1], -dir[2]]);
 	this.repaint();
 },
 
