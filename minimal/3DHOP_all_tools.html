@@ -1,26 +1,18 @@
 <!DOCTYPE>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<meta content="charset=UTF-8"/>
-<title>3DHOP - 3D Heritage Online Presenter</title>
-<!--STYLESHEET-->
-<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>
-<!--SPIDERGL-->
-<script type="text/javascript" src="js/spidergl.js"></script>
-<!--JQUERY-->
-<script type="text/javascript" src="js/jquery.js"></script>
-<!--PRESENTER-->
-<script type="text/javascript" src="js/presenter.js"></script>
-<!--3D MODELS LOADING AND RENDERING-->
-<script type="text/javascript" src="js/nexus.js"></script>
-<script type="text/javascript" src="js/ply.js"></script>
-<!--TRACKBALLS-->
-<script type="text/javascript" src="js/trackball_turntable.js"></script>
-<script type="text/javascript" src="js/trackball_turntable_pan.js"></script>
-<script type="text/javascript" src="js/trackball_pantilt.js"></script>
-<script type="text/javascript" src="js/trackball_sphere.js"></script>
-<!--UTILITY-->
-<script type="text/javascript" src="js/init.js"></script>
+	<meta content="charset=UTF-8"/>
+	<title>3DHOP - 3D Heritage Online Presenter</title>
+	<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>
+	<script type="text/javascript" src="js/spidergl.js"></script>
+	<script type="text/javascript" src="js/presenter.js"></script>
+	<script type="text/javascript" src="js/nexus.js"></script>
+	<script type="text/javascript" src="js/ply.js"></script>
+	<script type="text/javascript" src="js/trackball_turntable.js"></script>
+	<script type="text/javascript" src="js/trackball_turntable_pan.js"></script>
+	<script type="text/javascript" src="js/trackball_pantilt.js"></script>
+	<script type="text/javascript" src="js/trackball_sphere.js"></script>
+	<script type="text/javascript" src="js/init.js"></script>
 </head>
 <body>
 <div id="3dhop" class="tdhop"><div id="tdhlg"></div>
@@ -186,21 +178,23 @@ function actionsToolbar(action) {
 function onEndMeasure(measure) {
 	// measure.toFixed(2) sets the number of decimals when displaying the measure
 	// depending on the model measure units, use "mm","m","km" or whatever you have
-	$('#measure-output').html(measure.toFixed(2) + "mm"); 
+	var el = document.getElementById('measure-output');
+	if (el) el.innerHTML = measure.toFixed(2) + "mm";
 }
 //--MEASURE--
 
 //--PICKPOINT--
 function onEndPick(point) {
-	// .toFixed(2) sets the number of decimals when displaying the picked point	
+	// .toFixed(2) sets the number of decimals when displaying the picked point
 	var x = point[0].toFixed(2);
 	var y = point[1].toFixed(2);
 	var z = point[2].toFixed(2);
-    $('#pickpoint-output').html("[ "+x+" , "+y+" , "+z+" ]");
-} 
-//--PICKPOINT--	
+	var el = document.getElementById('pickpoint-output');
+	if (el) el.innerHTML = "[ " + x + " , " + y + " , " + z + " ]";
+}
+//--PICKPOINT--
 
-$(document).ready(function(){
+document.addEventListener('DOMContentLoaded', function () {
 	init3dhop();
 
 	setup3dhop();

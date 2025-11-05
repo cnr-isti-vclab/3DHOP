@@ -7,8 +7,6 @@
 <link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>  
 <!--SPIDERGL-->
 <script type="text/javascript" src="js/spidergl.js"></script>
-<!--JQUERY-->
-<script type="text/javascript" src="js/jquery.js"></script>
 <!--PRESENTER-->
 <script type="text/javascript" src="js/presenter.js"></script>
 <!--3D MODELS LOADING AND RENDERING-->
@@ -72,10 +70,11 @@ function actionsToolbar(action) {
 	else if(action=='full'  || action=='full_on') fullscreenSwitch(); 
 }
 
-$(document).ready(function(){
+document.addEventListener('DOMContentLoaded', function () {
 	init3dhop();
 
 	setup3dhop();
 });
+
 </script>
 </html>
