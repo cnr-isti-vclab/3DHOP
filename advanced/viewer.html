@@ -1,0 +1,1182 @@
+<!DOCTYPE>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta content="charset=UTF-8"/>
+<title>3DHOP - Advanced Viewer</title>
+<!--STYLESHEET-->
+<link type="text/css" rel="stylesheet" href="stylesheet/3dhop.css"/>
+<link type="text/css" rel="stylesheet" href="stylesheet/tdh_advanced.css"/>
+<link type="text/css" rel="stylesheet" href="stylesheet/fonts/material-symbols-local.css"/>
+<!--SPIDERGL-->
+<script type="text/javascript" src="js/spidergl.js"></script>
+<!--JQUERY-->
+<script type="text/javascript" src="js/jquery.js"></script>
+<!--PRESENTER-->
+<script type="text/javascript" src="js/presenter.js"></script>
+<!--3D MODELS LOADING AND RENDERING-->
+<script type="text/javascript" src="js/nexus.js"></script>
+<script type="text/javascript" src="js/ply.js"></script>
+<!--TRACKBALLS-->
+<script type="text/javascript" src="js/trackball_turntable.js"></script>
+<script type="text/javascript" src="js/trackball_turntable_pan.js"></script>
+<script type="text/javascript" src="js/trackball_sphere.js"></script>
+<!--UTILITY-->
+<script type="text/javascript" src="js/init.js"></script>
+<script type="text/javascript" src="js/helpers.js"></script>
+</head>
+<body>
+<div id="3dhop" class="tdhop" tabindex="0" style="background: linear-gradient(0deg,rgba(19, 26, 28, 1) 5%, rgba(15, 108, 145, 1) 95%);">
+	<div id="tdhlg"></div>
+	<canvas id="draw-canvas"></canvas>
+
+	<!--INTERFACE-->
+	<!-- Light controller canvas - positioned outside panel hierarchy for proper z-index -->
+	<canvas id="lightcontroller" width="10" height="10" style="display: none; position: fixed; z-index: 9999;"></canvas>
+	
+	<div class="tdh_interfacedx">
+		<div id="div_navcube">
+			<div class="cubeScene">
+				<div id="navcube" class="cube">
+				  <div class="cube__face cube__face--front" onclick="viewFrom('front');">FRONT</div>
+				  <div class="cube__face cube__face--back" onclick="viewFrom('back');">BACK</div>
+				  <div class="cube__face cube__face--right" onclick="viewFrom('right');">RIGHT</div>
+				  <div class="cube__face cube__face--left" onclick="viewFrom('left');">LEFT</div>
+				  <div class="cube__face cube__face--top" onclick="viewFrom('top');">ABOVE</div>
+				  <div class="cube__face cube__face--bottom" onclick="viewFrom('bottom');">BELOW</div>
+				</div>
+			  </div>				
+		</div>
+
+		<div class="tdh_panel tdh_row">
+			<button onclick="resetTrackball();" title="HOME VIEW"><span class="material-symbols-outlined">home</span></button>			
+			<button onclick="toggleTrackball();" id="bt_sphere" title="SPHERE/TURNTABLE"><span id="span_track" class="material-symbols-outlined">language</span></button>
+			<button onclick="toggleUp();" title="Y/Z UP"><span class="material-symbols-outlined">arrow_upward</span><span id="span_up">Y</span></button>
+			<button onclick="toggleCamera();" title="PERSPECTIVE/ORTHOGRAPHIC"><span class="material-symbols-outlined">videocam</span><span id="span_cam">P</span></button>
+		</div>
+
+		<div class="tdh_panel tdh_col">
+			<div class="tdh_row">
+				<button id="bt_lightdir" title="LIGHT DIRECTION"><span class="material-symbols-outlined">flashlight_on</span></button>
+				<button onclick="toggleLighting();" id="bt_lighting" title="ILLUMINATION ON/OFF"><span id="span_lighting" class="material-symbols-outlined">lightbulb</span></button>
+				<button onclick="setSpecularity();" title="SHINYNESS LEVEL"><span class="material-symbols-outlined">backlight_high</span><span id="span_specularity">1</span></button>
+			</div>
+			<div class="tdh_row">
+				<button onclick="toggleSolid();" title="COLOR/SOLID"><span id="span_solid" class="material-symbols-outlined">palette</span></button>
+				<button onclick="toggleTransparency();" title="TRANSPARENCY ON/OFF"><span id="span_transp" class="material-symbols-outlined">check_box_outline_blank</span></button>
+				<button onclick="toggleBackface();" title="BACKFACE"><span class="material-symbols-outlined">text_select_jump_to_beginning</span><span id="span_backface">T</span></button>				
+			</div>
+		</div>
+
+		<div class="tdh_panel tdh_col">
+			<div class="tdh_row">
+				<button onclick="toggleAxes();" title="AXES ON/OFF"><span id="span_axes" class="material-symbols-outlined">more_horiz</span></button>
+				<button onclick="toggleReference();" title="WIDGET ON/OFF"><span id="span_reference" class="material-symbols-outlined">grid_on</span></button>				
+			</div>			
+		</div>
+
+		<div class="tdh_panel tdh_col">
+			<div class="tdh_row">
+				<button onclick="toggleSectioning(!VIEWER_STATE.sectioning);" id="bt_sections" title="Sectioning"><span class="material-symbols-outlined">rainy_heavy</span></button>
+				<div class="sectioning">P<input type="checkbox" id="cb_sectPlane" checked onchange="toggleSectPlane(this.checked);"></div>
+				<div class="sectioning">B<input type="checkbox" id="cb_sectBorder" onchange="toggleSectBorder(this.checked);"></div>
+			</div>
+			<div class="tdh_row sectioning">
+				<button onclick="toggleSect(0)" id="bt_sect0" title="X">X<span id="dirS0"></span></button>
+				<input type="range" id="sect0" min="0.0" max="1.0" step="0.01" value="0.5" oninput="setSection(0,this.value);">
+			</div>
+			<div class="tdh_row sectioning">
+				<button onclick="toggleSect(1)" id="bt_sect1" title="X">Y<span id="dirS1"></span></button>
+				<input type="range" id="sect1" min="0.0" max="1.0" step="0.01" value="0.5" oninput="setSection(1,this.value);">
+			</div>
+			<div class="tdh_row sectioning">
+				<button onclick="toggleSect(2)" id="bt_sect2" title="X">Z<span id="dirS2"></span></button>
+				<input type="range" id="sect2" min="0.0" max="1.0" step="0.01" value="0.5" oninput="setSection(2,this.value);">
+			</div>
+		</div>
+
+	</div>
+	<!--INTERFACE-->
+
+	<!--INTERFACE TOOLS-->
+	<div class="tdh_interfacetools">
+		<div class="tdh_panel tdh_row">
+			<button onclick="startMeasure();" id="bt_measure" title="Distance"><span class="material-symbols-outlined">straighten</span></button>
+			<button onclick="startAngle();" id="bt_angle" title="Angle"><span class="material-symbols-outlined">square_foot</span></button>
+			<button onclick="startPick();" id="bt_pick" title="Pick Point"><span class="material-symbols-outlined">point_scan</span></button>
+		</div>
+		<div class="tdh_panel tdh_row" id="output_panel" style="display:none;">
+			<div>
+				<span id="span_output">----</span> <span id="span_message"></span>
+			</div>
+		</div>		
+	</div>
+	<!--INTERFACE TOOLS-->
+
+</div>
+</body>
+
+<script type="text/javascript">
+var presenter = null;	  // GLOBAL PRESENTER OBJECT
+var VIEWER_STATE = {};    // VIEWER STATE OBJECT
+//-------------------- DEFAULTS --------------------
+const DEFAULT_STATE = {
+		"modelURL"     : null,
+		"units"        : null,
+		"trackball"    : "sphere", // sphere or turntable
+		"up"           : "Y", // Y or Z
+		"baseView"     : [25,15,1.5],
+		"cameraType"   : "perspective", // perspective or orthographic
+		"currentTool"  : null,
+		"toolStage"	   : null,
+		"lighting"     : true,
+		"lightDir"     : [-0.17, 0.17], // initial lighting is top-left lighting
+		"solid"        : false,
+		"solidColor"   : [0.5, 0.6, 0.4],
+		"backface"     : [0.6, 0.4, 0.4, 3.0], // 4th number is backface mode (2=tinted,3=neutral,4=culled)
+		"transparent"  : false,
+		"alpha"        : 0.5,
+		"specularity"  : 1,
+		"axes"         : false,
+		"reference"    : true,
+		"sectioning"   : false,
+		"sections"     : [1, 1, 1],
+		"sectionPoint" : [0.0, 0.0, 0.0],
+	}	
+const FALLBACK_MODEL = "./models/laurana.nxz";
+const DEFAULT_TRACKLIMITS = {
+		minMaxDist    : [0.1, 4.0],
+		minMaxPhi     : [-180, 180],
+		minMaxTheta   : [-90.0, 90.0],
+		minMaxPanX    : [-1.0, 1.0],
+		minMaxPanY    : [-1.0, 1.0],
+		minMaxPanZ    : [-1.0, 1.0],
+}
+//-------------------- DEFAULTS --------------------
+
+function resetViewerState() {
+	VIEWER_STATE = structuredClone(DEFAULT_STATE);
+	displayViewerState();
+	closeAllTools();
+}
+
+function displayViewerState() {
+	document.getElementById("span_lighting").innerHTML = (VIEWER_STATE.lighting)?"lightbulb":"light_off";
+	document.getElementById("span_up").innerHTML = (VIEWER_STATE.up === "Y")?"Y":"Z";
+	document.getElementById("span_track").innerHTML = (VIEWER_STATE.trackball === "sphere")?"language":"table_bar";
+	document.getElementById("span_cam").innerHTML = (VIEWER_STATE.cameraType === "perspective")?"P":"O";
+	document.getElementById("span_solid").innerHTML = (VIEWER_STATE.solid)?"format_color_reset":"palette";
+	document.getElementById("span_transp").innerHTML = (VIEWER_STATE.transparent)?"gradient":"check_box_outline_blank";
+	document.getElementById("span_backface").innerHTML = (VIEWER_STATE.backface[3] == 2.0)?"C":(VIEWER_STATE.backface[3] == 3.0)?"T":"N";
+	document.getElementById("span_specularity").innerHTML = VIEWER_STATE.specularity;
+	document.getElementById("span_axes").innerHTML = (VIEWER_STATE.axes)?"matter":"more_horiz";
+	document.getElementById("span_reference").innerHTML = (VIEWER_STATE.reference)?(VIEWER_STATE.trackball === "sphere")?"orbit":"grid_on":"more_horiz";
+}
+
+function viewerSetup() { 
+	resetViewerState();
+
+	console.log("Loading model: " + VIEWER_STATE.modelURL);
+	var myscene = {
+		meshes: {
+			"mesh_1" : { url: VIEWER_STATE.modelURL}
+		},
+		modelInstances : {
+			"model_1" : {
+				mesh : "mesh_1", 
+				color : VIEWER_STATE.solidColor,
+				useSolidColor : false,
+				backfaceColor : VIEWER_STATE.backface,
+				specularColor : [0.1, 0.1, 0.1, 32.0],
+				alpha : VIEWER_STATE.alpha,
+				useTransparency : false,
+				useLighting : true,
+				visible : true,				
+				tags : ["SPECIMEN"]
+			}
+		},
+		space: {
+			centerMode       : "scene",
+			radiusMode       : "scene",
+			transform        : null,
+			cameraFOV        : 60.0,
+			cameraNearFar    : [0.01, 10.0],
+			cameraType       : "perspective",
+			sceneLighting    : true,
+		}
+	};
+
+	if(VIEWER_STATE.trackball === "turntable") {
+		myscene.trackball = { 
+			type : TurntablePanTrackball,
+			trackOptions : {
+				startPhi      : VIEWER_STATE.baseView[0],
+				startTheta    : VIEWER_STATE.baseView[1],
+				startPanX     : 0.0,
+				startPanY     : 0.0,
+				startPanZ     : 0.0,
+				startDistance : VIEWER_STATE.baseView[2],
+				minMaxDist    : [...DEFAULT_TRACKLIMITS.minMaxDist],
+				minMaxPhi     : [...DEFAULT_TRACKLIMITS.minMaxPhi],
+				minMaxTheta   : [...DEFAULT_TRACKLIMITS.minMaxTheta],
+				minMaxPanX    : [...DEFAULT_TRACKLIMITS.minMaxPanX],
+				minMaxPanY    : [...DEFAULT_TRACKLIMITS.minMaxPanY],
+				minMaxPanZ    : [...DEFAULT_TRACKLIMITS.minMaxPanZ],
+			}
+		};
+	}
+	else if (VIEWER_STATE.trackball === "sphere") {
+		myscene.trackball = { 
+			type : SphereTrackball,
+			trackOptions : {
+				startMatrix   : SglMat4.mul(SglMat4.rotationAngleAxis(sglDegToRad(VIEWER_STATE.baseView[1]), [1.0, 0.0, 0.0]),SglMat4.rotationAngleAxis(sglDegToRad(VIEWER_STATE.baseView[0]), [0.0, -1.0, 0.0])),
+				startPanX     : 0.0,
+				startPanY     : 0.0,
+				startPanZ     : 0.0,
+				startDistance : VIEWER_STATE.baseView[2],
+				minMaxDist    : [...DEFAULT_TRACKLIMITS.minMaxDist],
+				minMaxPanX    : [...DEFAULT_TRACKLIMITS.minMaxPanX],
+				minMaxPanY    : [...DEFAULT_TRACKLIMITS.minMaxPanY],
+				minMaxPanZ    : [...DEFAULT_TRACKLIMITS.minMaxPanZ]
+			}
+		};
+	}
+
+	// initializing viewer scene
+	presenter.setScene(myscene);
+
+	// at startup, load widgets
+	setTimeout(startupWidgets, 100);
+	
+	// initializing light controller
+	initLightController(VIEWER_STATE.lightDir[0],VIEWER_STATE.lightDir[1]);
+
+	// Attach keypress event listener to 3dhop div
+	var dhopDiv = document.getElementById('3dhop');
+	dhopDiv.addEventListener('keydown', handleKeyPress);
+	dhopDiv.focus();	// Set focus to capture key events
+}
+
+
+function toggleBackface() {
+	(VIEWER_STATE.backface[3] == 4.0)? VIEWER_STATE.backface[3] = 2.0 : VIEWER_STATE.backface[3] += 1.0;
+	presenter._scene.modelInstances['model_1'].backfaceColor = [...VIEWER_STATE.backface];
+	presenter.repaint();
+	displayViewerState();		
+}
+
+function setSpecularity() {
+	VIEWER_STATE.specularity = (VIEWER_STATE.specularity + 1)%4;	
+	var specularColor = [0.1 * VIEWER_STATE.specularity, 0.1 * VIEWER_STATE.specularity, 0.1 * VIEWER_STATE.specularity, 32];
+	presenter._scene.modelInstances['model_1'].specularColor = specularColor;
+	presenter.repaint();
+	displayViewerState();
+}
+
+function toggleTransparency() {
+	VIEWER_STATE.transparent = !VIEWER_STATE.transparent;
+	presenter.setInstanceTransparencyByName('model_1', VIEWER_STATE.transparent, true);
+	displayViewerState();
+}
+
+function toggleSolid() {
+	VIEWER_STATE.solid = !VIEWER_STATE.solid;
+	presenter.setInstanceSolidColorByName('model_1', VIEWER_STATE.solid, true);
+	displayViewerState();
+}
+
+function toggleLighting() {
+	VIEWER_STATE.lighting = !VIEWER_STATE.lighting;
+	presenter.setInstanceLightingByName("model_1", VIEWER_STATE.lighting, true);
+	displayViewerState();
+}
+
+function toggleAxes() {
+	VIEWER_STATE.axes = !VIEWER_STATE.axes;
+	if (VIEWER_STATE.axes) {
+		addAxes("model_1");
+	} else {
+		removeAxes("model_1");
+	}
+	displayViewerState();	
+}
+
+function toggleReference() {
+	VIEWER_STATE.reference = !VIEWER_STATE.reference;
+	if (VIEWER_STATE.reference) {
+		if(VIEWER_STATE.trackball === "turntable")
+			addBaseGrid("model_1");
+		else if (VIEWER_STATE.trackball === "sphere")
+			addTrackSphere("model_1");
+	} else {
+		removeBaseGrid();
+		removeTrackSphere();		
+	}
+	displayViewerState();
+}
+
+function toggleCamera() {
+	if (VIEWER_STATE.cameraType === "perspective") {
+		VIEWER_STATE.cameraType = "orthographic";
+		presenter.setCameraOrthographic();
+	} else {
+		VIEWER_STATE.cameraType = "perspective";
+		presenter.setCameraPerspective();
+	}
+	displayViewerState();
+}
+
+function toggleUp() {
+	closeAllTools();
+	if (VIEWER_STATE.up === "Y") {
+		VIEWER_STATE.up = "Z";
+		presenter._scene.space.transform.matrix = SglMat4.rotationAngleAxis(sglDegToRad(-90), [1.0, 0.0, 0.0]);
+	} 
+	else if (VIEWER_STATE.up === "Z") {
+		VIEWER_STATE.up = "Y";
+		presenter._scene.space.transform.matrix = SglMat4.identity();
+	}
+	displayViewerState();
+
+	if(VIEWER_STATE.trackball === "turntable") {
+		removeBaseGrid();
+		addBaseGrid("model_1");
+	} else if (VIEWER_STATE.trackball === "sphere") {
+		removeTrackSphere();
+		addTrackSphere("model_1");
+	}
+
+	presenter.repaint();
+}
+
+//-------- TRACKBALL -------------------------------
+
+function resetTrackball() {
+	if(VIEWER_STATE.trackball === "sphere") {
+		presenter.animateToTrackballPosition([SglMat4.mul(SglMat4.rotationAngleAxis(sglDegToRad(VIEWER_STATE.baseView[1]), [1.0, 0.0, 0.0]),SglMat4.rotationAngleAxis(sglDegToRad(VIEWER_STATE.baseView[0]), [0.0, -1.0, 0.0])), 0.0, 0.0, 0.0, VIEWER_STATE.baseView[2] ]);
+	}
+	else if (VIEWER_STATE.trackball === "turntable") {
+		presenter.animateToTrackballPosition([VIEWER_STATE.baseView[0], VIEWER_STATE.baseView[1], 0, 0, 0, VIEWER_STATE.baseView[2]]);
+	}
+}
+
+function toggleTrackball() {
+	if (VIEWER_STATE.trackball === "sphere") {
+		VIEWER_STATE.trackball = "turntable";
+		setTurntable();
+	}
+	else if (VIEWER_STATE.trackball === "turntable") {
+		VIEWER_STATE.trackball = "sphere";
+		setSphere();
+	}
+	displayViewerState();
+}
+
+function setSphere(){
+	var oldStatus = presenter.getTrackballPosition();
+	// get rot matrix from current status
+	var rotM = SglMat4.identity();
+	rotM = SglMat4.mul(rotM, SglMat4.rotationAngleAxis(sglDegToRad(oldStatus[1]), [1.0, 0.0, 0.0]));
+	rotM = SglMat4.mul(rotM, SglMat4.rotationAngleAxis(sglDegToRad(oldStatus[0]), [0.0, -1.0, 0.0]));
+
+	var options = {
+		startCenter   : [ 0.0, 0.0, 0.0 ],
+		startMatrix   : SglMat4.mul(SglMat4.rotationAngleAxis(sglDegToRad(VIEWER_STATE.baseView[1]), [1.0, 0.0, 0.0]),SglMat4.rotationAngleAxis(sglDegToRad(VIEWER_STATE.baseView[0]), [0.0, -1.0, 0.0])),
+		startPanX     : 0.0,
+		startPanY     : 0.0,
+		startPanZ     : 0.0,
+		startDistance : VIEWER_STATE.baseView[2],
+		minMaxDist    : [...DEFAULT_TRACKLIMITS.minMaxDist],
+		minMaxPanX    : [...DEFAULT_TRACKLIMITS.minMaxPanX],
+		minMaxPanY    : [...DEFAULT_TRACKLIMITS.minMaxPanY],
+		minMaxPanZ    : [...DEFAULT_TRACKLIMITS.minMaxPanZ]
+	}
+
+	presenter.trackball = new SphereTrackball();
+	presenter.trackball.setup(options, presenter);
+	presenter.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
+
+	// now setting stuff
+	presenter.trackball._rotMatrix = rotM;
+	presenter.trackball._panX = oldStatus[2];
+	presenter.trackball._panY = oldStatus[3];
+	presenter.trackball._panZ = oldStatus[4];
+	presenter.trackball._distance = oldStatus[5];
+
+	removeBaseGrid();
+	removeTrackSphere();
+	if(VIEWER_STATE.reference)
+		addTrackSphere("model_1");
+
+	presenter.repaint();		
+	displayViewerState();
+}
+
+function setTurntable(){
+	var oldStatus = presenter.getTrackballPosition();
+	// get angles from rotmatrix
+	// TODO TODO
+	var options = {
+		startCenter   : [ 0.0, 0.0, 0.0 ],
+		startPhi      : VIEWER_STATE.baseView[0],
+		startTheta    : VIEWER_STATE.baseView[1],
+		startPanX     : 0.0,
+		startPanY     : 0.0,
+		startPanZ     : 0.0,
+		startDistance : VIEWER_STATE.baseView[2],
+		minMaxDist    : [...DEFAULT_TRACKLIMITS.minMaxDist],
+		minMaxPhi     : [...DEFAULT_TRACKLIMITS.minMaxPhi],
+		minMaxTheta   : [...DEFAULT_TRACKLIMITS.minMaxTheta],
+		minMaxPanX    : [...DEFAULT_TRACKLIMITS.minMaxPanX],
+		minMaxPanY    : [...DEFAULT_TRACKLIMITS.minMaxPanY],
+		minMaxPanZ    : [...DEFAULT_TRACKLIMITS.minMaxPanZ],
+	}
+
+	presenter.trackball = new TurntablePanTrackball();
+	presenter.trackball.setup(options, presenter);
+	presenter.trackball.track(SglMat4.identity(), 0.0, 0.0, 0.0);
+
+	// now setting stuff
+	presenter.trackball._panX = oldStatus[1];
+	presenter.trackball._panY = oldStatus[2];
+	presenter.trackball._panZ = oldStatus[3];
+	presenter.trackball._distance = oldStatus[4];
+
+	removeBaseGrid();
+	removeTrackSphere();
+	if(VIEWER_STATE.reference)
+		addBaseGrid("model_1");
+
+	presenter.repaint();
+	displayViewerState();	
+}
+
+//--------SECTIONING-------------------------------
+function toggleSectioning(value) {
+	VIEWER_STATE.sectioning = value;
+	if(value){
+		document.getElementById("bt_sections").classList.add("highlighted");
+		document.querySelectorAll(".sectioning").forEach(function(el) { el.style.display = "flex"; });
+	}
+	else {
+		document.getElementById("bt_sections").classList.remove("highlighted");
+		document.querySelectorAll(".sectioning").forEach(function(el) { el.style.display = "none"; });
+	}
+
+	VIEWER_STATE.sections = [1, 1, 1];
+	document.getElementById("bt_sect0").classList.remove("highlighted");
+	document.getElementById("bt_sect1").classList.remove("highlighted");
+	document.getElementById("bt_sect2").classList.remove("highlighted");
+	document.getElementById("dirS0").innerHTML = "&nbsp;";
+	document.getElementById("dirS1").innerHTML = "&nbsp;";
+	document.getElementById("dirS2").innerHTML = "&nbsp;";
+	presenter.setClippingXYZ(VIEWER_STATE.sections[0]-1, VIEWER_STATE.sections[1]-1, VIEWER_STATE.sections[2]-1);
+
+	VIEWER_STATE.sectionPoint = [0.5, 0.5, 0.5];
+	document.getElementById("sect0").value = VIEWER_STATE.sectionPoint[0];
+	document.getElementById("sect1").value = VIEWER_STATE.sectionPoint[1];
+	document.getElementById("sect2").value = VIEWER_STATE.sectionPoint[2];
+	presenter.setClippingPointXYZ(VIEWER_STATE.sectionPoint[0], VIEWER_STATE.sectionPoint[1], VIEWER_STATE.sectionPoint[2]);
+}
+function toggleSect(axis) {
+	var label = ['-','&nbsp;','+'];
+	VIEWER_STATE.sections[axis] = (VIEWER_STATE.sections[axis] + 1) % 3; // 0, 1, 2
+	document.getElementById("dirS"+axis).innerHTML = label[VIEWER_STATE.sections[axis]];
+
+	presenter.setClippingXYZ(VIEWER_STATE.sections[0]-1, VIEWER_STATE.sections[1]-1, VIEWER_STATE.sections[2]-1);
+}
+function setSection(axis, value) {
+	VIEWER_STATE.sectionPoint[axis] = parseFloat(value);
+	presenter.setClippingPointXYZ(VIEWER_STATE.sectionPoint[0], VIEWER_STATE.sectionPoint[1], VIEWER_STATE.sectionPoint[2]);
+	if(VIEWER_STATE.sections[axis] == 1) {
+		toggleSect(axis);
+	}
+}
+function toggleSectPlane(value) {
+	presenter._scene.config.showClippingPlanes = value;
+	presenter.repaint();
+}
+function toggleSectBorder(value) {
+	presenter._scene.config.showClippingBorder = value;
+	presenter.repaint();
+}
+
+//--------BASE GRID	-------------------------------
+function addBaseGrid(instance) {
+	var rad = 1.0 / presenter.sceneRadiusInv;
+	var bb = getBBox(instance);
+	var XC, YC, ZC;
+	
+	var gStep,gStepNum;
+	if(VIEWER_STATE.units === "m") {
+		gStep = 1.0;
+		gStepNum = Math.ceil(rad/gStep);		
+	}
+	else if(VIEWER_STATE.units === "mm") {
+		gStep = 10.0;
+		gStepNum = Math.ceil(rad/gStep);		
+	}
+	else {
+		gStepNum = 5;
+		gStep = rad/gStepNum;
+	}
+	
+	var linesBuffer, grid, gg;
+	linesBuffer = [];
+	if (VIEWER_STATE.up === "Y") {
+		XC = (bb[0] + bb[3]) / 2.0;
+		YC = bb[4];
+		ZC = (bb[2] + bb[5]) / 2.0;
+		for (gg = -gStepNum; gg <= gStepNum; gg+=1)
+		{
+			linesBuffer.push([XC + (gg*gStep), YC, ZC + (-gStep*gStepNum)]);
+			linesBuffer.push([XC + (gg*gStep), YC, ZC + ( gStep*gStepNum)]);
+			linesBuffer.push([XC + (-gStep*gStepNum), YC, ZC + (gg*gStep)]);
+			linesBuffer.push([XC + ( gStep*gStepNum), YC, ZC + (gg*gStep)]);
+		}
+	} else if (VIEWER_STATE.up === "Z") {
+		XC = (bb[0] + bb[3]) / 2.0;
+		YC = (bb[1] + bb[4]) / 2.0;
+		ZC = bb[5];
+		for (gg = -gStepNum; gg <= gStepNum; gg+=1)
+		{
+			linesBuffer.push([XC + (gg*gStep), YC + (-gStep*gStepNum), ZC]);
+			linesBuffer.push([XC + (gg*gStep), YC + ( gStep*gStepNum), ZC]);
+			linesBuffer.push([XC + (-gStep*gStepNum), YC + (gg*gStep), ZC]);
+			linesBuffer.push([XC + ( gStep*gStepNum), YC + (gg*gStep), ZC]);
+		}
+	}
+	grid = presenter.createEntity("baseGrid", "lines", linesBuffer);
+	grid.color = [0.9, 0.9, 0.9, 0.3];
+	grid.zOff = 0.0;
+	grid.useTransparency = true;
+	presenter.repaint();
+}
+function removeBaseGrid() {
+	presenter.deleteEntity("baseGrid");
+}
+
+//-------- TRACK SPHERE -------------------------------
+function addTrackSphere(instance) {
+	var rad = 0.7 / presenter.sceneRadiusInv;
+	var bb = getBBox(instance);
+	
+	var XC = (bb[0] + bb[3]) / 2.0;
+	var YC = (bb[1] + bb[4]) / 2.0;
+	var ZC = (bb[2] + bb[5]) / 2.0;
+
+	var sStep,sStepNum;	
+	sStepNum = 32;
+	sStep = (2 * Math.PI) / sStepNum;
+	
+	var linesBuffer, sphere, ii;
+	linesBuffer = [];
+	for (ii = 0; ii < sStepNum; ii+=1)
+	{
+		linesBuffer.push([XC + (Math.cos(ii*sStep) * rad), YC, ZC + (Math.sin(ii*sStep) * rad)]);
+		linesBuffer.push([XC + (Math.cos((ii+1)*sStep) * rad), YC, ZC + (Math.sin((ii+1)*sStep) * rad)]);
+		
+		linesBuffer.push([XC , YC + (Math.cos(ii*sStep) * rad), ZC + (Math.sin(ii*sStep) * rad)]);
+		linesBuffer.push([XC , YC + (Math.cos((ii+1)*sStep) * rad), ZC + (Math.sin((ii+1)*sStep) * rad)]);
+		
+		linesBuffer.push([XC + (Math.cos(ii*sStep) * rad), YC + (Math.sin(ii*sStep) * rad), ZC]);
+		linesBuffer.push([XC + (Math.cos((ii+1)*sStep) * rad), YC + (Math.sin((ii+1)*sStep) * rad), ZC]);
+	}	
+	
+	sphere = presenter.createEntity("trackSphere", "lines", linesBuffer);
+	sphere.color = [0.9, 0.9, 0.9, 0.1];
+	sphere.zOff = 0.0;
+	sphere.useTransparency = true;
+	presenter.repaint();
+}
+function removeTrackSphere() {
+	presenter.deleteEntity("trackSphere");
+}
+
+//-------- AXES -------------------------------
+function addAxes(instance){
+	var length = (0.5 / presenter.sceneRadiusInv);
+	var linesBuffer;
+	var point, tpoint;
+
+	point = [length, 0.0, 0.0, 1.0]
+	tpoint = SglMat4.mul4(presenter._scene.modelInstances[instance].transform.matrix, point);
+	linesBuffer = [];
+	linesBuffer.push([0, 0, 0]);
+	linesBuffer.push([tpoint[0], tpoint[1], tpoint[2]]);	
+	var axisX = presenter.createEntity("XXaxis", "lines", linesBuffer);
+	axisX.color = [1.0, 0.2, 0.2, 1.0];
+	axisX.zOff = 0.0;
+
+	point = [0.0, length, 0.0, 1.0]
+	tpoint = SglMat4.mul4(presenter._scene.modelInstances[instance].transform.matrix, point);
+	linesBuffer = [];
+	linesBuffer.push([0, 0, 0]);
+	linesBuffer.push([tpoint[0], tpoint[1], tpoint[2]]);	
+	var axisY = presenter.createEntity("YYaxis", "lines", linesBuffer);
+	axisY.color = [0.2, 1.0, 0.2, 1.0];
+	axisY.zOff = 0.0;
+
+	point = [0.0, 0.0, length, 1.0]
+	tpoint = SglMat4.mul4(presenter._scene.modelInstances[instance].transform.matrix, point);	
+	linesBuffer = [];
+	linesBuffer.push([0, 0, 0]);
+	linesBuffer.push([tpoint[0], tpoint[1], tpoint[2]]);	
+	var axisZ = presenter.createEntity("ZZaxis", "lines", linesBuffer);
+	axisZ.color = [0.2, 0.2, 1.0, 1.0];
+	axisZ.zOff = 0.0;	
+	
+	presenter.repaint();
+}
+function removeAxes(){
+	presenter.deleteEntity("XXaxis");
+	presenter.deleteEntity("YYaxis");
+	presenter.deleteEntity("ZZaxis");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// ------- TOOLS -------
+var PP1, PP2, PP3;
+var measureEntities = [];
+
+function closeAllTools() {
+	VIEWER_STATE.currentTool = null;
+	resetTools();
+}
+function resetTools() {
+	$("#output_panel").hide();
+	document.getElementById("span_output").innerHTML = "----";
+	document.getElementById("span_message").innerHTML = "";
+	document.getElementById("bt_measure").classList.remove("highlighted");
+	document.getElementById("bt_angle").classList.remove("highlighted");
+	document.getElementById("bt_pick").classList.remove("highlighted");
+	presenter.enablePickpointMode(false);
+	presenter._onEndPickingPoint = null;
+
+	for (me in measureEntities) {
+		presenter.deleteEntity(measureEntities[me]);
+	}
+	measureEntities = [];
+}
+
+function startMeasure(){
+	if (VIEWER_STATE.currentTool === "measure"){
+		closeAllTools()
+		return;
+	}
+	resetTools();
+	VIEWER_STATE.currentTool = "measure";
+	VIEWER_STATE.toolStage = 0;
+	document.getElementById("bt_measure").classList.add("highlighted");
+	$("#output_panel").show();
+	document.getElementById("span_output").innerHTML = "----";
+	//document.getElementById("span_message").innerHTML = " Pick two points on the object";
+
+	presenter._onEndPickingPoint = measurePick;
+	presenter.enablePickpointMode(true);
+}
+function measurePick(pp){
+	var opoint = [pp[0], pp[1], pp[2], 1.0];
+	var tpoint = SglMat4.mul4(SglMat4.inverse(presenter._scene.space.transform.matrix), opoint);
+	var triBuffer = [];
+	for (me in measureEntities)
+			presenter.deleteEntity(measureEntities[me]);
+		measureEntities = [];
+
+	if(VIEWER_STATE.toolStage === 0){
+		PP1 = tpoint;
+		VIEWER_STATE.toolStage = 1;
+		document.getElementById("span_output").innerHTML = "----";
+		document.getElementById("span_message").innerHTML = "";
+	}
+	else if(VIEWER_STATE.toolStage === 1){
+		PP2 = tpoint;
+		VIEWER_STATE.toolStage = 0;
+		var distance = SglVec3.length(SglVec3.sub(PP1, PP2));		
+		var text;
+		var trunc;
+		if(VIEWER_STATE.units === "m") {trunc = 3;}         // 3 decimals if meters 
+		else if (VIEWER_STATE.units === "mm") {trunc = 1;}  // 1 decimals if mm 
+		else {trunc = 3}                                    // 3 decimals if unknown
+		text = distance.toFixed(trunc);
+		if(VIEWER_STATE.units === "m") {text += " m"}
+		else if (VIEWER_STATE.units === "mm") {text += " mm"}
+		document.getElementById("span_output").innerHTML = text;
+
+		var thickness;
+		if(VIEWER_STATE.units === "m") {
+			thickness = Math.min(0.005, distance/100.0);
+		} else if (VIEWER_STATE.units === "mm") {
+			thickness = Math.min(0.25, distance/100.0);
+		} else {
+			var rad = (1.0 / presenter.sceneRadiusInv);
+			thickness = Math.min(rad/200.0, distance/200.0);
+		}
+
+		triBuffer = tube(PP1, PP2, thickness);
+		var distanceBar = presenter.createEntity("distanceL", "triangleStrip", triBuffer);
+		distanceBar.color = [0.5, 1.0, 0.5, 1.0];
+		distanceBar.useSeethrough = true;
+		measureEntities.push("distanceL");
+		presenter.repaint();
+	}
+}
+
+function startAngle(){
+	if (VIEWER_STATE.currentTool === "angle"){
+		closeAllTools()
+		return;
+	}
+	resetTools();
+	VIEWER_STATE.currentTool = "angle";
+	VIEWER_STATE.toolStage = 0;	
+	document.getElementById("bt_angle").classList.add("highlighted");
+	$("#output_panel").show();	
+	document.getElementById("span_output").innerHTML = "----";
+	//document.getElementById("span_message").innerHTML = " Pick ABC points on the object";
+
+	presenter._onEndPickingPoint = anglePick;
+	presenter.enablePickpointMode(true);	
+}
+function anglePick(pp){
+	var opoint = [pp[0], pp[1], pp[2], 1.0];
+	var tpoint = SglMat4.mul4(SglMat4.inverse(presenter._scene.space.transform.matrix), opoint);
+	var pointsBuffer = [];
+	var linesBuffer = [];
+	var triBuffer = [];
+	for (me in measureEntities)
+			presenter.deleteEntity(measureEntities[me]);			
+	measureEntities = [];
+
+	if(VIEWER_STATE.toolStage === 0){
+		PP1 = tpoint;
+		VIEWER_STATE.toolStage = 1;
+	}
+	else if(VIEWER_STATE.toolStage === 1){
+		PP2 = tpoint;
+		VIEWER_STATE.toolStage = 2;
+
+		pointsBuffer.push(PP1);
+		pointsBuffer.push(PP2);
+		linesBuffer.push(PP1);
+		linesBuffer.push(PP2);
+	}
+	else if(VIEWER_STATE.toolStage === 2){
+		PP3 = tpoint;
+		VIEWER_STATE.toolStage = 0;
+		var text;
+		var trunc;
+		var v1 = SglVec3.normalize(SglVec3.sub(PP1, PP2));
+		var v2 = SglVec3.normalize(SglVec3.sub(PP3, PP2));
+		var angle = sglRadToDeg(Math.acos(SglVec3.dot(v1,v2)));
+		text = angle.toFixed(1) + " °";
+		document.getElementById("span_output").innerHTML = text;
+
+		pointsBuffer.push(PP1);
+		pointsBuffer.push(PP2);
+		pointsBuffer.push(PP3);
+		linesBuffer.push(PP1);
+		linesBuffer.push(PP2);
+		linesBuffer.push(PP2);
+		linesBuffer.push(PP3);
+		var v1 = SglVec3.normalize(SglVec3.sub(PP1, PP2));
+		var v2 = SglVec3.normalize(SglVec3.sub(PP3, PP2));      
+		var len = 0.75 * Math.min(SglVec3.length(SglVec3.sub(PP1, PP2)), SglVec3.length(SglVec3.sub(PP3, PP2)));
+		var triBuffer = [];
+		triBuffer.push(PP2);
+		triBuffer.push(SglVec3.add(SglVec3.muls(v1,len),PP2));
+		triBuffer.push(SglVec3.add(SglVec3.muls(v2,len),PP2));		
+	}
+
+	var angleP = presenter.createEntity("angleP", "points", pointsBuffer);
+	angleP.color = [0.2, 0.3, 0.9, 1.0];
+	angleP.pointSize = 8;
+	angleP.useSeethrough = true;
+	measureEntities.push("angleP");
+
+	var angleL = presenter.createEntity("angleL", "lines", linesBuffer);
+	angleL.color = [0.2, 0.3, 0.9, 1.0];
+  	angleL.useSeethrough = true;
+	measureEntities.push("angleL");
+
+	var angleV = presenter.createEntity("angleV", "triangles", triBuffer);
+	angleV.color = [0.2, 0.5, 0.7, 0.3];
+	angleV.useTransparency = true;
+	angleV.useSeethrough = true;
+	angleV.zOff = 0.001;
+	measureEntities.push("angleV");
+}
+
+function startPick(){	
+	if (VIEWER_STATE.currentTool === "pick"){
+		closeAllTools()
+		return;
+	}
+	resetTools();
+	VIEWER_STATE.currentTool = "pick";
+	VIEWER_STATE.toolStage = 0;
+	document.getElementById("bt_pick").classList.add("highlighted");
+	$("#output_panel").show();
+	document.getElementById("span_output").innerHTML = "----";
+	//document.getElementById("span_message").innerHTML = " Pick a point on the object";
+
+	presenter._onEndPickingPoint = pointPick;
+	presenter.enablePickpointMode(true);
+}
+function pointPick(pp) {
+	PP1 = pp;
+	var text;
+	var trunc;
+	if(VIEWER_STATE.units === "m") {trunc = 3;}         // 3 decimals if meters 
+	else if (VIEWER_STATE.units === "mm") {trunc = 1;}  // 1 decimals if mm 
+	else {trunc = 3}                                    // 3 decimals if unknown
+	if(VIEWER_STATE.up === "Y")
+		text = "[ " + PP1[0].toFixed(trunc) + " , " + PP1[1].toFixed(trunc) + " , " + PP1[2].toFixed(trunc) + " ]";
+	else if(VIEWER_STATE.up === "Z")
+		text = "[ " + PP1[0].toFixed(trunc) + " , " + -PP1[2].toFixed(trunc) + " , " + PP1[1].toFixed(trunc) + " ]";
+	document.getElementById("span_output").innerHTML = text;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// LIGHT CONTROL //
+function openLightControl(event){
+	var lightControllerCanvas = document.getElementById("lightcontroller");
+	var button = document.getElementById("bt_lightdir");
+	var rect = button.getBoundingClientRect();
+	
+	lightControllerCanvas.width = 150;
+	lightControllerCanvas.height = 150;
+	lightControllerCanvas.style.display = "block";
+	// Center the canvas over the button
+	lightControllerCanvas.style.left = (rect.left + (rect.width / 2) - 75) + "px";
+	lightControllerCanvas.style.top = (rect.top + (rect.height / 2) - 75) + "px";
+	
+	updateLightController(VIEWER_STATE.lightDir[0],VIEWER_STATE.lightDir[1]);
+	// Add move listeners for dragging
+	lightControllerCanvas.addEventListener("touchmove", clickLightController, false);
+	lightControllerCanvas.addEventListener("mousemove", clickLightController, false);
+}
+function closeLightControl(event){
+	const lightControllerCanvas = document.getElementById("lightcontroller");
+	if(lightControllerCanvas){
+		lightControllerCanvas.style.display = "none";
+	}
+}
+function resizeLightController(){
+	var lightControllerCanvas = document.getElementById("lightcontroller");
+	var dim = Math.min(150, Math.min(lightControllerCanvas.parentElement.clientWidth,lightControllerCanvas.parentElement.clientHeight));
+	lightControllerCanvas.width = dim;
+	lightControllerCanvas.height = dim;	
+}
+function clickLightController(event) {
+	var lightControllerCanvas = document.getElementById("lightcontroller");
+	var cwidth = lightControllerCanvas.width;
+	var cheight = lightControllerCanvas.height;
+	var midpoint = [Math.floor(cwidth/2.0),Math.floor(cheight/2.0)];
+	var radius = Math.min(midpoint[0],midpoint[1]);
+	var XX = event.offsetX - midpoint[0];
+	var YY = event.offsetY - midpoint[1];
+	// check inside circle
+	if((XX*XX + YY*YY) < ((radius)*(radius))) {
+		var lx = (XX / radius)/2.0;
+		var ly = (YY / radius)/2.0;
+		VIEWER_STATE.lightDir = [lx,-ly];
+		presenter.rotateLight(VIEWER_STATE.lightDir[0],VIEWER_STATE.lightDir[1]);
+		updateLightController(VIEWER_STATE.lightDir[0],VIEWER_STATE.lightDir[1]);
+		(event.touches) ? lightControllerCanvas.addEventListener("touchmove", clickLightController, false) : lightControllerCanvas.addEventListener("mousemove", clickLightController, false);
+	}
+	else {
+		closeLightControl(event);
+  	}	
+}
+function doubleclickLightController(event) {
+	event.preventDefault();  
+	VIEWER_STATE.lighting = !VIEWER_STATE.lighting;
+	presenter.enableSceneLighting(VIEWER_STATE.lighting);
+	updateLightController(VIEWER_STATE.lightDir[0],VIEWER_STATE.lightDir[1]);
+}
+function updateLightController(xx,yy) {
+	var lightControllerCanvas = document.getElementById("lightcontroller");
+	var cwidth = lightControllerCanvas.width;
+	var cheight = lightControllerCanvas.height;
+	var midpoint = [Math.floor(cwidth/2.0),Math.floor(cheight/2.0)];
+	var radius = Math.min(midpoint[0],midpoint[1]);
+	var context = lightControllerCanvas.getContext("2d");
+	context.clearRect(0, 0, cwidth, cheight);
+	var lightcolor = presenter.isSceneLightingEnabled()?"yellow":"grey";
+	context.beginPath();
+	context.arc(midpoint[0], midpoint[1], radius, 0, 2 * Math.PI, false);
+	var grd=context.createRadialGradient(midpoint[0]+(xx*(radius-3)*2),midpoint[1]+(-yy*(radius-3)*2),3,midpoint[0], midpoint[1],radius);
+	grd.addColorStop(0,lightcolor);
+	grd.addColorStop(1,"black");
+	context.fillStyle = grd;
+	context.fill();
+	context.lineWidth = 1;
+	context.strokeStyle = 'black';
+	context.stroke();
+	//central spot
+	context.beginPath();
+	context.rect(midpoint[0]+(xx*radius*2)-1,midpoint[1]+(-yy*radius*2)-1,3,3);
+	context.lineWidth = 3;
+	context.strokeStyle = lightcolor;
+	context.stroke();
+	presenter.repaint();
+}
+function initLightController(lightX,lightY) {
+	resizeLightController();
+	var lightControllerCanvas = document.getElementById("lightcontroller");
+	lightControllerCanvas.addEventListener("touchstart", clickLightController, false);
+	lightControllerCanvas.addEventListener("mousedown", clickLightController, false);
+	lightControllerCanvas.addEventListener("dblclick", doubleclickLightController, false);
+	var canvas = document.getElementById("draw-canvas");
+	canvas.addEventListener("mouseup", function () { 
+		lightControllerCanvas.removeEventListener("mousemove", clickLightController, false); 
+		lightControllerCanvas.removeEventListener("touchmove", clickLightController, false);
+	}, false);
+	document.addEventListener("mouseup", function () { 
+		lightControllerCanvas.removeEventListener("mousemove", clickLightController, false);
+		lightControllerCanvas.removeEventListener("touchmove", clickLightController, false);
+	}, false);
+	document.getElementById('bt_lightdir').addEventListener('mousedown', openLightControl);
+	document.getElementById('lightcontroller').addEventListener('mouseup', closeLightControl);	
+	presenter.rotateLight(lightX, lightY);
+	updateLightController(lightX, lightY);
+}
+/////////////////////////////////////////////////////////////////////////////////////
+
+function onTrackballUpdate(trackState){
+	updateCube();
+}
+function updateCube() {
+	var transf = "";
+	var csize = document.getElementById("navcube").clientWidth;
+	var state = presenter.getTrackballPosition();
+
+	if(VIEWER_STATE.trackball === "turntable") {
+		//transf = "translateZ(-"+csize+"px) rotateX("+ -state[1] +"deg) rotateY("+ -state[0] +"deg)";
+		transf = "translateZ(-50px) rotateX("+ -state[1] +"deg) rotateY("+ -state[0] +"deg)";
+	}
+	else {
+
+		let m = state[0];	
+		transf = "translateZ(-50px) matrix3d(" + 
+		-m[0]  + ", "  + m[1]  + ", "  + -m[2]  + ", "  + m[3]  + ", " + 
+		-m[4]  + ", "  + m[5]  + ", "  + -m[6]  + ", "  + m[7]  + ", " + 
+		-m[8]  + ", "  + m[9]  + ", "  + -m[10] + ", "  + m[11] + ", " + 
+		-m[12] + ", "  + m[13] + ", "  + -m[14] + ", "  + m[15] + ") rotateY(180deg)";
+	}
+	
+	$('.cube').css({"transform":transf});
+}
+
+
+//---------------------------------------------------------------------------------------
+
+
+//---------------------------------------------------------------------------------------
+function viewFrom(direction){
+	var distance = VIEWER_STATE.baseView[2];
+    switch(direction) {
+        case "front":
+			if(VIEWER_STATE.trackball === "turntable") {
+				presenter.animateToTrackballPosition([0.0, 0.0, 0.0, 0.0, 0.0, distance]);
+			}
+			else if (VIEWER_STATE.trackball === "sphere") {
+				presenter.animateToTrackballPosition([[ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 0.0, 0.0, 0.0, distance]);
+			}
+            break;
+        case "back":
+			if(VIEWER_STATE.trackball === "turntable") {
+				presenter.animateToTrackballPosition([180.0, 0.0, 0.0, 0.0, 0.0, distance]);
+			}
+			else if (VIEWER_STATE.trackball === "sphere") {
+				presenter.animateToTrackballPosition([[-1, 0, 0, 0, 0, 1, 0, 0, 0, 0,-1, 0, 0, 0, 0, 1 ], 0.0, 0.0, 0.0, distance]);
+			}
+            break;			
+        case "top":
+			if(VIEWER_STATE.trackball === "turntable") {
+				presenter.animateToTrackballPosition([0.0, 90.0, 0.0, 0.0, 0.0, distance]);
+			}
+			else if (VIEWER_STATE.trackball === "sphere") {
+				presenter.animateToTrackballPosition([[ 1, 0, 0, 0, 0, 0, 1, 0, 0,-1, 0, 0, 0, 0, 0, 1 ], 0.0, 0.0, 0.0, distance]);
+			}
+            break;
+        case "bottom":
+			if(VIEWER_STATE.trackball === "turntable") {
+				presenter.animateToTrackballPosition([0.0, -90.0, 0.0, 0.0, 0.0, distance]);
+			}
+			else if (VIEWER_STATE.trackball === "sphere") {
+				presenter.animateToTrackballPosition([[ 1, 0, 0, 0, 0, 0,-1, 0, 0, 1, 0, 0, 0, 0, 0, 1 ], 0.0, 0.0, 0.0, distance]);
+			}
+            break;
+        case "left":
+			if(VIEWER_STATE.trackball === "turntable") {
+				presenter.animateToTrackballPosition([270.0, 0.0, 0.0, 0.0, 0.0, distance]);
+			}
+			else if (VIEWER_STATE.trackball === "sphere") {
+				presenter.animateToTrackballPosition([[ 0, 0,-1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 ], 0.0, 0.0, 0.0, distance]);
+			}
+            break;
+        case "right":
+			if(VIEWER_STATE.trackball === "turntable") {
+				presenter.animateToTrackballPosition([90.0, 0.0, 0.0, 0.0, 0.0, distance]);
+			}
+			else if (VIEWER_STATE.trackball === "sphere") {
+				presenter.animateToTrackballPosition([[ 0, 0, 1, 0, 0, 1, 0, 0,-1, 0, 0, 0, 0, 0, 0, 1 ], 0.0, 0.0, 0.0, distance]);
+			}
+            break;			
+    }
+}
+
+// function that fills the buffer to create an entity of a triangled tube between two points
+// thickness is HALF the thickness of the tube
+function tube(p0, p1, thickness){
+	var dt = thickness;
+	var dir = SglVec3.normalize(SglVec3.sub(p1, p0));
+	var vInitial = [0.0, 0.0, 0.0];
+	do {
+		vInitial[0] = Math.random()+0.01;
+		vInitial[1] = Math.random()+0.01;
+		vInitial[2] = Math.random()+0.01;
+		vInitial = SglVec3.normalize(vInitial);
+	} while (SglVec3.dot(dir, vInitial) > 0.9);
+	var v0 = SglVec3.normalize(SglVec3.cross(dir, vInitial));
+	var v1 = SglVec3.normalize(SglVec3.cross(dir, v0));
+	// from Optimizing Triangle Strips for Fast Rendering https://www.cs.umd.edu/gvil/papers/av_ts.pdf
+	// triangle strip of a cube
+	var vertices = [];
+	vertices[1] = SglVec3.add(p0, SglVec3.muls(v0, dt));
+	vertices[2] = SglVec3.add(p0, SglVec3.muls(v1,-dt));
+	vertices[3] = SglVec3.add(p0, SglVec3.muls(v1, dt));
+	vertices[4] = SglVec3.add(p0, SglVec3.muls(v0,-dt));
+	vertices[5] = SglVec3.add(p1, SglVec3.muls(v0, dt));
+	vertices[6] = SglVec3.add(p1, SglVec3.muls(v1,-dt));
+	vertices[7] = SglVec3.add(p1, SglVec3.muls(v0,-dt));
+	vertices[8] = SglVec3.add(p1, SglVec3.muls(v1, dt));
+	var triBuffer = [];
+	triBuffer.push(vertices[4]);
+	triBuffer.push(vertices[3]);
+	triBuffer.push(vertices[7]);
+	triBuffer.push(vertices[8]);
+	triBuffer.push(vertices[5]);
+	triBuffer.push(vertices[3]);
+	triBuffer.push(vertices[1]);
+	triBuffer.push(vertices[4]);
+	triBuffer.push(vertices[2]);
+	triBuffer.push(vertices[7]);
+	triBuffer.push(vertices[6]);
+	triBuffer.push(vertices[5]);
+	triBuffer.push(vertices[2]);
+	triBuffer.push(vertices[1]);
+	return triBuffer;
+}
+
+
+// get objext bounding box. [xmin, ymin, zmin, xmax, ymax, zmax]
+function getBBox(instance) {
+	var mname = presenter._scene.modelInstances[instance].mesh;
+	var vv = presenter._scene.meshes[mname].renderable.mesh.basev;
+	var bbox = [-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE];	
+	var point,tpoint;
+	
+	for(var vi=1; vi<(vv.length / 3); vi++){
+		point = [vv[(vi*3)+0], vv[(vi*3)+1], vv[(vi*3)+2], 1.0]
+		tpoint = SglMat4.mul4(presenter._scene.modelInstances[instance].transform.matrix, point);
+		if(tpoint[0] > bbox[0]) bbox[0] = tpoint[0];
+		if(tpoint[1] > bbox[1]) bbox[1] = tpoint[1];
+		if(tpoint[2] > bbox[2]) bbox[2] = tpoint[2];
+		if(tpoint[0] < bbox[3]) bbox[3] = tpoint[0];
+		if(tpoint[1] < bbox[4]) bbox[4] = tpoint[1];
+		if(tpoint[2] < bbox[5]) bbox[5] = tpoint[2];
+	}		
+	return bbox;
+}
+
+function estimateMeasureUnit() {
+	//just a stub
+	return;
+		var bb = getBBox("model_1");	
+		console.log("meters");
+		console.log("millimeters");
+}
+
+
+function startupWidgets(){
+	var vv = presenter._scene.meshes[presenter._scene.modelInstances["model_1"].mesh].renderable.mesh.basev;
+	if (typeof vv === 'undefined')
+		setTimeout(startupWidgets, 50);
+	else {
+		if(VIEWER_STATE.reference){
+			if(VIEWER_STATE.trackball === "turntable")
+				addBaseGrid("model_1");
+			else if (VIEWER_STATE.trackball === "sphere")
+				addTrackSphere("model_1");
+		}
+
+		if(VIEWER_STATE.axes)
+			addAxes("model_1");
+
+		estimateMeasureUnit();
+	}
+}
+
+//----------------------------------------   blender style numpad key handling to change view
+function handleKeyPress(event) {	
+	switch(event.code) {
+		case "Numpad1":
+			if (event.ctrlKey) {
+				viewFrom("back");
+			} else {
+				viewFrom("front");
+			}
+			event.preventDefault();
+			break;
+		case "Numpad3":
+			if (event.ctrlKey) {
+				viewFrom("left");
+			} else {
+				viewFrom("right");
+			}
+			event.preventDefault();
+			break;
+		case "Numpad7":
+			if (event.ctrlKey) {
+				viewFrom("bottom");
+			} else {
+				viewFrom("top");
+			}
+			event.preventDefault();
+			break;
+		case "Numpad5":
+			toggleCamera();
+			event.preventDefault();
+			break;
+		default:
+			return;
+	}
+}
+
+
+$(document).ready(function(){
+	var pageParams = parsePageParams();
+	let MODELURL = null;
+	let MANIFESTURL = null;
+	if(pageParams["model"]){
+		MODELURL = decodeURIComponent(pageParams["model"]);
+	}
+	if (pageParams["manifest"]){	// not implemented yet
+		MANIFESTURL = decodeURIComponent(pageParams["manifest"]);
+	}	
+	
+	// finalizing default state
+	DEFAULT_STATE.modelURL = (MODELURL === undefined || MODELURL === null) ? FALLBACK_MODEL : MODELURL;
+	Object.freeze(DEFAULT_STATE);
+
+	init3dhop();
+	presenter = new Presenter("draw-canvas");
+	// startup viewer
+	viewerSetup();
+});
+</script>
+</html>

@@ -1,0 +1,148 @@
+#3dhop {
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-weight: normal;
+}
+
+.tdh_interfacedx {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    gap: 0.5rem;
+ }
+.tdh_panel {
+  display: flex;
+  border-radius: 0.5rem;
+  padding: 0.2rem;
+  background-color: rgba(128, 128, 128, 0.6);
+  z-index: 20;
+  gap: 0.5rem;  
+}
+.tdh_row {
+    display: flex;    
+    flex-direction: row;
+    justify-content: space-around;
+    gap: 0.2rem;
+}
+.tdh_col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;    
+    gap: 0.2rem;
+}
+.tdh_panel > div  {
+  flex: 1;
+  padding: 0.1rem;
+  text-align: center;
+  align-items: center;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.tdh_interfacetools {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.sectioning {
+    display: none;
+    flex-direction: row;
+}
+
+.sectioning  button{
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bolder;
+    font-size: 1.3rem;
+}
+
+button {
+    background-color: #b7c1e0;
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 1.3rem;
+    font-family: 'Courier New', Courier, monospace;
+    cursor: pointer;
+    border-radius: 0.2rem;
+    display: flex;
+}
+button:hover {
+    background-color: #9daee2;
+}
+
+button .material-symbols-outlined {
+    font-size: 1.5rem;
+    font-weight: normal;
+}
+
+.highlighted {
+    background-color: rgba(173, 107, 140, 0.5);
+}
+.highlighted:hover {
+    background-color: rgba(175, 85, 130, 0.7);
+}
+
+#span_message {
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+/* 3DCUBE */
+.cubeScene {
+    --cube-size: min(12vw, 120px);
+    --cube-halfsize: calc(var(--cube-size) / 2);
+    height: calc( var(--cube-size)+ 1vw);
+    margin: 1vw;
+    perspective: 24vw;
+    font-family: Arial, Helvetica, sans-serif;
+}
+  
+.cube {
+    width: var(--cube-size);
+    height: var(--cube-size);  
+    position: relative;
+    transform-style: preserve-3d;
+    margin: auto;
+}
+  
+.cube__face {
+    position: absolute;
+    width: var(--cube-size);
+    height: var(--cube-size);
+    border: 2px solid black;
+    line-height: var(--cube-size);
+    font-size: min(2vw, 20px);
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    user-select: none;
+    background: hsla(  0, 0%, 50%, 1.0);    
+}
+  
+.cube__face--front  { 
+      transform: rotateY(  0deg) translateZ(var(--cube-halfsize));	
+}
+.cube__face--right  { 
+      transform: rotateY( 90deg) translateZ(var(--cube-halfsize));
+}
+.cube__face--back   { 
+      transform: rotateY(180deg) translateZ(var(--cube-halfsize));
+}
+.cube__face--left   { 
+      transform: rotateY(-90deg) translateZ(var(--cube-halfsize));
+}
+.cube__face--top    { 
+      transform: rotateX( 90deg) translateZ(var(--cube-halfsize));
+}
+.cube__face--bottom { 
+      transform: rotateX(-90deg) translateZ(var(--cube-halfsize));
+}
