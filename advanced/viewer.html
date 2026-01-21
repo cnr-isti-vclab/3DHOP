@@ -25,13 +25,13 @@
 <script type="text/javascript" src="js/helpers.js"></script>
 </head>
 <body>
-<div id="3dhop" class="tdhop" tabindex="0" style="background: linear-gradient(0deg,rgba(19, 26, 28, 1) 5%, rgba(15, 108, 145, 1) 95%);">
+<div id="3dhop" class="tdhop" tabindex="0" style="position: relative; background: linear-gradient(0deg,rgba(19, 26, 28, 1) 5%, rgba(15, 108, 145, 1) 95%);">
 	<div id="tdhlg"></div>
 	<canvas id="draw-canvas"></canvas>
 
 	<!--INTERFACE-->
 	<!-- Light controller canvas - positioned outside panel hierarchy for proper z-index -->
-	<canvas id="lightcontroller" width="10" height="10" style="display: none; position: fixed; z-index: 9999;"></canvas>
+	<canvas id="lightcontroller" width="10" height="10" style="display: none; position: absolute; z-index: 9999;"></canvas>
 	
 	<div class="tdh_interfacedx">
 		<div id="div_navcube">
@@ -136,7 +136,7 @@ const DEFAULT_STATE = {
 		"transparent"  : false,
 		"alpha"        : 0.5,
 		"specularity"  : 1,
-		"axes"         : false,
+		"axes"         : true,
 		"reference"    : true,
 		"sectioning"   : false,
 		"sections"     : [1, 1, 1],
@@ -253,7 +253,14 @@ function viewerSetup() {
 	// Attach keypress event listener to 3dhop div
 	var dhopDiv = document.getElementById('3dhop');
 	dhopDiv.addEventListener('keydown', handleKeyPress);
-	dhopDiv.focus();	// Set focus to capture key events
+	
+	// Focus on user interaction instead of on load (prevents iframe scroll hijacking)
+	dhopDiv.addEventListener('mousedown', function() {
+		dhopDiv.focus();
+	}, { once: false });
+	dhopDiv.addEventListener('touchstart', function() {
+		dhopDiv.focus();
+	}, { once: false });
 }
 
 
